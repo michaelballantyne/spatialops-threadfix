@@ -566,31 +566,29 @@ namespace SpatialOps {
         }
     };
 
-  /**
-   * \struct NeboBoundaryConditionBuilder
-   * \brief Supports definition of new Nebo boundary condition.
-   *
-   * \tparam LowPnt      Stencil offset for low point in Phi
-   * \tparam HighPnt     Stencil offset for high point in Phi
-   * \tparam PhiFieldT   Type of field of phi, which this operator modifies
-   * \tparam GammaFieldT Type of fields in gamma, which this operator reads
-   *
-   * Note that Gamma is assumed to be the origin, for the stencil points and mask points.
-   *
-   * Stencil points should reflect this equation:
-   *  gamma = dest * destCoef + src * srcCoef
-   * This stencil actually computes (only for given mask points):
-   *  dest = (gamma - src * srcCoef) / destCoef
-   */
-    template<typename PointCollection, typename PhiFieldT, typename GammaFieldT>
+    /**
+     * \struct NeboBoundaryConditionBuilder
+     * \brief Supports definition of new Nebo boundary condition.
+     *
+     * \tparam OperatorT   Operator to invert
+     * \tparam PhiFieldT   Type of field of phi, which this operator modifies
+     * \tparam GammaFieldT Type of fields in gamma, which this operator reads
+     *
+     * Note that Gamma is assumed to be the origin, for the stencil points and mask points.
+     */
+    template<typename OperatorT, typename PhiFieldT, typename GammaFieldT>
     struct NeboBoundaryConditionBuilder {
     public:
-      typedef typename PointCollection::First       LowPoint;      ///< stencil offset for low point in phi, assumes gamma is origin
-      typedef typename PointCollection::AllButFirst NonLowPoints;  ///< stencil offsets for all but low point in phi, assumes gamma is origin
-      typedef typename PointCollection::Last        HighPoint;     ///< stencil offset for high point in phi, assumes gamma is origin
-      typedef typename PointCollection::AllButLast  NonHighPoints; ///< stencil offsets for all but high point in phi, assumes gamma is origin
-      typedef PhiFieldT     PhiFieldType; ///< field type of phi, which this operator modifies
+      typedef OperatorT   OperatorType;   ///< type of operator to invert
+      typedef PhiFieldT   PhiFieldType;   ///< field type of phi, which this operator modifies
       typedef GammaFieldT GammaFieldType; ///< type of fields in gamma, which this operator reads
+
+      typedef typename OperatorType::PointCollectionType PointCollection; ///< stencil point collection
+
+      typedef typename PointCollection::Last        LowPoint;      ///< stencil offset for low point in phi, assumes gamma is origin
+      typedef typename PointCollection::AllButLast  NonLowPoints;  ///< stencil offsets for all but low point in phi, assumes gamma is origin
+      typedef typename PointCollection::First       HighPoint;     ///< stencil offset for high point in phi, assumes gamma is origin
+      typedef typename PointCollection::AllButFirst NonHighPoints; ///< stencil offsets for all but high point in phi, assumes gamma is origin
 
       typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, LowPoint>:: result LowGammaPoint;
       typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, HighPoint>::result HighGammaPoint;
@@ -609,8 +607,14 @@ namespace SpatialOps {
       /**
        *  \brief construct a boundary condition
        */
-      NeboBoundaryConditionBuilder(CoefCollection const & coefs)
-      : lowCoef_(coefs.coef()), highCoef_(coefs.last()), minusGamma_(1.0), minusPhi_(coefs.others()), plusGamma_(1.0), plusPhi_(coefs.all_but_last()), shift_()
+      NeboBoundaryConditionBuilder(OperatorType const & op)
+      : lowCoef_(op.coefs().last()),
+        highCoef_(op.coefs().coef()),
+        minusGamma_(1.0),
+        minusPhi_(op.coefs().all_but_last()),
+        plusGamma_(1.0),
+        plusPhi_(op.coefs().others()),
+        shift_()
       {}
 
       ~NeboBoundaryConditionBuilder() {}

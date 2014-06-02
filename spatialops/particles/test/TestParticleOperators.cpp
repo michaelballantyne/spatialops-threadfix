@@ -63,7 +63,7 @@ int main()
   //
   // set the particle coordinates
   //
-  pCoord[0] = 3;/*
+  pCoord[0] = 3.25;/*
   pCoord[1] = 7.0;
   pCoord[2] = 1;
   pCoord[3] = 7.5;*/
@@ -85,15 +85,18 @@ int main()
   // build the operators
   //
   typedef SpatialOps::Particle::CellToParticle<CellField> C2P;
-  const C2P c2p( cellField );
+  C2P c2p( cellField[1]-cellField[0], cellField[0] );
+  c2p.set_coordinate_information( &pCoord, NULL, NULL, &pSize );
+
   typedef SpatialOps::Particle::ParticleToCell<CellField> P2C;
-  const P2C p2c( cellField );
+  P2C p2c( cellField[1] - cellField[0], cellField[0] );
+  p2c.set_coordinate_information( &pCoord, NULL, NULL, &pSize );
 
   //
   // interpolate to particles
   //
-  c2p.apply_to_field( pCoord, pSize, cellFieldvalues, ptmp );
-  p2c.apply_to_field( pCoord, pSize, pfield, ctmp );
+  c2p.apply_to_field( cellFieldvalues, ptmp );
+  p2c.apply_to_field( pfield, ctmp );
 
   for( size_t i=0; i<np; ++i )
     std::cout<<"  Interpolated particle field : "<<ptmp[i]<<std::endl;
@@ -104,15 +107,17 @@ int main()
 
   TestHelper status;
   for( size_t i=0; i<np; ++i )
-    status( ptmp[i] == 35 );
+    status( ptmp[i] == 32.5, "c2p" );
 
-  status( ctmp[0] == 0, "gas interp [0]" );
-  status( ctmp[1] == 2, "gas interp [1]" );
-  status( ctmp[2] ==  4, "gas interp [2]" );
-  status( ctmp[3] ==  4, "gas interp [3]" );
-  status( ctmp[4] == 4, "gas interp [4]" );
-  status( ctmp[5] ==  4, "gas interp [5]" );
-  status( ctmp[6] ==  2, "gas interp [6]" );
+  status( ctmp[0] == 0, "p2c [0]" );
+  status( ctmp[1] == 3, "p2c [1]" );
+  status( ctmp[2] == 4, "p2c [2]" );
+  status( ctmp[3] == 4, "p2c [3]" );
+  status( ctmp[4] == 4, "p2c [4]" );
+  status( ctmp[5] == 4, "p2c [5]" );
+  status( ctmp[6] == 1, "p2c [6]" );
+  status( ctmp[7] == 0, "p2c [7]" );
+  status( ctmp[8] == 0, "p2c [8]" );
 
   if( status.ok() ) return 0;
   return -1;

@@ -165,6 +165,18 @@ namespace structured{
     opdb.register_new_operator( new OperatorTypeBuilder<Filter,YVolField,YVolField>::type() );
     opdb.register_new_operator( new OperatorTypeBuilder<Filter,ZVolField,ZVolField>::type() );
 
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,XSurfXField,XSurfXField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,XSurfYField,XSurfYField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,XSurfZField,XSurfZField>::type() );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,YSurfXField,YSurfXField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,YSurfYField,YSurfYField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,YSurfZField,YSurfZField>::type() );
+
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,ZSurfXField,ZSurfXField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,ZSurfYField,ZSurfYField>::type() );
+    opdb.register_new_operator( new OperatorTypeBuilder<Filter,ZSurfZField,ZSurfZField>::type() );
+
     //___________________________________________________________________
     // Finite Difference stencils:
     //

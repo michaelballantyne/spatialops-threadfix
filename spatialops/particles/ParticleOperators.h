@@ -27,6 +27,7 @@
 
 #include <stdexcept>
 #include <cmath>
+#include <algorithm>
 
 namespace SpatialOps{
 namespace Particle{
@@ -34,7 +35,10 @@ namespace Particle{
    /**
     *  @class  ParticleToCell
     *  @author James C. Sutherland
-    *  @brief Interpolates a particle field onto an underlying mesh field.
+    *  @brief Interpolates an extensive particle field onto an underlying mesh field.
+    *
+    *  Note that this should only be used to interpolate extensive quantities and
+    *  not intensive quantities.
     */
    template< typename CellField >
    class ParticleToCell
@@ -44,23 +48,35 @@ namespace Particle{
      typedef CellField     DestFieldType;
 
      /**
-      *  @param meshCoord Vector of coordinates for the underlying mesh
+      * @param xcoord  mesh x-coordinate field
+      * @param ycoord  mesh y-coordinate field
+      * @param zcoord  mesh z-coordinate field
       */
-     ParticleToCell( const CellField& meshCoord );
+     ParticleToCell( const double dx,    const double xlo,
+                     const double dy=-1, const double ylo =0,
+                     const double dz=-1, const double zlo =0 );
 
-   /**
-    *  @param particleCoord Field of coordinates for all particles (ParticleField)
-    *  @param particleSize Field of size for all particles (ParticleField)
-    *  @param src source field from which values are interpolated to partciles (ParticleField)
-    *  @param dest destination field to which values are interpolated (CellField)
-    */
-     void apply_to_field( const ParticleField& particleCoord,
-                          const ParticleField& particleSize,
-                          const SrcFieldType& src,
+     /**
+      * @param pxcoord x-coordinate of each particle
+      * @param pycoord y-coordinate of each particle
+      * @param pzcoord z-coordinate of each particle
+      * @param psize   diameter of each particle
+      */
+     void set_coordinate_information( const ParticleField * const pxcoord,
+                                      const ParticleField * const pycoord,
+                                      const ParticleField * const pzcoord,
+                                      const ParticleField * const psize );
+
+     /**
+      *  @param src source field from which values are interpolated to particles (ParticleField)
+      *  @param dest destination field to which values are interpolated (CellField)
+      */
+     void apply_to_field( const SrcFieldType& src,
                           DestFieldType& dest ) const;
    private:
-     const CellField& coordVec_;
-     const double dx_, xo_;
+     const double dx_, dy_, dz_;
+     const double xlo_, ylo_, zlo_;
+     const ParticleField *px_, *py_, *pz_, *psize_;
    };
 
 
@@ -71,6 +87,8 @@ namespace Particle{
    *  @class CellToParticle
    *  @brief Operator to interpolate a mesh field onto a particle.
    *  @author James C. Sutherland
+   *
+   *  Note that this can be used for either intensive or extensive quantities.
    */
   template< typename CellField >
   class CellToParticle
@@ -82,21 +100,31 @@ namespace Particle{
     /**
      *  @param meshCoord Field of coordinates for the underlying mesh
      */
-    CellToParticle( const CellField& meshCoord );
+    CellToParticle( const double dx,    const double xlo,
+                    const double dy=-1, const double ylo =0,
+                    const double dz=-1, const double zlo =0 );
 
     /**
-    * @param particleCoord Field of coordinates for all particles (ParticleField)
-    * @param particleSize Field of size for all particles (ParticleField)
-    * @param src source field from which values are interpolated to partciles (VolField)
-    * @param dest destination field to which values are interpolated (ParticleField)
-    */
-    void apply_to_field( const ParticleField& particleCoord,
-                         const ParticleField& particleSize,
-                         const SrcFieldType& src,
+     * @param pxcoord x-coordinate of each particle
+     * @param pycoord y-coordinate of each particle
+     * @param pzcoord z-coordinate of each particle
+     * @param psize   size of each particle
+     */
+    void set_coordinate_information( const ParticleField* pxcoord,
+                                     const ParticleField* pycoord,
+                                     const ParticleField* pzcoord,
+                                     const ParticleField* psize );
+
+    /**
+     * @param src source field from which values are interpolated to particles (VolField)
+     * @param dest destination field to which values are interpolated (ParticleField)
+     */
+    void apply_to_field( const SrcFieldType& src,
                          DestFieldType& dest ) const;
   private:
-    const CellField& coordVec_;
-    const double dx_, xo_;
+    const double dx_, dy_, dz_;
+    const double xlo_, ylo_, zlo_;
+    const ParticleField *px_, *py_, *pz_, *psize_;
   };
 
 
@@ -111,25 +139,20 @@ namespace Particle{
 
    template< typename CellField >
    ParticleToCell<CellField>::
-   ParticleToCell( const CellField& meshCoord )
-     : coordVec_( meshCoord ),
-       dx_( meshCoord[1]-meshCoord[0] ),
-       xo_( meshCoord[0] )
+   ParticleToCell( const double dx, const double xlo,
+                   const double dy, const double ylo,
+                   const double dz, const double zlo )
+     : dx_ ( dx<=0 ? 1.0 : dx ),
+       dy_ ( dy<=0 ? 1.0 : dy ),
+       dz_ ( dz<=0 ? 1.0 : dz ),
+       xlo_( dx<=0 ? 0.0 : xlo ),
+       ylo_( dy<=0 ? 0.0 : ylo ),
+       zlo_( dz<=0 ? 0.0 : zlo )
    {
-     const double TOL = 1e-6;
-
-     // note that this assumes 1D
-     bool isUniform = true;
-     typename CellField::const_iterator ix2=meshCoord.begin();
-     typename CellField::const_iterator ix = ix2;
-     ++ix2;
-     for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){
-       if( fabs( dx_ - (*ix2-*ix) )/dx_ > TOL ){
-         isUniform = false;
-       }
-     }
-     if( !isUniform )
-       throw std::runtime_error( "Particle operators require uniform mesh spacing" );
+     px_    = NULL;
+     py_    = NULL;
+     pz_    = NULL;
+     psize_ = NULL;
    }
 
    //------------------------------------------------------------------
@@ -137,67 +160,115 @@ namespace Particle{
    template< typename CellField >
    void
    ParticleToCell<CellField>::
-   apply_to_field( const ParticleField& particleCoord,
-                   const ParticleField& particleSize,
-                   const SrcFieldType& src,
+   set_coordinate_information( const ParticleField *pxcoord,
+                               const ParticleField *pycoord,
+                               const ParticleField *pzcoord,
+                               const ParticleField *psize )
+   {
+     px_    = pxcoord;
+     py_    = pycoord;
+     pz_    = pzcoord;
+     psize_ = psize  ;
+   }
+
+   template< typename CellField >
+   void
+   ParticleToCell<CellField>::
+   apply_to_field( const SrcFieldType& src,
                    DestFieldType& dest ) const
    {
-     dest <<= 0.0;
+     assert( psize_ != NULL );
 
-#   ifndef NDEBUG
-    const int nmax = dest.window_with_ghost().local_npts();
-#   endif
+     dest <<= 0.0;  // set to zero and accumulate contributions from each particle below.
 
-    ParticleField::const_iterator plociter = particleCoord.begin();
-    ParticleField::const_iterator psizeiter = particleSize.begin();
-    ParticleField::const_iterator isrc = src.begin();
-    for( ; plociter!=particleCoord.end(); ++plociter, ++isrc, ++psizeiter ){
-      //particle location is the position where particle center is located
-      //identify the location of the particle left boundary
-      double leftloc = *plociter-( *psizeiter / 2) ;
-      //identify the location of the particle right boundary
-      const double rightloc = *plociter+( 0.5 * *psizeiter );
-      //identify the cell index where particle left boundary located
-      int leftcellIx1 = int((*plociter-( 0.5 * *psizeiter )) / dx_) + 1;
-#     ifndef NDEBUG
-      if( (leftcellIx1 >= nmax) || (leftcellIx1<0) ){
-        throw std::runtime_error( "Particle is outside of the domain!" );
-      }
-#     endif
-      //loop through all cells affected by the particle and add the contribution
-      while(leftloc < rightloc){
-        double rb = coordVec_[leftcellIx1] + dx_/2;
-        if( rb > rightloc ) rb = rightloc;
-        dest[leftcellIx1] += *isrc * (rb-leftloc) / *psizeiter;
-        ++leftcellIx1;
-        leftloc = rb ;
-      }
-    }
+     // Note: here the outer loop is over particles and the inner loop is over
+     // cells to sum in the particle contributions.  This should be optimal for
+     // situations where there are a relatively small number of particles. In
+     // cases where many particles per cell present, it may be more effective
+     // to invert the loop structure.
+     ParticleField::const_iterator ipx    = px_ ? px_->begin() : src.begin();
+     ParticleField::const_iterator ipy    = py_ ? py_->begin() : src.begin();
+     ParticleField::const_iterator ipz    = pz_ ? pz_->begin() : src.begin();
+     ParticleField::const_iterator ipsize = psize_->begin();
+     ParticleField::const_iterator isrc   = src.begin();
+     const ParticleField::const_iterator ise = src.end();
+     for( ; isrc != ise; ++ipx, ++ipy, ++ipz, ++ipsize, ++isrc ){
+
+       // Identify the location of the particle boundary
+       const double pxlo = px_ ? *ipx - ( 0.5 * *ipsize ) : 0;
+       const double pylo = py_ ? *ipy - ( 0.5 * *ipsize ) : 0;
+       const double pzlo = pz_ ? *ipz - ( 0.5 * *ipsize ) : 0;
+
+       const double pxhi = px_ ? pxlo + *ipsize           : 0;
+       const double pyhi = py_ ? pylo + *ipsize           : 0;
+       const double pzhi = pz_ ? pzlo + *ipsize           : 0;
+
+       const size_t ixlo = ( pxlo - (xlo_) ) / dx_;
+       const size_t iylo = ( pylo - (ylo_) ) / dy_;
+       const size_t izlo = ( pzlo - (zlo_) ) / dz_;
+
+       const size_t ixhi = px_ ? ixlo + *ipsize/dx_+1 : ixlo+1;
+       const size_t iyhi = py_ ? iylo + *ipsize/dy_+1 : iylo+1;
+       const size_t izhi = pz_ ? izlo + *ipsize/dz_+1 : izlo+1;
+
+       // Distribute particle through the volume(s) it touches. Here we are
+       // doing a highly approximate job at approximating how much fractional
+       // particle volume is in each cell.
+#      ifndef NDEBUG
+       double sumterm=0.0;
+#      endif
+       const double rp = *ipsize * 0.5;
+       for( size_t k=izlo; k<izhi; ++k ){
+         const double zcm = zlo_ + k*dz_;
+         const double zcp = zcm + dz_;
+         const double zlo = std::max( zcm, *ipz - rp );
+         const double zhi = std::min( zcp, *ipz + rp );
+         const double zscal = pz_ ? (zhi - zlo) / *ipsize : 1.0;
+         for( size_t j=iylo; j<iyhi; ++j ){
+           const double ycm = ylo_ + j*dy_;
+           const double ycp = ycm + dy_;
+           const double ylo = std::max( ycm, *ipy - rp );
+           const double yhi = std::min( ycp, *ipy + rp );
+           const double yscal = py_ ? (yhi - ylo) / *ipsize : 1.0;
+           for( size_t i=ixlo; i<ixhi; ++i ){
+             const double xcm = xlo_ + i*dx_;
+             const double xcp = xcm + dx_;
+             const double xlo = std::max( xcm, *ipx - rp );
+             const double xhi = std::min( xcp, *ipx + rp );
+             const double xscal = px_ ? (xhi - xlo) / *ipsize : 1.0;
+             const double contribution = xscal * yscal * zscal;
+             dest(i,j,k) += *isrc * contribution;
+#            ifndef NDEBUG
+             sumterm += contribution;
+#            endif
+           }
+         }
+       }
+#      ifndef NDEBUG
+       if( std::abs(1.0-sumterm) >= 1e-10 ) std::cout << "sum: " << sumterm << std::endl;
+       assert( std::abs(1.0-sumterm) < 1e-10 );
+#      endif
+     } // particle loop
    }
 
  //==================================================================
 
   template< typename CellField >
   CellToParticle<CellField>::
-  CellToParticle( const CellField& meshCoord )
-    : coordVec_( meshCoord ),
-      dx_( meshCoord[1]-meshCoord[0] ),
-      xo_( meshCoord[0] )
+  CellToParticle( const double dx, const double xlo,
+                  const double dy, const double ylo,
+                  const double dz, const double zlo )
+  : dx_ ( dx<=0 ? 1.0 : dx ),
+    dy_ ( dy<=0 ? 1.0 : dy ),
+    dz_ ( dz<=0 ? 1.0 : dz ),
+    xlo_( dx<=0 ? 0.0 : xlo ),
+    ylo_( dy<=0 ? 0.0 : ylo ),
+    zlo_( dz<=0 ? 0.0 : zlo )
   {
-    const double TOL = 1e-6;
-
-    // note that this assumes 1D
-    bool isUniform = true;
-    typename CellField::const_iterator ix2=meshCoord.begin();
-    typename CellField::const_iterator ix = ix2;
-    ++ix2;
-    for( ; ix2!=meshCoord.end(); ++ix, ++ix2 ){
-      if( fabs( dx_ - (*ix2-*ix) )/dx_ > TOL ){
-        isUniform = false;
-      }
-    }
-    if( !isUniform )
-      throw std::runtime_error( "Particle operators require uniform mesh spacing" );
+    px_    = NULL;
+    py_    = NULL;
+    pz_    = NULL;
+    psize_ = NULL;
   }
 
   //------------------------------------------------------------------
@@ -205,35 +276,90 @@ namespace Particle{
   template<typename CellField>
   void
   CellToParticle<CellField>::
-  apply_to_field( const ParticleField& particleCoord,
-                  const ParticleField& particleSize,
-                  const SrcFieldType& src,
+  set_coordinate_information( const ParticleField *pxcoord,
+                              const ParticleField *pycoord,
+                              const ParticleField *pzcoord,
+                              const ParticleField *psize )
+  {
+    px_    = pxcoord;
+    py_    = pycoord;
+    pz_    = pzcoord;
+    psize_ = psize  ;
+  }
+
+  //------------------------------------------------------------------
+
+  template<typename CellField>
+  void
+  CellToParticle<CellField>::
+  apply_to_field( const SrcFieldType& src,
                   DestFieldType& dest ) const
   {
-#   ifndef NDEBUG
-    const int nmax = src.window_with_ghost().local_npts();
-#   endif
-    ParticleField::const_iterator plociter = particleCoord.begin();
-    ParticleField::const_iterator psizeiter = particleSize.begin();
-    ParticleField::iterator destiter = dest.begin();
-    for( ; plociter!=particleCoord.end(); ++plociter, ++destiter, ++psizeiter ){
-      double leftloc = *plociter-( *psizeiter / 2.0) ;
-      const double rightloc = *plociter+( *psizeiter / 2.0) ;
-      int leftcellIx1 = int((*plociter-( *psizeiter / 2.0)) / dx_) + 1;
+    ParticleField::const_iterator ipx    = px_ ? px_->begin() : dest.begin();
+    ParticleField::const_iterator ipy    = py_ ? py_->begin() : dest.begin();
+    ParticleField::const_iterator ipz    = pz_ ? pz_->begin() : dest.begin();
+    ParticleField::const_iterator ipsize = psize_->begin();
+    ParticleField::iterator        idst  = dest.begin();
+    const  ParticleField::iterator idste = dest.end();
+    for( ; idst != idste; ++ipx, ++ipy, ++ipz, ++ipsize, ++idst ){
+
+      *idst = 0.0;
+
+      // Identify the location of the particle boundary
+      const double pxlo = px_ ? *ipx - ( 0.5 * *ipsize ) : 0;
+      const double pylo = py_ ? *ipy - ( 0.5 * *ipsize ) : 0;
+      const double pzlo = pz_ ? *ipz - ( 0.5 * *ipsize ) : 0;
+
+      const double pxhi = px_ ? pxlo + *ipsize           : 0;
+      const double pyhi = py_ ? pylo + *ipsize           : 0;
+      const double pzhi = pz_ ? pzlo + *ipsize           : 0;
+
+      const size_t ixlo = ( pxlo - (xlo_-dx_/2) ) / dx_;
+      const size_t iylo = ( pylo - (ylo_-dy_/2) ) / dy_;
+      const size_t izlo = ( pzlo - (zlo_-dz_/2) ) / dz_;
+
+      const size_t ixhi = px_ ? ixlo + *ipsize/dx_+1 : ixlo+1;
+      const size_t iyhi = py_ ? iylo + *ipsize/dy_+1 : iylo+1;
+      const size_t izhi = pz_ ? izlo + *ipsize/dz_+1 : izlo+1;
+
+      // Distribute particle through the volume(s) it touches. Here we are
+      // doing a highly approximate job at approximating how much fractional
+      // particle volume is in each cell.
 #     ifndef NDEBUG
-      if( leftcellIx1 >= nmax || leftcellIx1<0 ){
-        throw std::runtime_error( "Particle is outside of the domain!" );
-      }
+      double sumterm=0.0;
 #     endif
-      *destiter = 0.0;
-      while(leftloc < rightloc){
-        double rb = coordVec_[leftcellIx1] + dx_/2.0;
-        if( rb > rightloc ) rb = rightloc;
-        *destiter += src[leftcellIx1] * (rb-leftloc) / *psizeiter;
-        ++leftcellIx1;
-        leftloc = rb ;
+      const double rp = *ipsize * 0.5;
+      for( size_t k=izlo; k<izhi; ++k ){
+        const double zcm = zlo_ + k*dz_;
+        const double zcp = zcm + dz_;
+        const double zlo = std::max( zcm, *ipz - rp );
+        const double zhi = std::min( zcp, *ipz + rp );
+        const double zscal = pz_ ? (zhi - zlo) / *ipsize : 1.0;
+        for( size_t j=iylo; j<iyhi; ++j ){
+          const double ycm = ylo_ + j*dy_;
+          const double ycp = ycm + dy_;
+          const double ylo = std::max( ycm, *ipy - rp );
+          const double yhi = std::min( ycp, *ipy + rp );
+          const double yscal = py_ ? (yhi - ylo) / *ipsize : 1.0;
+          for( size_t i=ixlo; i<ixhi; ++i ){
+            const double xcm = xlo_ + i*dx_;
+            const double xcp = xcm + dx_;
+            const double xlo = std::max( xcm, *ipx - rp );
+            const double xhi = std::min( xcp, *ipx + rp );
+            const double xscal = px_ ? (xhi - xlo) / *ipsize : 1.0;
+            const double contribution = xscal * yscal * zscal;
+            *idst += src(i,j,k) * contribution;
+#           ifndef NDEBUG
+            sumterm += contribution;
+#           endif
+          }
+        }
       }
-    }
+#     ifndef NDEBUG
+      if( std::abs(1.0-sumterm) >= 1e-10 ) std::cout << "sum: " << sumterm << std::endl;
+      assert( std::abs(1.0-sumterm) < 1e-10 );
+#     endif
+    } // particle loop
   }
 
 } // namespace Particle
