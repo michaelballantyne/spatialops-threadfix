@@ -571,17 +571,15 @@ namespace SpatialOps {
      * \brief Supports definition of new Nebo boundary condition.
      *
      * \tparam OperatorT   Operator to invert
-     * \tparam PhiFieldT   Type of field of phi, which this operator modifies
-     * \tparam GammaFieldT Type of fields in gamma, which this operator reads
      *
      * Note that Gamma is assumed to be the origin, for the stencil points and mask points.
      */
-    template<typename OperatorT, typename PhiFieldT, typename GammaFieldT>
+    template<typename OperatorT>
     struct NeboBoundaryConditionBuilder {
     public:
-      typedef OperatorT   OperatorType;   ///< type of operator to invert
-      typedef PhiFieldT   PhiFieldType;   ///< field type of phi, which this operator modifies
-      typedef GammaFieldT GammaFieldType; ///< type of fields in gamma, which this operator reads
+      typedef OperatorT                            OperatorType;   ///< type of operator to invert
+      typedef typename OperatorType::SrcFieldType  PhiFieldType;   ///< field type of phi, which this operator modifies
+      typedef typename OperatorType::DestFieldType GammaFieldType; ///< type of fields in gamma, which this operator reads
 
       typedef typename OperatorType::PointCollectionType PointCollection; ///< stencil point collection
 

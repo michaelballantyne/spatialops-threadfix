@@ -109,7 +109,7 @@ int main()
   build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
   typedef structured::BasicOpTypes<PhiFieldT>::GradX OpT;
   const OpT* const op = opdb.retrieve_operator<OpT>();
-  NeboBoundaryConditionBuilder<OpT, PhiFieldT, GammaFieldT> BC(*op);
+  NeboBoundaryConditionBuilder<OpT> BC(*op);
 
   //make the minus mask:
   std::vector<IntVec> minusSet;
