@@ -106,10 +106,9 @@ public:
    *
    *  @param pointer to wrap
    *  @param do we build it
-   *  @param where the memory is allocated
    *  @param device index for memory lookup
    */
-  SpatFldPtr(FieldT* const field, const bool builtFromStore, const MemoryType mtype, const unsigned short int deviceIndex);
+  SpatFldPtr(FieldT* const field, const bool builtFromStore, const short int deviceIndex);
 
   ~SpatFldPtr();
 
@@ -163,8 +162,7 @@ private:
   FieldT* f_;
   int* count_;
   bool builtFromStore_;
-  unsigned short deviceIndex_;
-  MemoryType memType_;
+  short int deviceIndex_;
 
 #ifdef ENABLE_THREADS
   /**
@@ -220,8 +218,7 @@ public:
    *  @param w  A memory window describing the desired field dimensions
    *  @param bc the information on boundaries
    *  @param ghost ghost information
-   *  @param mtype where this field should be located
-   *  @param deviceIndex for multiple GPUs, which one to locate the field on
+   *  @param deviceIndex for CPU, multiple GPUs, which one to locate the field on
    *
    *  Note that you should not dereference the SpatFldPtr object to
    *  store a SpatialField reference.  Doing so can cause memory
@@ -232,8 +229,7 @@ public:
   get_from_window( const structured::MemoryWindow& window,
                    const structured::BoundaryCellInfo& bc,
                    const structured::GhostData& ghost,
-                   const MemoryType mtype = LOCAL_RAM,
-                   const unsigned short int deviceIndex = 0 );
+                   const short int deviceIndex = CPU_INDEX );
 
   /**
    *  @brief Obtain a temporary field.
@@ -247,14 +243,11 @@ public:
   template< typename FieldT, typename ProtoT >
   inline static SpatFldPtr<FieldT>
   get( const ProtoT& f,
-       MemoryType mtype = UNKNOWN,
        short int deviceIndex = -9999 )
   {
     using namespace structured;
 
     if( deviceIndex == -9999 ) deviceIndex = f.device_index();
-
-    if( mtype == UNKNOWN ) mtype = f.memory_device_type();
 
     const MemoryWindow& ws = f.window_with_ghost();
     GhostData gs = f.get_ghost_data();
@@ -266,7 +259,7 @@ public:
                           ws.offset(),
                           ws.extent()   + inc );
 
-    return get_from_window<FieldT>(w,bc,gs,mtype,deviceIndex);
+    return get_from_window<FieldT>(w,bc,gs,deviceIndex);
   }
 
 
@@ -280,7 +273,7 @@ public:
    *  objects.  Calling it anywhere else can result in memory corruption.
    */
   template<typename FieldT>
-  inline static void restore_field(const MemoryType mtype, FieldT& f);
+  inline static void restore_field(const short int deviceIndex, FieldT& f);
 
 private:
 
@@ -308,8 +301,7 @@ SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const f )
   : f_(f),
     count_(new int),
     builtFromStore_(false),
-    deviceIndex_( ( f != NULL ? f->device_index() : 0 ) ),
-    memType_( ( f != NULL ? f->memory_device_type() : LOCAL_RAM ) )
+    deviceIndex_( ( f != NULL ? f->device_index() : CPU_INDEX ) )
 {
   *count_ = 1;
 }
@@ -321,8 +313,7 @@ SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f, const bool builtFromStore)
   : f_(f),
     count_(new int),
     builtFromStore_(builtFromStore),
-    deviceIndex_( ( f != NULL ? f->device_index() : 0 ) ),
-    memType_( ( f != NULL ? f->memory_device_type() : LOCAL_RAM ) )
+    deviceIndex_( ( f != NULL ? f->device_index() : CPU_INDEX ) )
 {
   *count_ = 1;
 }
@@ -334,8 +325,7 @@ SpatFldPtr<FieldT>::SpatFldPtr(const SpatFldPtr<FieldT>& p)
   : f_(p.f_),
     count_(p.count_),
     builtFromStore_( p.builtFromStore_ ),
-    deviceIndex_( p.deviceIndex_),
-    memType_( p.memType_ )
+    deviceIndex_( p.deviceIndex_)
 {
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
@@ -350,8 +340,7 @@ SpatFldPtr<FieldT>::SpatFldPtr()
   : f_( NULL ),
     count_( NULL ),
     builtFromStore_( false ),
-    deviceIndex_( 0 ),
-    memType_( LOCAL_RAM )
+    deviceIndex_( CPU_INDEX )
 {}
 //------------------------------------------------------------------
 
@@ -369,7 +358,7 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
     // kill the old one if needed
     if (*count_ == 0) {
       if (builtFromStore_) {
-	SpatialFieldStore::restore_field(memType_, *f_);
+	SpatialFieldStore::restore_field(deviceIndex_, *f_);
       }
       delete f_;
       delete count_;
@@ -381,7 +370,6 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
   f_ = p.f_;
   count_ = p.count_;
   builtFromStore_ = p.builtFromStore_;
-  memType_ = p.memType_;
   deviceIndex_ = p.deviceIndex_;
   // increment copy count
   ++(*count_);
@@ -402,7 +390,7 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
     // kill the old one if needed
     if (*count_ == 0) {
       if (builtFromStore_) {
-	SpatialFieldStore::restore_field(memType_, *f_);
+	SpatialFieldStore::restore_field(deviceIndex_, *f_);
       }
 
       delete f_;
@@ -416,7 +404,6 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
   count_ = new int;
   *count_ = 1;
   builtFromStore_ = false;
-  memType_ = f->memory_device_type();
   deviceIndex_ = f->device_index();
 
   return *this;
@@ -436,7 +423,7 @@ void SpatFldPtr<FieldT>::detach() {
     if( *count_ == 0 ){
       // kill the old one if needed
       if( builtFromStore_ ){
-	SpatialFieldStore::restore_field(memType_, *f_);
+	SpatialFieldStore::restore_field(deviceIndex_, *f_);
       }
       delete count_; count_ = NULL;
       delete f_;     f_     = NULL;
@@ -464,8 +451,7 @@ SpatialFieldStore::
 get_from_window( const structured::MemoryWindow& window,
                  const structured::BoundaryCellInfo& bc,
                  const structured::GhostData& ghost,
-                 const MemoryType mtype,
-                 const unsigned short int deviceIndex )
+                 const short int deviceIndex )
 {
   typedef typename FieldT::value_type ValT;
 # ifdef ENABLE_THREADS
@@ -481,47 +467,53 @@ get_from_window( const structured::MemoryWindow& window,
     assert(     mw.sanity_check() );
 #   endif
 
-  switch (mtype) {
-  case LOCAL_RAM: { // Allocate from a store
-    ValT* fnew = structured::Pool<ValT>::self().get(mtype,npts);
-#   ifndef NDEBUG  // only zero the field for debug runs.
-    ValT* iftmp = fnew;
-    for( size_t i=0; i<npts; ++i, ++iftmp )  *iftmp = 0.0;
-#   endif
-    return SpatFldPtr<FieldT>( new FieldT(mw,bc,ghost,fnew,structured::ExternalStorage), true );
-  }
+    // Allocate from a store
+    if( deviceIndex == CPU_INDEX ) {
+      ValT* fnew = structured::Pool<ValT>::self().get(deviceIndex,npts);
+      return SpatFldPtr<FieldT>( new FieldT( mw,bc,ghost,fnew,
+                                             structured::ExternalStorage),
+                                 true );
+    }
 # ifdef ENABLE_CUDA
-  case EXTERNAL_CUDA_GPU: {
-    ValT* fnew = structured::Pool<ValT>::self().get(mtype, npts);
-    return SpatFldPtr<FieldT>( new FieldT( mw, bc, ghost, fnew,
-                                           structured::ExternalStorage,
-                                           mtype, deviceIndex ),
-                               true );
-  }
+    else if( IS_GPU_INDEX(deviceIndex) ){
+      ValT* fnew = structured::Pool<ValT>::self().get(deviceIndex, npts);
+      return SpatFldPtr<FieldT>( new FieldT( mw, bc, ghost, fnew,
+                                             structured::ExternalStorage,
+                                             deviceIndex ),
+                                 true );
+    }
 # endif
-  default: {
-    std::ostringstream msg;
-    msg << "Attempt to create Spatial Field Pointer wrapping ( "
-        << DeviceTypeTools::get_memory_type_description(mtype)
-    << " ) field type, without supporting libraries included\n";
-    msg << "\t " << __FILE__ << " : " << __LINE__;
-    throw(std::runtime_error(msg.str()));
-  }
-  }
+    else {
+      std::ostringstream msg;
+      msg << "Attempt to create Spatial Field Pointer wrapping ( "
+          << DeviceTypeTools::get_memory_type_description(deviceIndex)
+          << " ) field type, without supporting libraries included\n";
+      msg << "\t " << __FILE__ << " : " << __LINE__;
+      throw(std::runtime_error(msg.str()));
+    }
 }
 
 //------------------------------------------------------------------
 
 template<typename FieldT>
 inline
-void SpatialFieldStore::restore_field( const MemoryType mtype, FieldT& field )
+void SpatialFieldStore::restore_field( const short int deviceIndex, FieldT& field )
 {
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
   typedef typename FieldT::value_type ValT;
-  ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.memory_device_type(), field.device_index()));
-  structured::Pool<ValT>::self().put( mtype, values );
+  ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.device_index()));
+# ifndef NDEBUG
+  if( !IS_VALID_INDEX(deviceIndex) ){
+    std::ostringstream msg;
+    msg << "Invalid device Index passed to SpatialFieldStore::restore_field() : "
+        << deviceIndex <<std::endl
+        << " \t - " << __FILE__ << " : " << __LINE__ << std::endl;
+    throw( std::runtime_error(msg.str()));
+  }
+# endif
+  structured::Pool<ValT>::self().put( deviceIndex, values );
 }
 
 } // namespace SpatialOps

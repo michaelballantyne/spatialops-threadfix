@@ -52,8 +52,8 @@ class Pool{
  public:
 
   static Pool& self();
-  T* get( const MemoryType mtype, const size_t n );
-  void put( const MemoryType mtype, T* );
+  T* get( const short int deviceLocation, const size_t n );
+  void put( const short int deviceLocation, T* );
   size_t active() const;
   size_t total() const{ return cpuhighWater_; }
   const unsigned short int deviceIndex_;

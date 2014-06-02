@@ -82,8 +82,8 @@ Pool<T>::~Pool()
   for( typename FQSizeMap::iterator i=gpufqm_.begin(); i!=gpufqm_.end(); ++i ){
     FieldQueue& fq = i->second;
     while( !fq.empty() ){
-            ema::cuda::CUDADeviceInterface::self().release( fq.top(), deviceIndex_ );
-            fq.pop();
+      ema::cuda::CUDADeviceInterface::self().release( fq.top(), deviceIndex_ );
+      fq.pop();
     }
   }
 # endif
@@ -112,27 +112,24 @@ Pool<T>::self()
 
 template< typename T >
 T*
-Pool<T>::get( const MemoryType mtype, const size_t _n )
+Pool<T>::get( const short int deviceLocation, const size_t _n )
 {
   assert( !destroyed_ );
 
   if( pad_==0 ) pad_ = _n/10;
   size_t n = _n+pad_;
 
-  switch(mtype) {
-  case LOCAL_RAM: {
+  if( deviceLocation == CPU_INDEX ){
     T* field = NULL;
     typename FQSizeMap::iterator ifq = cpufqm_.lower_bound( n );
-    if( ifq == cpufqm_.end() ){
-      ifq = cpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
-    }
-    else{
-      n = ifq->first;
-    }
+    if(ifq == cpufqm_.end()) ifq = cpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
+    else                     n = ifq->first;
+
     FieldQueue& fq = ifq->second;
     if( fq.empty() ){
       ++cpuhighWater_;
       try{
+
 #ifdef ENABLE_CUDA
         /* Pinned Memory Mode
          * As the Pinned memory allocation and deallocation has higher overhead
@@ -155,7 +152,7 @@ Pool<T>::get( const MemoryType mtype, const size_t _n )
 #endif
       }
       catch(std::runtime_error& e){
-        std::cout << "Error occurred while allocating memory on LOCAL_RAM" << std::endl
+        std::cout << "Error occurred while allocating memory on CPU_INDEX" << std::endl
                   << e.what() << std::endl
                   << __FILE__ << " : " << __LINE__ << std::endl;
       }
@@ -167,20 +164,17 @@ Pool<T>::get( const MemoryType mtype, const size_t _n )
     return field;
   }
 # ifdef ENABLE_CUDA
-  case EXTERNAL_CUDA_GPU: {
+  else if( IS_GPU_INDEX(deviceLocation) ){
     T* field = NULL;
     typename FQSizeMap::iterator ifq = gpufqm_.lower_bound( n );
-    if( ifq == gpufqm_.end() ){
-      ifq = gpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
-    }
-    else{
-      n = ifq->first;
-    }
+    if(ifq == gpufqm_.end()) ifq = gpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
+    else                     n = ifq->first;
+
     FieldQueue& fq = ifq->second;
     if( fq.empty() ) {
       ++gpuhighWater_;
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      field = (T*)CDI.get_raw_pointer( n * sizeof(T), deviceIndex_ );
+      field = (T*)CDI.get_raw_pointer( n*sizeof(T), deviceLocation );
       fsm_[field] = n;
     }
     else{
@@ -189,20 +183,19 @@ Pool<T>::get( const MemoryType mtype, const size_t _n )
     return field;
   }
 # endif
-  default: {
+  else{
     std::ostringstream msg;
       msg << "Attempt to get unsupported memory pool ( "
-          << DeviceTypeTools::get_memory_type_description(mtype)
+          << DeviceTypeTools::get_memory_type_description(deviceLocation)
           << " ) \n";
       msg << "\t " << __FILE__ << " : " << __LINE__;
       throw(std::runtime_error(msg.str()));
   }
-  } //switch
 }
 
 template< typename T >
 void
-Pool<T>::put( const MemoryType mtype, T* t )
+Pool<T>::put( const short int deviceLocation, T* t )
 {
   // in some cases (notably in the LBMS code), singleton destruction order
   // causes the pool to be prematurely deleted.  Then subsequent calls here
@@ -211,32 +204,28 @@ Pool<T>::put( const MemoryType mtype, T* t )
   // leak memory on shut-down in those cases.
   if( destroyed_ ) return;
 
-  switch(mtype) {
-  case LOCAL_RAM: {
+  if( deviceLocation == CPU_INDEX ){
     const size_t n = fsm_[t];
     const typename FQSizeMap::iterator ifq = cpufqm_.lower_bound( n );
-    assert( ifq != cpufqm_.end() );
+      assert( ifq != cpufqm_.end() );
     ifq->second.push(t);
-    break;
   }
 # ifdef ENABLE_CUDA
-  case EXTERNAL_CUDA_GPU: {
+  else if( IS_GPU_INDEX(deviceLocation) ) {
     const size_t n = fsm_[t];
     const typename FQSizeMap::iterator ifq = gpufqm_.lower_bound( n );
     assert( ifq != gpufqm_.end() );
     ifq->second.push(t);
-    break;
   }
 # endif
-  default: {
+  else {
     std::ostringstream msg;
         msg << "Error occurred while restoring memory back to memory pool ( "
-            << DeviceTypeTools::get_memory_type_description(mtype)
+            << DeviceTypeTools::get_memory_type_description(deviceLocation)
             << " ) \n";
         msg << "\t " << __FILE__ << " : " << __LINE__;
         throw(std::runtime_error(msg.str()));
   }
-  }//switch
 }
 
 template<typename T>

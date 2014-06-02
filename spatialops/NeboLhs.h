@@ -66,10 +66,10 @@
 
           template<typename RhsType>
            inline void assign(bool const useGhost, RhsType rhs) {
-              field_.reset_valid_ghosts(calculate_actual_ghost(useGhost,
-                                                               field_.get_ghost_data(),
-                                                               field_.boundary_info(),
-                                                               rhs.possible_ghosts()));
+//              field_.reset_valid_ghosts(calculate_actual_ghost(useGhost,
+//                                                               field_.get_ghost_data(),
+//                                                               field_.boundary_info(),
+//                                                               rhs.possible_ghosts()));
 
               structured::GhostData extents = calculate_limits(useGhost,
                                                                field_.window_with_ghost(),
@@ -401,11 +401,11 @@
               }
 
              inline bool cpu_ready(void) const {
-                return LOCAL_RAM == field_.memory_device_type();
+                return IS_CPU_INDEX(field_.device_index());
              }
 
              inline bool gpu_ready(void) const {
-                return EXTERNAL_CUDA_GPU == field_.memory_device_type();
+               return IS_GPU_INDEX(field_.device_index());
              }
 
              inline int gpu_device_index(void) const {
@@ -431,24 +431,24 @@
 
                     rhs.gpu_prep(0);
 
-                    if(LOCAL_RAM == field_.memory_device_type()) {
+                    if(CPU_INDEX == field_.device_index()) {
                        FieldType gpu_field(field_.window_with_ghost(),
                                            field_.boundary_info(),
                                            field_.get_valid_ghost_data(),
                                            NULL,
                                            structured::InternalStorage,
-                                           EXTERNAL_CUDA_GPU,
-                                           0);
+                                           GPU_INDEX);
 
                        NeboField<Initial, FieldType> gpu_lhs(gpu_field);
 
                        ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
                        CUDADeviceInterface::self();
 
-                       CDI.memcpy_to(gpu_field.field_values(EXTERNAL_CUDA_GPU, 0),
+                       CDI.memcpy_to(gpu_field.field_values(GPU_INDEX),
                                      field_.field_values(),
                                      field_.allocated_bytes(),
-                                     0);
+                                     0,
+                                     field_.get_stream());
 
                        gpu_lhs.template gpu_assign<RhsType>(rhs,
                                                             xLow,
@@ -459,10 +459,10 @@
                                                             zHigh);
 
                        CDI.memcpy_from(field_.field_values(),
-                                       gpu_field.field_values(EXTERNAL_CUDA_GPU,
-                                                              0),
+                                       gpu_field.field_values(GPU_INDEX),
                                        field_.allocated_bytes(),
-                                       0);
+                                       0,
+                                       field_.get_stream());
                     }
                     else {
                        gpu_assign<RhsType>(rhs,
@@ -539,7 +539,7 @@
           NeboField(FieldType f)
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
-            base_(f.field_values(LOCAL_RAM, 0) + (f.window_with_ghost().offset(0)
+            base_(f.field_values(CPU_INDEX) + (f.window_with_ghost().offset(0)
                                                   + f.get_valid_ghost_data().get_minus(0))
                   + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                            + f.get_valid_ghost_data().get_minus(1))
@@ -585,7 +585,7 @@
              typename field_type::value_type typedef value_type;
 
              NeboField(FieldType f)
-             : base_(f.field_values(EXTERNAL_CUDA_GPU, f.device_index()) + (f.window_with_ghost().offset(0)
+             : base_(f.field_values(GPU_INDEX) + (f.window_with_ghost().offset(0)
                                                                             + f.get_valid_ghost_data().get_minus(0))
                      + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                               + f.get_valid_ghost_data().get_minus(1))

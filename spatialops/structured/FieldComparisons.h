@@ -152,7 +152,7 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error, const double 
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.memory_device_type()) << std::endl;
+          f1.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   if(temp1)
@@ -170,7 +170,7 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error, const double 
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f2.memory_device_type()) << std::endl;
+          f2.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   } //memory leak if runtime error thrown
 
@@ -264,7 +264,7 @@ bool field_equal_abs(const FieldT& f1, const FieldT& f2, double error=0.0)
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.memory_device_type()) << std::endl;
+          f1.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   if(temp1)
@@ -281,7 +281,7 @@ bool field_equal_abs(const FieldT& f1, const FieldT& f2, double error=0.0)
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f2.memory_device_type()) << std::endl;
+          f2.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   } //memory leak if runtime error thrown
 
@@ -378,7 +378,7 @@ bool field_equal_ulp(const FieldT& f1, const FieldT& f2, const unsigned int ulps
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.memory_device_type()) << std::endl;
+          f1.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   if(temp1)
@@ -395,7 +395,7 @@ bool field_equal_ulp(const FieldT& f1, const FieldT& f2, const unsigned int ulps
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f2.memory_device_type()) << std::endl;
+          f2.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   } //memory leak if runtime error thrown
 
@@ -537,7 +537,7 @@ bool field_equal(const double d, const FieldT& f1, double error, const double er
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.memory_device_type()) << std::endl;
+          f1.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   if(temp1)
@@ -624,7 +624,7 @@ bool field_equal_abs(const double d, const FieldT& f1, double error=0.0)
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.memory_device_type()) << std::endl;
+          f1.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   if(temp1)
@@ -714,7 +714,7 @@ bool field_equal_ulp(const double d, const FieldT& f1, const unsigned int ulps)
     msg << "\t - "
       << "Attempted to compare with a field in "
       << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.memory_device_type()) << std::endl;
+          f1.device_index()) << std::endl;
     throw(std::runtime_error(msg.str()));
   }
   if(temp1)
@@ -790,11 +790,11 @@ class FieldComparisonHelper
         FieldT** const localPtr)
     {
       //we can get the iterator directly if on local ram
-      if(field.memory_device_type() == LOCAL_RAM) {
+      if(field.device_index() == CPU_INDEX) {
         return new typename FieldT::const_iterator(field.begin());
       }
       //we need to transfer the field to local ram to iterate
-      else if (field.memory_device_type() == EXTERNAL_CUDA_GPU) {
+      else if (IS_GPU_INDEX(field.device_index())) {
         *localPtr = new FieldT(window, bcinfo, ghost, NULL, InternalStorage);
         **localPtr = field;
 
