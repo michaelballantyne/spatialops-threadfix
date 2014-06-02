@@ -263,11 +263,10 @@ namespace structured{
     unsigned int * bitValues_;		///< Values associated with this mask in the context of LOCAL_RAM
     unsigned int * bitValuesExtDevice_; ///< External mask pointer ( This pointer will only be valid on the device it was created )
     const bool builtMask_;		///< Indicates whether or not we created this mask ( we could just be wrapping memory )
+    bool hasgpuConsumer_;               ///< Indicates whether a GPU consumer exists or not.
 
-    const MemoryType memType_; 		///< Indicates the type of device on which this mask is allocated
-    const unsigned short deviceIndex_;        ///< Indicates which device is this mask stored on
+    const short int deviceIndex_;       ///< Indicates which device is this mask stored on
 
-    bool builtCpuConsumer_;             ///< Indicates that bitValues_ is a consumer and was built by this mask
 
     //Note: Presently this is assumed to be a collection of GPU based < index, pointer pairs >;
     //      which is not as general is it likely should be, but GPUs are currently the only external
@@ -277,24 +276,18 @@ namespace structured{
 
     inline void reset_values(void)
     {
-      switch ( memType_ ) {
-      case LOCAL_RAM:
+      if( deviceIndex_ == CPU_INDEX ){
         for( unsigned int long i = 0; i < size_; ++i )
           bitValues_[i] = 0;
-        break;
-#     ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU:
-        ema::cuda::CUDADeviceInterface::self().memset(bitValuesExtDevice_, 0, bytes_, deviceIndex_);
-        break;
-#     endif
-      default:
+      }
+      else{
         std::ostringstream msg;
         msg << "Reset values called for unsupported field type ( "
-            << DeviceTypeTools::get_memory_type_description(memType_) << " )"
+            << DeviceTypeTools::get_memory_type_description(deviceIndex_) << " )"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
-      };
-    };
+      }
+    }
 
     inline int find_position(const IntVec & point) const
     {
@@ -333,7 +326,7 @@ namespace structured{
       } else {
         std::ostringstream msg;
         msg << "Unsupported attempt to add points to a mask of type ( "
-            << DeviceTypeTools::get_memory_type_description(memType_)
+            << DeviceTypeTools::get_memory_type_description(deviceIndex_)
             << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       };
@@ -352,53 +345,22 @@ namespace structured{
      *  \param points - the points in the mask
      *  \param window - the window to build
      *  \param interiorWindow - the interior window
-     *  \param consumerMemoryType - where this mask lives (e.g., CPU, GPU)
-     *  \param devIdx - the identifier for the GPU/accelerator if the mask lives there.
      */
     BitField(const std::vector<IntVec> & points,
              const MemoryWindow & window,
-             const GhostData & ghosts,
-             const MemoryType mtype,
-             const unsigned short int devIdx)
+             const GhostData & ghosts)
       : maskWindow_(window),
         ghosts_(ghosts),
         size_(NEBO_ROUND_TO_INT(window.glob_npts())),
         bytes_(NEBO_ROUND_TO_INT(window.glob_npts()) * NEBO_INT_BYTE),
-        bitValues_(mtype == LOCAL_RAM ?
-                   Pool<unsigned int>::self().get(LOCAL_RAM, size_) :
-                   NULL),
-        bitValuesExtDevice_(mtype == EXTERNAL_CUDA_GPU ?
-                            Pool<unsigned int>::self().get(EXTERNAL_CUDA_GPU, size_) :
-                            NULL),
+        bitValues_(Pool<unsigned int>::self().get(CPU_INDEX, size_)),
         builtMask_(true),
-        memType_(mtype),
-        deviceIndex_(devIdx),
-        builtCpuConsumer_(false)
+        hasgpuConsumer_(false),
+        deviceIndex_(CPU_INDEX)
     {
       reset_values();
-      switch ( mtype ) {
-      case LOCAL_RAM:
-        add_points(points);
-        break;
-#     ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU:
-        if( !points.empty() ) {
-          std::ostringstream msg;
-          msg << "Unsupported attempt to add points to a mask of type ( "
-              << DeviceTypeTools::get_memory_type_description(memType_)
-              << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
-        break;
-#     endif
-      default:
-        std::ostringstream msg;
-        msg << "Unsupported attempt to create mask of type ( "
-            << DeviceTypeTools::get_memory_type_description(memType_)
-            << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-        throw(std::runtime_error(msg.str()));
-      };
-    };
+      add_points(points);
+    }
 
     /**
      *  \brief Shallow copy constructor.  This results in two masks
@@ -410,11 +372,9 @@ namespace structured{
         size_(other.size_),
         bytes_(other.bytes_),
         bitValues_(other.bitValues_),
-        bitValuesExtDevice_(other.bitValuesExtDevice_),
         builtMask_(false),
-        memType_(other.memType_),
+        hasgpuConsumer_(false),
         deviceIndex_(other.deviceIndex_),
-        builtCpuConsumer_(false),
         consumerBitValues_(other.consumerBitValues_)
     {};
 
@@ -422,40 +382,32 @@ namespace structured{
     {
 #     ifdef ENABLE_CUDA
       //Release any masks allocated for consumer use
-      for( ConsumerMap::iterator i = myConsumerBitValues_.begin(); i != myConsumerBitValues_.end(); ++i ){
-        Pool<unsigned int>::self().put( EXTERNAL_CUDA_GPU, i->second );
+      if( hasgpuConsumer_ ){
+        for( ConsumerMap::iterator i = myConsumerBitValues_.begin(); i != myConsumerBitValues_.end(); ++i ){
+          Pool<unsigned int>::self().put( GPU_INDEX, i->second );
+        }
       }
-
       consumerBitValues_.clear();
       myConsumerBitValues_.clear();
-
-      if ( builtCpuConsumer_ ) {
-        Pool<unsigned int>::self().put( LOCAL_RAM, bitValues_ );
-      }
+      hasgpuConsumer_ = false;
 #     endif
 
-      if ( builtMask_ ) {
-        switch ( memType_ ) {
-        case LOCAL_RAM:
-          Pool<unsigned int>::self().put( LOCAL_RAM, bitValues_ );
+      if ( builtMask_ && !hasgpuConsumer_ ) {
+        if( deviceIndex_ == CPU_INDEX ){
+          Pool<unsigned int>::self().put( CPU_INDEX, bitValues_ );
           bitValues_ = NULL;
-          break;
-#       ifdef ENABLE_CUDA
-        case EXTERNAL_CUDA_GPU:
-          Pool<unsigned int>::self().put( LOCAL_RAM, bitValuesExtDevice_ );
-          bitValuesExtDevice_ = NULL;
-          break;
-#       endif
-        default:
+        }
+        else{
           std::ostringstream msg;
           msg << "Attempt to release ( "
-              << DeviceTypeTools::get_memory_type_description(memType_)
+              << DeviceTypeTools::get_memory_type_description(deviceIndex_)
               << " ) mask type, without supporting libraries -- this likely indicates a serious problem in mask initialization\n"
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw( std::runtime_error( msg.str() ) );
         }
       }
     };
+
 
     /**
      *  \brief Given an index in this mask, return whether or not index is a mask point.
@@ -473,7 +425,7 @@ namespace structured{
       } else {
         std::ostringstream msg;
         msg << "Unsupported attempt to add points to a mask of type ( "
-            << DeviceTypeTools::get_memory_type_description(memType_)
+            << DeviceTypeTools::get_memory_type_description(deviceIndex_)
             << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       };
@@ -487,7 +439,7 @@ namespace structured{
       if( bitValues_ == NULL) {
         std::ostringstream msg;
         msg << "Mask type ( "
-            << DeviceTypeTools::get_memory_type_description(memType_) << " ) ,"
+            << DeviceTypeTools::get_memory_type_description(deviceIndex_) << " ) ,"
             << " does not support direct iteration, and has no local consumer mask allocated.\n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
@@ -505,139 +457,54 @@ namespace structured{
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "Unsupported request for const_iterator to mask type ( "
-            << DeviceTypeTools::get_memory_type_description(memType_) << " )"
+            << DeviceTypeTools::get_memory_type_description(deviceIndex_) << " )"
             << "\t - No consumer allocated." << std::endl;
         throw std::runtime_error( msg.str() );
       }
     }
 
-    inline void add_consumer(MemoryType consumerMemoryType,
-                             const unsigned short int consumerDeviceIndex)
+    inline void add_consumer( const short int consumerDeviceIndex )
     {
-      //Check for local allocation
-      if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ ) {
+      // CPU Masks are always exist and hence create only GPU Masks.
+      if( consumerDeviceIndex == CPU_INDEX )  return;
+# ifdef ENABLE_CUDA
+      else if( IS_GPU_INDEX(consumerDeviceIndex) ){
+        //CPU Mask needs to be available on GPU
+        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+
+        //Check to see if GPU mask memory exists
+        if(consumerBitValues_.find(consumerDeviceIndex) == consumerBitValues_.end()) {
+          consumerBitValues_[consumerDeviceIndex] = Pool<unsigned int>::self().get(consumerDeviceIndex, size_);
+          myConsumerBitValues_[consumerDeviceIndex] = consumerBitValues_[consumerDeviceIndex];
+        };
+
+        CDI.memcpy_to((void*)consumerBitValues_[consumerDeviceIndex], bitValues_, bytes_, consumerDeviceIndex);
+        hasgpuConsumer_ = true;
         return;
       }
-
-      //Take action based on where the mask must be available and where it currently is
-      switch( consumerMemoryType ){
-      case LOCAL_RAM:
-        switch( memType_ ) {
-#       ifdef ENABLE_CUDA
-        case LOCAL_RAM:
-          // The only way we should get here is if for some reason a mask was allocated as
-          // LOCAL_RAM with a non-zero device index.
-          // This shouldn't happen given how we define LOCAL_RAM at present, but I don't know if
-          // we should consider it an error.
-          break;
-
-        case EXTERNAL_CUDA_GPU:
-          // GPU mask that needs to be available on the CPU
-          if( bitValues_ == NULL ) {
-            builtCpuConsumer_ = true;
-            bitValues_ = Pool<unsigned int>::self().get(consumerMemoryType, size_);
-          }
-          {
-            ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-            CDI.memcpy_from(bitValues_, bitValuesExtDevice_, bytes_, deviceIndex_);
-          }
-          break;
-#         endif
-
-        default:
-          std::ostringstream msg;
-          msg << "Failed call to add_consumer on Spatial Mask, unknown source device type\n"
-              << "This error indicates a serious problem in how this mask was originally created\n"
-              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
-        break;
-
-#     ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU:
-        switch( memType_ ) {
-        case LOCAL_RAM: {
-          ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-
-          //Check to see if mask memory exists
-          if(consumerBitValues_.find(consumerDeviceIndex) == consumerBitValues_.end()) {
-            consumerBitValues_[consumerDeviceIndex] = Pool<unsigned int>::self().get(consumerMemoryType, size_);
-            myConsumerBitValues_[consumerDeviceIndex] = consumerBitValues_[consumerDeviceIndex];
-          };
-
-          CDI.memcpy_to((void*)consumerBitValues_[consumerDeviceIndex], bitValues_, bytes_, consumerDeviceIndex);
-          break;
-        }
-
-        case EXTERNAL_CUDA_GPU: {
-          //GPU Mask needs to be available on another GPU
-          ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-
-          //Check to see if the mask exists
-          if(consumerBitValues_.find(consumerDeviceIndex) == consumerBitValues_.end()) {
-            consumerBitValues_[consumerDeviceIndex] = Pool<unsigned int>::self().get(consumerMemoryType, size_);
-            myConsumerBitValues_[consumerDeviceIndex] = consumerBitValues_[consumerDeviceIndex];
-          };
-
-          CDI.memcpy_peer((void*)consumerBitValues_[consumerDeviceIndex],
-                          consumerDeviceIndex,
-                          bitValuesExtDevice_,
-                          deviceIndex_,
-                          bytes_);
-          break;
-        }
-
-        default:
-          std::ostringstream msg;
-          msg << "Failed call to add_consumer on Spatial Mask, unknown source device type\n"
-              << "This error indicates a serious problem in how this mask was originally created\n"
-              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
-        break;
-#       endif
-
-      default:
+# endif
+      else{
         std::ostringstream msg;
-        msg << "Failed call to add_consumer on Spatial Mask, unknown destination device type\n"
+        msg << "Failed call to add_consumer on Spatial Mask, unknown destination device type : " << consumerDeviceIndex << std::endl
             << "Ensure that you are compiling spatial ops with the proper end device support\n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
     };
 
-    inline bool find_consumer(MemoryType consumerMemoryType,
-                              const unsigned short int consumerDeviceIndex) const
+    inline bool find_consumer(const short int consumerDeviceIndex) const
     {
       //Check for local allocation
-      if( consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_ )
-        return true;
-
-      //Take action based on where the mask must be available and where it currently is
-      switch( consumerMemoryType ){
-      case LOCAL_RAM:
-        switch( memType_ ) {
-#       ifdef ENABLE_CUDA
-        case EXTERNAL_CUDA_GPU:
-          // GPU mask that needs to be available on the CPU
-          return bitValues_ != NULL;
-#       endif
-
-        default:
-          std::ostringstream msg;
-          msg << "Failed call to find_consumer on SpatialMask, unknown source device type\n"
-              << "This error indicates a serious problem in how this mask was originally created\n"
-              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
-#     ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU:
+      if( consumerDeviceIndex == CPU_INDEX ) return true;
+# ifdef ENABLE_CUDA
+      else if( IS_GPU_INDEX(consumerDeviceIndex) ){
         return consumerBitValues_.find( consumerDeviceIndex ) != consumerBitValues_.end();
-#     endif
-
-      default:
+      }
+# endif
+      else
+      {
         std::ostringstream msg;
-        msg << "Failed call to find_consumer on SpatialMask, unknown destination device type\n"
+        msg << "Failed call to find_consumer on SpatialMask, unknown destination device type : " << consumerDeviceIndex << std::endl
             << "Ensure that you are compiling spatial ops with the proper end device support\n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
@@ -646,83 +513,48 @@ namespace structured{
 
     inline bool has_consumers()
     {
-      const unsigned short int consumerDeviceIndex = 0;
-
-      //Take action based on where the mask must be available and where it currently is
-      if (memType_ == LOCAL_RAM)
-        return consumerBitValues_.find( consumerDeviceIndex ) != consumerBitValues_.end();
-      else if (memType_ == EXTERNAL_CUDA_GPU)
-        return bitValues_ != NULL;
-      else {
-        std::ostringstream msg;
-        msg << "Failed call to has_consumers() on Spatial Mask, unknown mask memory type \n"
-            << "Ensure that you are compiling SpatialOps with the proper end device support\n"
-            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-        throw(std::runtime_error(msg.str()));
-      };
+      return consumerBitValues_.find(GPU_INDEX) != consumerBitValues_.end();
     };
 
-    inline void remove_consumers()
+    inline short int device_index() const { return deviceIndex_; };
+
+    inline const unsigned int * mask_values(const short int consumerDeviceIndex = CPU_INDEX) const
     {
-#     ifdef ENABLE_CUDA
-      //Release any masks allocated for "consumer" use
-      for( ConsumerMap::iterator i = myConsumerBitValues_.begin();
-          i != myConsumerBitValues_.end();
-          i++)
-        Pool<unsigned int>::self().put(EXTERNAL_CUDA_GPU, i->second);
-
-      consumerBitValues_.clear();
-      myConsumerBitValues_.clear();
-
-      if(memType_ == EXTERNAL_CUDA_GPU && builtCpuConsumer_) {
-        // restore memory for consumer masks on CPU
-        Pool<unsigned int>::self().put( LOCAL_RAM, bitValues_ );
-        bitValues_ = NULL;
-        builtCpuConsumer_ = false;
-      };
-#     endif
-    };
-
-    inline MemoryType memory_device_type() const { return memType_; };
-
-    inline unsigned short int device_index() const { return deviceIndex_; };
-
-    inline const unsigned int * mask_values(const MemoryType consumerMemoryType = LOCAL_RAM,
-                                            const unsigned short int consumerDeviceIndex = 0) const
-    {
-      switch( consumerMemoryType ) {
-      case LOCAL_RAM:
-        if(bitValues_ == NULL) {
-          std::ostringstream msg;
-          msg << "Request for consumer mask pointer on a device (Local RAM) for which it has not been allocated\n"
-              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
-        return bitValues_;
-
-#     ifdef ENABLE_CUDA
-      case EXTERNAL_CUDA_GPU: {
-        //Check local allocations first
-        if(consumerMemoryType == memType_ && consumerDeviceIndex == deviceIndex_)
-          return bitValuesExtDevice_;
-
-        ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
-        if(citer != consumerBitValues_.end())
-          return citer->second;
-
-        std::ostringstream msg;
-        msg << "Request for consumer mask pointer on a device (GPU) for which it has not been allocated\n"
-            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-        throw( std::runtime_error(msg.str()) );
-      }
-#     endif
-
-      default:
+#     ifndef NDEBUG
+      if( !IS_VALID_INDEX(consumerDeviceIndex)){
         std::ostringstream msg;
         msg << "Request for consumer mask pointer to unknown or unsupported device\n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
+#     endif
+
+      if(consumerDeviceIndex == CPU_INDEX){
+#     ifndef NDEBUG
+        if(bitValues_ == NULL) {
+          std::ostringstream msg;
+          msg << "Request for consumer mask pointer on a CPU_INDEX for which it has not been allocated\n"
+              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+          throw(std::runtime_error(msg.str()));
+        }
+#     endif
+        return bitValues_;
+      }
+#     ifdef ENABLE_CUDA
+      else {
+        ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
+        if(citer != consumerBitValues_.end())
+#     ifndef NDEBUG
+        if(citer->second == NULL) {
+          std::ostringstream msg;
+          msg << "Request for consumer mask pointer on a GPU_INDEX for which it has not been allocated\n"
+              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+          throw(std::runtime_error(msg.str()));
+        }
+#     endif
+        return citer->second;
+      }
+#     endif
     };
   };
 
