@@ -125,9 +125,7 @@ namespace structured{
         points_(points),
         bitField_(points_,
                   interiorMaskWindow_,
-                  validGhosts_,
-                  prototype.memory_device_type(),
-                  prototype.device_index())
+                  validGhosts_)
     {};
 
     /**
@@ -206,21 +204,17 @@ namespace structured{
       return bitField_.end(interiorMaskWindow_);
     };
 
-    inline void add_consumer(const MemoryType consumerMemoryType,
-                             const unsigned short int consumerDeviceIndex)
+    inline void add_consumer(const short int consumerDeviceIndex)
     {
-      bitField_.add_consumer(consumerMemoryType, consumerDeviceIndex);
+      bitField_.add_consumer(consumerDeviceIndex);
     };
 
-    inline bool find_consumer(MemoryType consumerMemoryType,
-                              const unsigned short int consumerDeviceIndex) const
+    inline bool find_consumer(const short int consumerDeviceIndex) const
     {
-      return bitField_.find_consumer(consumerMemoryType, consumerDeviceIndex);
+      return bitField_.find_consumer(consumerDeviceIndex);
     };
 
     inline bool has_consumers() { return bitField_.has_consumers(); };
-
-    inline void remove_consumers() { return bitField_.remove_consumers(); };
 
     inline const BoundaryCellInfo& boundary_info() const{ return bcInfo_; };
 
@@ -228,14 +222,11 @@ namespace structured{
 
     inline const MemoryWindow& window_with_ghost() const { return maskWindow_; };
 
-    inline MemoryType memory_device_type() const { return bitField_.memory_device_type(); };
+    inline short int device_index() const { return bitField_.device_index(); };
 
-    inline unsigned short int device_index() const { return bitField_.device_index(); };
-
-    inline const unsigned int * mask_values(const MemoryType consumerMemoryType = LOCAL_RAM,
-                                            const unsigned short int consumerDeviceIndex = 0) const
+    inline const unsigned int * mask_values(const short int consumerDeviceIndex = 0) const
     {
-      return bitField_.mask_values(consumerMemoryType, consumerDeviceIndex);
+      return bitField_.mask_values(consumerDeviceIndex);
     };
 
     inline const GhostData& get_ghost_data() const{ return ghosts_; };
