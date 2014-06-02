@@ -71,7 +71,17 @@
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return true; }
 
-             inline bool gpu_ready(int const deviceIndex) const { return true; }
+             inline bool gpu_ready(int const deviceIndex) const {
+               if(IS_GPU_INDEX(deviceIndex)) return true;
+               else{
+                 std::ostringstream msg;
+                 msg << "Interanl Nebo error in gpu_ready()" << ",\n";
+                 msg << "with invalid GPU index : " << deviceIndex << " ";
+                 msg << "\n";
+                 msg << "\t - " << __FILE__ << " : " << __LINE__;
+                 throw(std::runtime_error(msg.str()));
+               }
+             }
 
              inline GPUWalkType gpu_init(int const deviceIndex) const {
                 return GPUWalkType(value_);
@@ -191,21 +201,49 @@
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
-                return field_.find_consumer(LOCAL_RAM, 0);
+               return (field_.find_field_loc(CPU_INDEX) && field_.is_valid(CPU_INDEX));
              }
 
              inline bool gpu_ready(int const deviceIndex) const {
-                return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
+               if(IS_GPU_INDEX(deviceIndex)){
+                 return (field_.find_field_loc(deviceIndex) && field_.is_valid(deviceIndex));
+               }
+               else{
+                 std::ostringstream msg;
+                 msg << "Interanl Nebo error in gpu_ready()" << ",\n";
+                 msg << "with invalid GPU index : " << deviceIndex << " ";
+                 msg << "\n";
+                 msg << "\t - " << __FILE__ << " : " << __LINE__;
+                 throw(std::runtime_error(msg.str()));;
+               }
              }
 
              inline GPUWalkType gpu_init(int const deviceIndex) const {
+                # ifndef NDEBUG
+                if(!IS_GPU_INDEX(deviceIndex)){
+                  std::ostringstream msg;
+                  msg << "Error : deviceIndex passed in NeboRHS gpu_init is not a valid GPU : " << deviceIndex << std::endl;
+                  msg << "\n";
+                  msg << "\t - " << __FILE__ << " : " << __LINE__;
+                  throw(std::runtime_error(msg.str()));;
+                }
+                # endif
                 return GPUWalkType(deviceIndex, field_);
              }
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<FieldType *>(&field_)->add_consumer(EXTERNAL_CUDA_GPU,
-                                                                  deviceIndex);
+                  if( IS_GPU_INDEX(deviceIndex){
+                    const_cast<FieldType *>(&field_)->add_field_loc(deviceIndex);
+                  }
+                  else{
+                   std::ostringstream msg;
+                   msg << "Interanl Nebo error in " << "gpu_prep()" << ":\n";
+                   msg << "with invalid GPU index : " << deviceIndex << " ";
+                   msg << "\n";
+                   msg << "\t - " << __FILE__ << " : " << __LINE__;
+                   throw(std::runtime_error(msg.str()));;
+                  }
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -244,7 +282,7 @@
           NeboConstField(FieldType const & f)
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
-            base_(f.field_values(LOCAL_RAM, 0) + (f.window_with_ghost().offset(0)
+            base_(f.field_values(CPU_INDEX) + (f.window_with_ghost().offset(0)
                                                   + f.get_valid_ghost_data().get_minus(0))
                   + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                            + f.get_valid_ghost_data().get_minus(1))
@@ -273,7 +311,7 @@
              typename field_type::value_type typedef value_type;
 
              NeboConstField(int const deviceIndex, FieldType const & f)
-             : base_(f.field_values(EXTERNAL_CUDA_GPU, deviceIndex) + (f.window_with_ghost().offset(0)
+             : base_(f.field_values(GPU_INDEX) + (f.window_with_ghost().offset(0)
                                                                        + f.get_valid_ghost_data().get_minus(0))
                      + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                               + f.get_valid_ghost_data().get_minus(1))
@@ -342,33 +380,61 @@
           inline int extent(int const dir) const { return 0; }
 
           inline SeqWalkType init(void) const {
-             return SeqWalkType(* field_.field_values(LOCAL_RAM));
+             return SeqWalkType(* field_.field_values(CPU_INDEX));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
              inline ResizeType resize(void) const {
-                return ResizeType(* field_.field_values(LOCAL_RAM));
+                return ResizeType(* field_.field_values(CPU_INDEX));
              }
           #endif
           /* FIELD_EXPRESSION_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
-                return field_.find_consumer(LOCAL_RAM, 0);
+               return (field_.find_field_loc(CPU_INDEX) && field_.is_valid(CPU_INDEX));
              }
 
              inline bool gpu_ready(int const deviceIndex) const {
-                return field_.find_consumer(EXTERNAL_CUDA_GPU, deviceIndex);
+               if(IS_GPU_INDEX(deviceIndex)){
+                 return (field_.find_field_loc(deviceIndex) && field_.is_valid(deviceIndex));
+               }
+               else{
+                 std::ostringstream msg;
+                 msg << "Interanl Nebo error in " << "gpu_ready()" << ":\n";
+                 msg << "with invalid GPU index : " << deviceIndex << " ";
+                 msg << "\n";
+                 msg << "\t - " << __FILE__ << " : " << __LINE__;
+                 throw(std::runtime_error(msg.str()));;
+               }
              }
 
              inline GPUWalkType gpu_init(int const deviceIndex) const {
+                # ifndef NDEBUG
+                if(!IS_GPU_INDEX(deviceIndex)){
+                  std::ostringstream msg;
+                  msg << "Error : deviceIndex passed in NeboRHS gpu_init is not a valid GPU : " << deviceIndex << std::endl;
+                  msg << "\n";
+                  msg << "\t - " << __FILE__ << " : " << __LINE__;
+                  throw(std::runtime_error(msg.str()));;
+                }
+                # endif
                 return GPUWalkType(deviceIndex, field_);
              }
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<SingleValueFieldType *>(&field_)->add_consumer(EXTERNAL_CUDA_GPU,
-                                                                             deviceIndex);
+                  if( IS_GPU_INDEX(deviceIndex)){
+                      const_cast<SingleValueFieldType *>(&field_)->add_field_loc(deviceIndex);
+                  }
+                  else{
+                    std::ostringstream msg;
+                    msg << "Interanl Nebo error in " << "gpu_prep()" << ":\n";
+                    msg << "with invalid GPU index : " << deviceIndex << " ";
+                    msg << "\n";
+                    msg << "\t - " << __FILE__ << " : " << __LINE__;
+                    throw(std::runtime_error(msg.str()));;
+                  }
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -436,7 +502,7 @@
 
              NeboConstSingleValueField(int const deviceIndex,
                                        SingleValueFieldType const & f)
-             : pointer_(f.field_values(EXTERNAL_CUDA_GPU, deviceIndex))
+             : pointer_(f.field_values(GPU_INDEX))
              {}
 
              __device__ inline value_type eval(int const x,
