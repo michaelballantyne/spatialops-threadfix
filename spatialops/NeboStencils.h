@@ -154,6 +154,13 @@
          return NeboStencilCoefCollection<1>(c1)(c2);
       };
 
+      inline NeboStencilCoefCollection<3> const
+      build_three_point_coef_collection(double const c1,
+                                        double const c2,
+                                        double const c3) {
+         return NeboStencilCoefCollection<1>(c1)(c2)(c3);
+      };
+
       inline NeboStencilCoefCollection<4> const build_four_point_coef_collection(double
                                                                                  const
                                                                                  c1,
@@ -167,6 +174,24 @@
                                                                                  const
                                                                                  c4) {
          return NeboStencilCoefCollection<1>(c1)(c2)(c3)(c4);
+      };
+
+      inline NeboStencilCoefCollection<5> const build_five_point_coef_collection(double
+                                                                                 const
+                                                                                 c1,
+                                                                                 double
+                                                                                 const
+                                                                                 c2,
+                                                                                 double
+                                                                                 const
+                                                                                 c3,
+                                                                                 double
+                                                                                 const
+                                                                                 c4,
+                                                                                 double
+                                                                                 const
+                                                                                 c5) {
+         return NeboStencilCoefCollection<1>(c1)(c2)(c3)(c4)(c5);
       };
 
       template<typename PointType, typename CollectionType>

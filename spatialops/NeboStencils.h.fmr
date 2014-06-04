@@ -235,6 +235,17 @@
                         'c1)
               'c2))
 
+  (def-returning-function (dcl-function 'build_three_point_coef_collection
+                                        (const (type-template NSCC 3))
+                                        (function-pmtr (const 'double) 'c1)
+                                        (function-pmtr (const 'double) 'c2)
+                                        (function-pmtr (const 'double) 'c3))
+    null
+    (val-call (val-call (val-call (type-template NSCC 1)
+                                  'c1)
+                        'c2)
+              'c3))
+
   (def-returning-function (dcl-function 'build_four_point_coef_collection
                                         (const (type-template NSCC 4))
                                         (function-pmtr (const 'double) 'c1)
@@ -247,6 +258,21 @@
                                   'c2)
                         'c3)
               'c4))
+
+  (def-returning-function (dcl-function 'build_five_point_coef_collection
+                                        (const (type-template NSCC 5))
+                                        (function-pmtr (const 'double) 'c1)
+                                        (function-pmtr (const 'double) 'c2)
+                                        (function-pmtr (const 'double) 'c3)
+                                        (function-pmtr (const 'double) 'c4)
+                                        (function-pmtr (const 'double) 'c5))
+    null
+    (val-call (val-call (val-call (val-call (val-call (type-template NSCC 1)
+                                                      'c1)
+                                            'c2)
+                                  'c3)
+                        'c4)
+              'c5))
 
   (def-template-struct NSPC
     (list (typename 'PointType)
