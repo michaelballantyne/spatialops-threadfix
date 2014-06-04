@@ -115,7 +115,7 @@ int main()
   std::vector<IntVec> minusSet;
   minusSet.push_back(IntVec(0,1,0));
   minusSet.push_back(IntVec(1,2,0));
-  SpatialMask<SSurfXField> minus(*gamma, minusSet);
+  SpatialMask<GammaFieldT> minus(*gamma, minusSet);
 
   // evaluate the minus BC and set it in the field.
   BC(minus, *test, *gamma, true);
@@ -124,7 +124,8 @@ int main()
   std::vector<IntVec> plusSet;
   plusSet.push_back(IntVec(2,1,0));
   plusSet.push_back(IntVec(3,2,0));
-  SpatialMask<SSurfXField> plus(*gamma, plusSet);
+  //build mask without gamma:
+  SpatialMask<GammaFieldT> plus = SpatialMask<GammaFieldT>::build(*test, plusSet);
 
   // evaluate the plus BC and set it in the field.
   BC(plus, *test, *gamma, false);
