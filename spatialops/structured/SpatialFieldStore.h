@@ -250,7 +250,6 @@ public:
     if( deviceIndex == -9999 ) deviceIndex = f.device_index();
 
     const MemoryWindow& ws = f.window_with_ghost();
-    GhostData gs = f.get_ghost_data();
 
     const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( f.boundary_info().has_bc() );
 
