@@ -256,17 +256,11 @@ public:
 
     if( mtype == UNKNOWN ) mtype = f.memory_device_type();
 
-    const MemoryWindow& ws = f.window_with_ghost();
-    GhostData gs = f.get_ghost_data();
-
-    const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( f.boundary_info().has_bc() );
-
-    const IntVec inc = bc.has_bc() * Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec();
-    const MemoryWindow w( ws.glob_dim() + inc,
-                          ws.offset(),
-                          ws.extent()   + inc );
-
-    return get_from_window<FieldT>(w,bc,gs,mtype,deviceIndex);
+    return get_from_window<FieldT>(create_new_memory_window<FieldT, ProtoT>(f),
+                                   create_new_boundary_cell_info<FieldT, ProtoT>(f),
+                                   f.get_ghost_data(),
+                                   mtype,
+                                   deviceIndex);
   }
 
 
