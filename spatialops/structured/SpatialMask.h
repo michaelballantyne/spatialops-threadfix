@@ -97,23 +97,35 @@ namespace structured{
 
     /**
      *  \brief Construct a SpatialMask
-     *  \param window - the MemoryWindow that specifies this field
+     *  \param window the MemoryWindow that specifies this field
      *         including ghost cells.
      *  \param bc information on boundary treatment for this field
      *  \param ghosts information on ghost cells for this field
-     *  \param fieldValues a pointer to memory to be wrapped by this field
-     *  \param mode Storage options.  If InternalStorage then the
-     *         fieldValues will be copied into an internal buffer.  If
-     *         ExternalStorage then the fieldValues will be stored
-     *         externally.  Efficiency suggests that ExternalStorage
-     *         is best, since it will avoid excessive copies.  Safety
-     *         suggests that InternalStorage is best, since it
-     *         protects against memory corruption and inadvertent
-     *         deletion of the field's underlying memory.
-     *  \param consumerMemoryType describes where this field lives (e.g., CPU, GPU)
-     *  \param devIdx the identifier for the GPU/accelerator if the field lives
-     *         there. This allows for the case where multiple accelerators are
-     *         on a given node.
+     *  \param points points in the mask
+     */
+    SpatialMask(const MemoryWindow & window,
+                const BoundaryCellInfo & bc,
+                const GhostData & ghosts,
+                const std::vector<IntVec> & points)
+      : maskWindow_(window),
+        interiorMaskWindow_(MemoryWindow(window.glob_dim(),
+                                         window.offset() + ghosts.get_minus(),
+                                         window.extent() - ghosts.get_minus() - ghosts.get_plus())),
+        bcInfo_(bc),
+        ghosts_(ghosts),
+        validGhosts_(ghosts),
+        points_(points),
+        bitField_(points_,
+                  interiorMaskWindow_,
+                  validGhosts_,
+                  LOCAL_RAM,
+                  0)
+    {};
+
+    /**
+     *  \brief Construct a SpatialMask
+     *  \param prototype field to copy size information from
+     *  \param points points in the mask
      */
     SpatialMask(const FieldType & prototype,
                 const std::vector<IntVec> & points)
@@ -165,6 +177,24 @@ namespace structured{
         assert( window.offset(i) < pWindow.glob_dim(i) );
       }
 #     endif
+    };
+
+    template<typename PrototypeType>
+      SpatialMask<FieldType>
+      static inline build(const PrototypeType & prototype,
+                          const std::vector<IntVec> & points) {
+
+      const BoundaryCellInfo prototypeBC = prototype.boundary_info();
+      const BoundaryCellInfo actualBC = BoundaryCellInfo::build<FieldType>(prototypeBC.has_bc());
+
+      const MemoryWindow prototypeWindow = prototype.window_with_ghost();
+      const MemoryWindow actualWindow(prototypeWindow.glob_dim() - prototypeBC.has_extra() + actualBC.has_extra(),
+                                      prototypeWindow.offset(),
+                                      prototypeWindow.extent() - prototypeBC.has_extra() + actualBC.has_extra());
+      return SpatialMask(actualWindow,
+                         actualBC,
+                         prototype.get_valid_ghost_data(),
+                         points);
     };
 
     ~SpatialMask() {};
