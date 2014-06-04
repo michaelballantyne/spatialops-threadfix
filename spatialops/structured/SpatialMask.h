@@ -180,19 +180,11 @@ namespace structured{
     };
 
     template<typename PrototypeType>
-      SpatialMask<FieldType>
-      static inline build(const PrototypeType & prototype,
-                          const std::vector<IntVec> & points) {
-
-      const BoundaryCellInfo prototypeBC = prototype.boundary_info();
-      const BoundaryCellInfo actualBC = BoundaryCellInfo::build<FieldType>(prototypeBC.has_bc());
-
-      const MemoryWindow prototypeWindow = prototype.window_with_ghost();
-      const MemoryWindow actualWindow(prototypeWindow.glob_dim() - prototypeBC.has_extra() + actualBC.has_extra(),
-                                      prototypeWindow.offset(),
-                                      prototypeWindow.extent() - prototypeBC.has_extra() + actualBC.has_extra());
-      return SpatialMask(actualWindow,
-                         actualBC,
+    SpatialMask<FieldType>
+    static inline build(const PrototypeType & prototype,
+                        const std::vector<IntVec> & points) {
+      return SpatialMask(create_new_memory_window<FieldType, PrototypeType>(prototype),
+                         create_new_boundary_cell_info<FieldType, PrototypeType>(prototype),
                          prototype.get_valid_ghost_data(),
                          points);
     };

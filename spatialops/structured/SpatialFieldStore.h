@@ -259,7 +259,10 @@ public:
                           ws.offset(),
                           ws.extent()   + inc );
 
-    return get_from_window<FieldT>(w,bc,gs,deviceIndex);
+    return get_from_window<FieldT>(create_new_memory_window<FieldT, ProtoT>(f),
+                                   create_new_boundary_cell_info<FieldT, ProtoT>(f),
+                                   f.get_ghost_data(),
+                                   deviceIndex);
   }
 
 
