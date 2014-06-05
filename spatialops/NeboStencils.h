@@ -219,11 +219,27 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
+          static inline structured::GhostData possible_ghosts(void) {
+             return min(additive_reductive_point_to_ghost(Point::int_vec()),
+                        Collection::possible_ghosts());
+          }
+
           static inline structured::GhostData possible_ghosts(structured::
                                                               GhostData const &
                                                               ghosts) {
-             return min(ghosts - point_to_ghost(Point::int_vec()),
-                        Collection::possible_ghosts(ghosts));
+             return ghosts + possible_ghosts();
+          }
+
+          static inline structured::GhostData possible_additive_ghosts(void) {
+             return min(addative_point_to_ghost(Point::int_vec()),
+                        Collection::possible_ghosts());
+          }
+
+          static inline structured::GhostData possible_additive_ghosts(structured::
+                                                                       GhostData
+                                                                       const &
+                                                                       ghosts) {
+             return ghosts + possible_additive_ghosts();
           }
       };
 
@@ -247,10 +263,25 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
+          static inline structured::GhostData possible_ghosts(void) {
+             return additive_reductive_point_to_ghost(Point::int_vec());
+          }
+
           static inline structured::GhostData possible_ghosts(structured::
                                                               GhostData const &
                                                               ghosts) {
-             return ghosts - point_to_ghost(Point::int_vec());
+             return ghosts + possible_ghosts();
+          }
+
+          static inline structured::GhostData possible_additive_ghosts(void) {
+             return additive_point_to_ghost(Point::int_vec());
+          }
+
+          static inline structured::GhostData possible_additive_ghosts(structured::
+                                                                       GhostData
+                                                                       const &
+                                                                       ghosts) {
+             return ghosts + possible_additive_ghosts();
           }
       };
 
@@ -523,7 +554,7 @@
           {}
 
           inline structured::GhostData possible_ghosts(void) const {
-             return arg_.possible_ghosts();
+             return Pts::possible_additive_ghosts(arg_.possible_ghosts());
           }
 
           inline structured::GhostData minimum_ghosts(void) const {
@@ -987,7 +1018,7 @@
        static inline structured::GhostData point_possible_ghosts(structured::
                                                                  GhostData const
                                                                  & ghosts) {
-          return ghosts - point_to_ghost(Point::int_vec());
+          return ghosts + additive_reductive_point_to_ghost(Point::int_vec());
        };
 
       template<typename CurrentMode,

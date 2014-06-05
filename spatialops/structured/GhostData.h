@@ -63,16 +63,6 @@ namespace structured{
     IntVec minus_, plus_;
     bool isInf_;
 
-    inline void check_valid( const IntVec& minus, const IntVec& plus )
-    {
-  #   ifndef NDEBUG
-      for( int i=0; i<3; ++i ){
-        assert( minus[i] >= 0 );
-        assert(  plus[i] >= 0 );
-      }
-  #   endif
-    }
-
     // If any value is infinite (>= GHOST_MAX), then return true
     //  Infinite ghost data is used within Nebo to account for scalars
     inline bool is_IntVec_infinite(const IntVec & values) {
@@ -105,9 +95,7 @@ namespace structured{
     : minus_( nx, ny, nz ),
       plus_ ( px, py, pz ),
       isInf_(is_ghost_infinite(minus_,plus_))
-    {
-      check_valid(minus_,plus_);
-    }
+    {}
 
 
     /**
@@ -120,9 +108,7 @@ namespace structured{
     : minus_( minus ),
       plus_ ( plus  ),
       isInf_(is_ghost_infinite(minus_,plus_))
-    {
-      check_valid(minus_,plus_);
-    }
+    {}
 
     /**
      * \brief construct a GhostData with the same number of ghost cells on each face
@@ -132,15 +118,12 @@ namespace structured{
     : minus_( n, n, n ),
       plus_ ( n, n, n ),
       isInf_(is_ghost_infinite(minus_,plus_))
-    {
-      check_valid(minus_,plus_);
-    }
+    {}
 
     GhostData( const GhostData& rhs )
     {
        minus_ = rhs.minus_;
        plus_  = rhs.plus_;
-       check_valid(minus_,plus_);
        isInf_ = rhs.isInf_;
      }
 
@@ -148,7 +131,6 @@ namespace structured{
     {
       minus_ = rhs.minus_;
       plus_  = rhs.plus_;
-      check_valid(minus_,plus_);
       isInf_ = rhs.isInf_;
       return *this;
     }
@@ -204,7 +186,6 @@ namespace structured{
         else {
           minus_ += rhs.minus_;
           plus_  += rhs.plus_;
-          check_valid(minus_,plus_);
         }
       }
       return *this;
@@ -222,7 +203,6 @@ namespace structured{
       }
       minus_ -= rhs.minus_;
       plus_  -= rhs.plus_;
-      check_valid(minus_,plus_);
       return *this;
     }
 
@@ -254,6 +234,31 @@ namespace structured{
                        (given[1] > 0 ?   given[1] : 0),
                        (given[2] < 0 ? - given[2] : 0),
                        (given[2] > 0 ?   given[2] : 0));
+  }
+
+  inline GhostData reductive_point_to_ghost( const IntVec&  given )
+  {
+      return GhostData((given[0] < 0 ?   given[0] : 0),
+                       (given[0] > 0 ? - given[0] : 0),
+                       (given[1] < 0 ?   given[1] : 0),
+                       (given[1] > 0 ? - given[1] : 0),
+                       (given[2] < 0 ?   given[2] : 0),
+                       (given[2] > 0 ? - given[2] : 0));
+  }
+
+  inline GhostData additive_point_to_ghost( const IntVec&  given )
+  {
+      return GhostData((given[0] > 0 ?   given[0] : 0),
+                       (given[0] < 0 ? - given[0] : 0),
+                       (given[1] > 0 ?   given[1] : 0),
+                       (given[1] < 0 ? - given[1] : 0),
+                       (given[2] > 0 ?   given[2] : 0),
+                       (given[2] < 0 ? - given[2] : 0));
+  }
+
+  inline GhostData additive_reductive_point_to_ghost( const IntVec&  given )
+  {
+    return additive_point_to_ghost(given) + reductive_point_to_ghost(given);
   }
 
   inline std::ostream& operator<<( std::ostream& out, const GhostData& gd )
