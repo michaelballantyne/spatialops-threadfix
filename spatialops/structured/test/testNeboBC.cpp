@@ -353,6 +353,108 @@ int main()
     status( field_equal(*test, *ref), "Invert GradY on YVol" );
   }
 
+  {
+    const BoundaryCellInfo  fbc = BoundaryCellInfo::build<XVolField  >( bcFlag[0], bcFlag[1], bcFlag[2] );
+    const BoundaryCellInfo dfbc = BoundaryCellInfo::build<XVolField>( bcFlag[0], bcFlag[1], bcFlag[2] );
+    SpatFldPtr<XVolField  > test  = SpatialFieldStore::get_from_window<XVolField>( get_window_with_ghost(dim, fghost, fbc),  fbc,  fghost );
+    SpatFldPtr<XVolField  > ref   = SpatialFieldStore::get_from_window<XVolField>( get_window_with_ghost(dim, fghost, fbc),  fbc,  fghost );
+    SpatFldPtr<XVolField> gamma = SpatialFieldStore::get_from_window<XVolField>( get_window_with_ghost(dim,dfghost,dfbc), dfbc, dfghost );
+
+    /* Invert gradent:
+     *  Y-staggered Cell (volume) to face:
+     *  -------------
+     *  |     |     |
+     *  X  S  X  S  X
+     *  |     |     |
+     *  -------------
+     *  X => XVol
+     *  S => SVol
+     *
+     *  -------------
+     *  |     |     |
+     *  A     B     C
+     *  |     |     |
+     *  -------------
+     *
+     *  dx = Lx/nx
+     *
+     *  GradientX (FDStencil):
+     *  B = A * -0.5/dx + C * 0.5/dx
+     *
+     *  Negative side inversion:
+     *  A = (B - C * 0.5/dx) / (-0.5/dx)
+     *
+     *  Positive side inversion:
+     *  C = (B - A * -0.5/dx) / (0.5/dx)
+     *
+     *  Indices:
+     *  A = -1, 0, 0
+     *  B =  0, 0, 0
+     *  C =  1, 0, 0
+     */
+
+    XVolField::iterator ig = gamma->begin();
+    XVolField::iterator ir = ref->begin();
+    XVolField::iterator it = test->begin();
+    for(int j=-1; j < 4; j++)
+      for( int i = -1; i < 5; i++) {
+        *ig = 25 + i + j * 5;
+        *it = i + j * 5;
+        if( (i == -1 && j == 0) ||
+            (i == -1 && j == 1) ) {
+          //Negative side inversion: *ir == A
+          int B = 25 + (i + 1) + j * 5;
+          int C = (i + 2) + j * 5;
+          *ir = (B - C * (0.5/dx)) / (-0.5/dx);
+        }
+        else if( (i ==  4 && j == 0) ||
+                 (i ==  4 && j == 1) ) {
+          //Positive side inversion: *ir == C
+          int B = 25 + (i - 1) + j * 5;
+          int A = (i - 2) + j * 5;
+          *ir = (B - A * (-0.5/dx)) / (0.5/dx);
+        }
+        else
+          *ir = i + j * 5;
+        it++;
+        ir++;
+        ig++;
+      }
+
+    print_field(*gamma);
+    //make the BC:
+    OperatorDatabase opdb;
+    build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
+    typedef structured::OperatorTypeBuilder<GradientX,XVolField,XVolField>::type OpT;
+    const OpT* const op = opdb.retrieve_operator<OpT>();
+    NeboBoundaryConditionBuilder<OpT> BC(*op);
+
+    //make the minus mask:
+    std::vector<IntVec> minusSet;
+    minusSet.push_back(IntVec(0,0,0));
+    minusSet.push_back(IntVec(0,1,0));
+    SpatialMask<XVolField> minus(*gamma, minusSet);
+
+    // evaluate the minus BC and set it in the field.
+    BC(minus, *test, *gamma, true);
+
+    //make the plus mask:
+    std::vector<IntVec> plusSet;
+    plusSet.push_back(IntVec(3,0,0));
+    plusSet.push_back(IntVec(3,1,0));
+    //build mask without gamma:
+    SpatialMask<XVolField> plus = SpatialMask<XVolField>::build(*test, plusSet);
+
+    // evaluate the plus BC and set it in the field.
+    BC(plus, *test, *gamma, false);
+
+    //display differences and values:
+    display_fields_compare(*test, *ref, true, true);
+
+    // verify that the BC was set properly.
+    status( field_equal(*test, *ref), "Invert GradX(FD) on XVol" );
+  }
+
 
   if( status.ok() ) {
     std::cout << "ALL TESTS PASSED :)" << std::endl;
