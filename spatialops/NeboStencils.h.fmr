@@ -293,11 +293,22 @@
                                               null
                                               (stmt-typedef (type-template NSPC 'NewPoint 'MyType)
                                                             'Result))
+                    (def-returning-function (dcl-static-function 'possible_ghosts GhostData)
+                      null
+                      (val-call 'min
+                                (val-call 'additive_reductive_point_to_ghost (val-call (scope 'Point 'int_vec)))
+                                (val-call (scope 'Collection 'possible_ghosts))))
                     (def-returning-function (dcl-static-function 'possible_ghosts GhostData ghost-pmtr)
                       null
-                      (val-call 'min (val-subtract 'ghosts (val-call 'point_to_ghost (val-call (scope 'Point 'int_vec))))
-                                (val-call (scope 'Collection 'possible_ghosts)
-                                          'ghosts)))))
+                      (val-add 'ghosts (val-call 'possible_ghosts)))
+                    (def-returning-function (dcl-static-function 'possible_additive_ghosts GhostData)
+                      null
+                      (val-call 'min
+                                (val-call 'addative_point_to_ghost (val-call (scope 'Point 'int_vec)))
+                                (val-call (scope 'Collection 'possible_ghosts))))
+                    (def-returning-function (dcl-static-function 'possible_additive_ghosts GhostData ghost-pmtr)
+                      null
+                      (val-add 'ghosts (val-call 'possible_additive_ghosts)))))
 
   (def-template-struct NSPC
     (typename 'PointType)
@@ -314,9 +325,18 @@
                                               null
                                               (stmt-typedef (type-template NSPC 'NewPoint 'MyType)
                                                             'Result))
+                    (def-returning-function (dcl-static-function 'possible_ghosts GhostData)
+                      null
+                      (val-call 'additive_reductive_point_to_ghost (val-call (scope 'Point 'int_vec))))
                     (def-returning-function (dcl-static-function 'possible_ghosts GhostData ghost-pmtr)
                       null
-                      (val-subtract 'ghosts (val-call 'point_to_ghost (val-call (scope 'Point 'int_vec)))))))
+                      (val-add 'ghosts (val-call 'possible_ghosts)))
+                    (def-returning-function (dcl-static-function 'possible_additive_ghosts GhostData)
+                      null
+                      (val-call 'additive_point_to_ghost (val-call (scope 'Point 'int_vec))))
+                    (def-returning-function (dcl-static-function 'possible_additive_ghosts GhostData ghost-pmtr)
+                      null
+                      (val-add 'ghosts (val-call 'possible_additive_ghosts)))))
 
   (build-struct 'NeboStencil
                 std-FT
@@ -416,7 +436,8 @@
                                                 (list (val-construct 'arg_ 'a)
                                                       (val-construct 'coefs_ 'coefs))
                                                 null)
-                                (val-member-call 'arg_ 'possible_ghosts)
+                                (val-call (scope 'Pts 'possible_additive_ghosts)
+                                          (val-member-call 'arg_ 'possible_ghosts))
                                 (val-member-call 'arg_ 'minimum_ghosts)
                                 (val-member-call 'arg_ 'has_extent)
                                 null
@@ -586,7 +607,7 @@
   (def-template (typename 'Point)
     (def-returning-function (dcl-static-function 'point_possible_ghosts GhostData ghost-pmtr)
       null
-      (val-subtract 'ghosts (val-call 'point_to_ghost (val-call (scope 'Point 'int_vec))))))
+      (val-add 'ghosts (val-call 'additive_reductive_point_to_ghost (val-call (scope 'Point 'int_vec))))))
 
   (build-struct 'NeboMaskShift
                 std-FT

@@ -501,7 +501,7 @@ namespace SpatialOps {
           StPtCollection;
     };
 
-    template<typename SrcFieldType, typename DestFieldType>
+    template<typename OperatorType, typename SrcFieldType, typename DestFieldType>
     struct MaskShiftPoints {
       // source field offset
       typedef typename SrcFieldType::Location::Offset                      SrcOffset;
@@ -514,24 +514,38 @@ namespace SpatialOps {
                                                DestOffset>::result::Negate PlusPoint;
     };
 
+    //must be a finite difference (FD) stencil, pull direction and points from operator:
+    template<typename OperatorType, typename FieldType>
+    struct MaskShiftPoints<OperatorType, FieldType, FieldType> {
+      typedef typename OperatorType::type                    OpT;
+      // FDStencilCollection:
+      typedef FDStencilCollection<OpT, FieldType, FieldType> FDStencil;
+      // minus-side stencil point location
+      typedef typename FDStencil::DirVec                     MinusPoint;
+      // plus-side stencil point location
+      typedef typename FDStencil::DirVec::Negate             PlusPoint;
+    };
+
   /**
    * \struct NeboMaskShiftBuilder
    * \brief Supports definition of new Nebo mask shift stencils, which converts a mask of one field type into another field type.
    *
+   * \tparam OperatorT    the type of the operator
    * \tparam SrcFieldT    the type of field that this operator acts on
    * \tparam DestFieldT   the type of field that this operator produces
    */
-    template<typename SrcFieldT, typename DestFieldT>
+    template<typename OperatorT, typename SrcFieldT, typename DestFieldT>
       struct NeboMaskShiftBuilder {
       public:
+        typedef OperatorT  OperatorType;  ///< operator type
         typedef SrcFieldT  SrcFieldType;  ///< source field type
         typedef DestFieldT DestFieldType; ///< destination field type
 
         typedef structured::SpatialMask<SrcFieldType>  SrcMask;  ///< source mask type
         typedef structured::SpatialMask<DestFieldType> DestMask; ///< destination mask type
 
-        typedef typename MaskShiftPoints<SrcFieldType, DestFieldType>::MinusPoint MinusPoint; ///< negative face shift for mask
-        typedef typename MaskShiftPoints<SrcFieldType, DestFieldType>::PlusPoint  PlusPoint;  ///< positive face shift for mask
+        typedef typename MaskShiftPoints<OperatorType, SrcFieldType, DestFieldType>::MinusPoint MinusPoint; ///< negative face shift for mask
+        typedef typename MaskShiftPoints<OperatorType, SrcFieldType, DestFieldType>::PlusPoint  PlusPoint;  ///< positive face shift for mask
 
         typedef NeboMask<Initial, SrcFieldType> Mask; ///< Nebo mask type
 
@@ -593,7 +607,7 @@ namespace SpatialOps {
       typedef typename ListSubtract<NonLowPoints,  LowPoint>:: result                           NonLowSrcPoints;
       typedef typename ListSubtract<NonHighPoints, HighPoint>::result                           NonHighSrcPoints;
       typedef NeboMask<Initial, GammaFieldType>                                                 GammaMask;
-      typedef NeboMaskShiftBuilder<GammaFieldType, PhiFieldType>                                Shift;
+      typedef NeboMaskShiftBuilder<OperatorType, GammaFieldType, PhiFieldType>                  Shift;
 
       typedef NeboStencilCoefCollection<PointCollection::length> CoefCollection; ///< collection of coefficients
 
