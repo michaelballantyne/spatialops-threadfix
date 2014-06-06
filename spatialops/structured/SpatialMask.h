@@ -117,9 +117,7 @@ namespace structured{
         points_(points),
         bitField_(points_,
                   interiorMaskWindow_,
-                  validGhosts_,
-                  LOCAL_RAM,
-                  0)
+                  validGhosts_)
     {};
 
     /**
@@ -187,7 +185,7 @@ namespace structured{
                          create_new_boundary_cell_info<FieldType, PrototypeType>(prototype),
                          prototype.get_valid_ghost_data(),
                          points);
-    };
+    }
 
     ~SpatialMask() {};
 
