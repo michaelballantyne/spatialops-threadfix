@@ -520,15 +520,6 @@ namespace structured{
 
     inline const unsigned int * mask_values(const short int consumerDeviceIndex = CPU_INDEX) const
     {
-#     ifndef NDEBUG
-      if( !IS_VALID_INDEX(consumerDeviceIndex)){
-        std::ostringstream msg;
-        msg << "Request for consumer mask pointer to unknown or unsupported device\n"
-            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-        throw(std::runtime_error(msg.str()));
-      }
-#     endif
-
       if(consumerDeviceIndex == CPU_INDEX){
 #     ifndef NDEBUG
         if(bitValues_ == NULL) {
@@ -540,10 +531,10 @@ namespace structured{
 #     endif
         return bitValues_;
       }
+      else if(IS_GPU_INDEX(consumerDeviceIndex)){
 #     ifdef ENABLE_CUDA
-      else {
         ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
-        if(citer != consumerBitValues_.end())
+        if(citer != consumerBitValues_.end()){
 #     ifndef NDEBUG
         if(citer->second == NULL) {
           std::ostringstream msg;
@@ -553,8 +544,15 @@ namespace structured{
         }
 #     endif
         return citer->second;
-      }
+        }
 #     endif
+      }
+      else{
+        std::ostringstream msg;
+        msg << "Request for consumer mask pointer to unknown or unsupported device\n"
+            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+        throw(std::runtime_error(msg.str()));
+      }
     };
   };
 
