@@ -194,22 +194,31 @@ namespace Particle{
      const ParticleField::const_iterator ise = src.end();
      for( ; isrc != ise; ++ipx, ++ipy, ++ipz, ++ipsize, ++isrc ){
 
+       const double rp = *ipsize * 0.5;
+
        // Identify the location of the particle boundary
-       const double pxlo = px_ ? *ipx - ( 0.5 * *ipsize ) : 0;
-       const double pylo = py_ ? *ipy - ( 0.5 * *ipsize ) : 0;
-       const double pzlo = pz_ ? *ipz - ( 0.5 * *ipsize ) : 0;
+       const double pxlo = px_ ? *ipx - rp : 0;
+       const double pylo = py_ ? *ipy - rp : 0;
+       const double pzlo = pz_ ? *ipz - rp : 0;
 
-       const double pxhi = px_ ? pxlo + *ipsize           : 0;
-       const double pyhi = py_ ? pylo + *ipsize           : 0;
-       const double pzhi = pz_ ? pzlo + *ipsize           : 0;
+       const double pxhi = px_ ? pxlo + *ipsize : 0;
+       const double pyhi = py_ ? pylo + *ipsize : 0;
+       const double pzhi = pz_ ? pzlo + *ipsize : 0;
 
-       const size_t ixlo = ( pxlo - (xlo_) ) / dx_;
-       const size_t iylo = ( pylo - (ylo_) ) / dy_;
-       const size_t izlo = ( pzlo - (zlo_) ) / dz_;
+       const size_t ixlo = ( pxlo - (xlo_-dx_/2) ) / dx_;
+       const size_t iylo = ( pylo - (ylo_-dy_/2) ) / dy_;
+       const size_t izlo = ( pzlo - (zlo_-dz_/2) ) / dz_;
 
-       const size_t ixhi = px_ ? ixlo + *ipsize/dx_+1 : ixlo+1;
-       const size_t iyhi = py_ ? iylo + *ipsize/dy_+1 : iylo+1;
-       const size_t izhi = pz_ ? izlo + *ipsize/dz_+1 : izlo+1;
+       const size_t ixhi = px_ ? ( pxhi - (xlo_-dx_/2) ) / dx_ + 1 : ixlo+1;
+       const size_t iyhi = py_ ? ( pyhi - (ylo_-dy_/2) ) / dy_ + 1 : iylo+1;
+       const size_t izhi = pz_ ? ( pzhi - (zlo_-dz_/2) ) / dz_ + 1 : izlo+1;
+
+//       std::cout << "Particle info:\n"
+//           <<   "\tDiameter: " << *ipsize
+//           << "\n\tLocation: " << pxlo << " - " << pxhi
+//           << "\n\tilo: " << ixlo << " (" << ixlo*dx_+xlo_-dx_/2 << ")"
+//           << "\n\tihi: " << ixhi-1 << " (" << ixhi*dx_+xlo_-dx_/2 << ")"
+//           << "\n";
 
        // Distribute particle through the volume(s) it touches. Here we are
        // doing a highly approximate job at approximating how much fractional
@@ -217,21 +226,20 @@ namespace Particle{
 #      ifndef NDEBUG
        double sumterm=0.0;
 #      endif
-       const double rp = *ipsize * 0.5;
        for( size_t k=izlo; k<izhi; ++k ){
-         const double zcm = zlo_ + k*dz_;
+         const double zcm = zlo_ + (k-0.5)*dz_;
          const double zcp = zcm + dz_;
          const double zlo = std::max( zcm, *ipz - rp );
          const double zhi = std::min( zcp, *ipz + rp );
          const double zscal = pz_ ? (zhi - zlo) / *ipsize : 1.0;
          for( size_t j=iylo; j<iyhi; ++j ){
-           const double ycm = ylo_ + j*dy_;
+           const double ycm = ylo_ + (j-0.5)*dy_;
            const double ycp = ycm + dy_;
            const double ylo = std::max( ycm, *ipy - rp );
            const double yhi = std::min( ycp, *ipy + rp );
            const double yscal = py_ ? (yhi - ylo) / *ipsize : 1.0;
            for( size_t i=ixlo; i<ixhi; ++i ){
-             const double xcm = xlo_ + i*dx_;
+             const double xcm = xlo_ + (i-0.5)*dx_;
              const double xcp = xcm + dx_;
              const double xlo = std::max( xcm, *ipx - rp );
              const double xhi = std::min( xcp, *ipx + rp );
@@ -305,22 +313,31 @@ namespace Particle{
 
       *idst = 0.0;
 
-      // Identify the location of the particle boundary
-      const double pxlo = px_ ? *ipx - ( 0.5 * *ipsize ) : 0;
-      const double pylo = py_ ? *ipy - ( 0.5 * *ipsize ) : 0;
-      const double pzlo = pz_ ? *ipz - ( 0.5 * *ipsize ) : 0;
+      const double rp = *ipsize * 0.5;
 
-      const double pxhi = px_ ? pxlo + *ipsize           : 0;
-      const double pyhi = py_ ? pylo + *ipsize           : 0;
-      const double pzhi = pz_ ? pzlo + *ipsize           : 0;
+      // Identify the location of the particle boundary
+      const double pxlo = px_ ? *ipx - rp : 0;
+      const double pylo = py_ ? *ipy - rp : 0;
+      const double pzlo = pz_ ? *ipz - rp : 0;
+
+      const double pxhi = px_ ? pxlo + *ipsize : 0;
+      const double pyhi = py_ ? pylo + *ipsize : 0;
+      const double pzhi = pz_ ? pzlo + *ipsize : 0;
 
       const size_t ixlo = ( pxlo - (xlo_-dx_/2) ) / dx_;
       const size_t iylo = ( pylo - (ylo_-dy_/2) ) / dy_;
       const size_t izlo = ( pzlo - (zlo_-dz_/2) ) / dz_;
 
-      const size_t ixhi = px_ ? ixlo + *ipsize/dx_+1 : ixlo+1;
-      const size_t iyhi = py_ ? iylo + *ipsize/dy_+1 : iylo+1;
-      const size_t izhi = pz_ ? izlo + *ipsize/dz_+1 : izlo+1;
+      const size_t ixhi = px_ ? ( pxhi - (xlo_-dx_/2) ) / dx_ + 1 : ixlo+1;
+      const size_t iyhi = py_ ? ( pyhi - (ylo_-dy_/2) ) / dy_ + 1 : iylo+1;
+      const size_t izhi = pz_ ? ( pzhi - (zlo_-dz_/2) ) / dz_ + 1 : izlo+1;
+
+//      std::cout << "Particle info:\n"
+//          <<   "\tDiameter: " << *ipsize
+//          << "\n\tLocation: " << pxlo << " (" << *ipx << ") " << pxhi
+//          << "\n\tilo: " << ixlo << " (" << ixlo*dx_+xlo_-dx_/2 << ")"
+//          << "\n\tihi: " << ixhi-1 << " (" << ixhi*dx_+xlo_-dx_/2 << ")"
+//          << "\n";
 
       // Distribute particle through the volume(s) it touches. Here we are
       // doing a highly approximate job at approximating how much fractional
@@ -328,21 +345,20 @@ namespace Particle{
 #     ifndef NDEBUG
       double sumterm=0.0;
 #     endif
-      const double rp = *ipsize * 0.5;
       for( size_t k=izlo; k<izhi; ++k ){
-        const double zcm = zlo_ + k*dz_;
+        const double zcm = zlo_ + (k-0.5)*dz_;
         const double zcp = zcm + dz_;
         const double zlo = std::max( zcm, *ipz - rp );
         const double zhi = std::min( zcp, *ipz + rp );
         const double zscal = pz_ ? (zhi - zlo) / *ipsize : 1.0;
         for( size_t j=iylo; j<iyhi; ++j ){
-          const double ycm = ylo_ + j*dy_;
+          const double ycm = ylo_ + (j-0.5)*dy_;
           const double ycp = ycm + dy_;
           const double ylo = std::max( ycm, *ipy - rp );
           const double yhi = std::min( ycp, *ipy + rp );
           const double yscal = py_ ? (yhi - ylo) / *ipsize : 1.0;
           for( size_t i=ixlo; i<ixhi; ++i ){
-            const double xcm = xlo_ + i*dx_;
+            const double xcm = xlo_ + (i-0.5)*dx_;
             const double xcp = xcm + dx_;
             const double xlo = std::max( xcm, *ipx - rp );
             const double xhi = std::min( xcp, *ipx + rp );
