@@ -57,7 +57,7 @@ int main()
   CellField::iterator fielditer=cellFieldvalues.begin();
   for( CellField::iterator icoord=cellField.begin(); icoord!=cellField.end(); ++icoord, ++i, ++fielditer ){
     *icoord = i - 0.5 ;
-    *fielditer = i * 10 ;
+    *fielditer = *icoord * 10 ;
   }
 
   //
@@ -79,7 +79,7 @@ int main()
   pfield[3] = 70;*/
 
   for( size_t i=0; i<np; ++i )
-    std::cout<<"  particle coord : "<<pCoord[i]<<"  particle field : "<<pfield[i]<<std::endl;
+    std::cout << "  particle coord : " << pCoord[i] << "  particle field : " << pfield[i] << std::endl;
 
   //
   // build the operators
@@ -99,23 +99,23 @@ int main()
   p2c.apply_to_field( pfield, ctmp );
 
   for( size_t i=0; i<np; ++i )
-    std::cout<<"  Interpolated particle field : "<<ptmp[i]<<std::endl;
+    std::cout << "  Interpolated gas value to particle field : " << ptmp[i] << std::endl;
 
   CellField::const_iterator ix=cellField.begin();
   for( CellField::const_iterator i=ctmp.begin(); i!=ctmp.end(); ++i, ++ix )
-    std::cout<<"  Interpolated Gas field at x=" << *ix << " = "<< *i <<std::endl;
+    std::cout << "  Interpolated particle value to gas field at x=" << *ix << " = "<< *i << std::endl;
 
   TestHelper status;
   for( size_t i=0; i<np; ++i )
     status( ptmp[i] == 32.5, "c2p" );
 
   status( ctmp[0] == 0, "p2c [0]" );
-  status( ctmp[1] == 3, "p2c [1]" );
+  status( ctmp[1] == 1, "p2c [1]" );
   status( ctmp[2] == 4, "p2c [2]" );
   status( ctmp[3] == 4, "p2c [3]" );
   status( ctmp[4] == 4, "p2c [4]" );
   status( ctmp[5] == 4, "p2c [5]" );
-  status( ctmp[6] == 1, "p2c [6]" );
+  status( ctmp[6] == 3, "p2c [6]" );
   status( ctmp[7] == 0, "p2c [7]" );
   status( ctmp[8] == 0, "p2c [8]" );
 
