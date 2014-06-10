@@ -477,7 +477,10 @@ namespace structured{
                         T* const fieldValues,
                         const StorageMode mode = InternalStorage,
                         const short int devIdx = CPU_INDEX )
-     : fieldWindow_(window), sfsharedPtr_(new SpatialFieldLoc( window, bc, ghosts, fieldValues, mode, devIdx ))
+     : fieldWindow_(window),
+       bcInfo_(bc.limit_by_extent(window.extent())),
+       validGhosts_(ghosts.limit_by_extent(window.extent())),
+       sfsharedPtr_(new SpatialFieldLoc( window, bc, ghosts, fieldValues, mode, devIdx ))
    {}
 
    /**
@@ -485,15 +488,24 @@ namespace structured{
     *  that share the same underlying memory.
     */
    inline SpatialField(const SpatialField& other)
-   : fieldWindow_(other.fieldWindow_), sfsharedPtr_( other.sfsharedPtr_ )
+   : fieldWindow_(other.fieldWindow_),
+     bcInfo_(other.bcInfo_),
+     validGhosts_(other.validGhosts_),
+     sfsharedPtr_(other.sfsharedPtr_)
    {}
+
    /**
     *  \brief Shallow copy constructor with new window.
     */
    inline SpatialField(const MemoryWindow& window,
                        const SpatialField& other)
-   : fieldWindow_(window), sfsharedPtr_( other.sfsharedPtr_ )
-   {}
+   : fieldWindow_(window),
+     bcInfo_(other.bcInfo_.limit_by_extent(window.extent())),
+     validGhosts_( other.validGhosts_.limit_by_extent(window.extent())),
+     sfsharedPtr_( other.sfsharedPtr_ )
+   {
+     //SpatialFieldLoc( window, *(other.sfsharedPtr_) );
+   }
 
    virtual inline ~SpatialField();
 
@@ -714,8 +726,8 @@ namespace structured{
     *        can lead to modification of the number of valid ghost cells.  This
     *        information is recorded here.
     */
-   const GhostData& get_valid_ghost_data() const{ return sfsharedPtr_->validGhosts_; }
-   
+   const GhostData& get_valid_ghost_data() const{ return validGhosts_; }
+
    unsigned int allocated_bytes() const{ return sfsharedPtr_->allocatedBytes_; }
 
 
@@ -726,10 +738,10 @@ namespace structured{
     * This method should be used when a field assignment can only occur on a subset of the field due to invalidation of some of the ghost cells.
     */
    inline void reset_valid_ghosts( const GhostData& ghosts ){
-//     const IntVec diff = sfsharedPtr_->validGhosts_.get_minus() - ghosts.get_minus();
-//     fieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(),
-//                                  fieldWindow_.offset() + diff,
-//                                  fieldWindow_.extent() - diff - sfsharedPtr_->validGhosts_.get_plus() + ghosts.get_plus() );
+     const IntVec diff = sfsharedPtr_->validGhosts_.get_minus() - ghosts.get_minus();
+     fieldWindow_ = MemoryWindow( fieldWindow_.glob_dim(),
+                                  fieldWindow_.offset() + diff,
+                                  fieldWindow_.extent() - diff - sfsharedPtr_->validGhosts_.get_plus() + ghosts.get_plus() );
      sfsharedPtr_->reset_valid_ghosts( ghosts );
    }
 
@@ -753,9 +765,11 @@ namespace structured{
      return field_type( w, *this );
    }
 
-   MemoryWindow fieldWindow_;
-
   private:
+
+   MemoryWindow fieldWindow_;
+   BoundaryCellInfo bcInfo_;
+   GhostData validGhosts_;
    typedef boost::shared_ptr<SpatialFieldLoc> shared_ptrT;
    shared_ptrT sfsharedPtr_;
 
