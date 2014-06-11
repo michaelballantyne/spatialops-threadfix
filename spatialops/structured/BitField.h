@@ -536,14 +536,14 @@ namespace structured{
         ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
         if(citer != consumerBitValues_.end()){
 #     ifndef NDEBUG
-        if(citer->second == NULL) {
-          std::ostringstream msg;
-          msg << "Request for consumer mask pointer on a GPU_INDEX for which it has not been allocated\n"
-              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
+          if(citer->second == NULL) {
+            std::ostringstream msg;
+            msg << "Request for consumer mask pointer on a GPU_INDEX for which it has not been allocated\n"
+                << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+            throw(std::runtime_error(msg.str()));
+          }
 #     endif
-        return citer->second;
+          return citer->second;
         }
 #     endif
       }
