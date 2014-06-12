@@ -233,7 +233,7 @@
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                  if( IS_GPU_INDEX(deviceIndex){
+                  if( IS_GPU_INDEX(deviceIndex)){
                     const_cast<FieldType *>(&field_)->add_field_loc(deviceIndex);
                   }
                   else{
