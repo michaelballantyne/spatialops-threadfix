@@ -521,31 +521,31 @@ namespace structured{
     inline const unsigned int * mask_values(const short int consumerDeviceIndex = CPU_INDEX) const
     {
       if(consumerDeviceIndex == CPU_INDEX){
-#     ifndef NDEBUG
+#       ifndef NDEBUG
         if(bitValues_ == NULL) {
           std::ostringstream msg;
           msg << "Request for consumer mask pointer on a CPU_INDEX for which it has not been allocated\n"
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
-#     endif
+#       endif
         return bitValues_;
       }
-      else if(IS_GPU_INDEX(consumerDeviceIndex)){
-#     ifdef ENABLE_CUDA
+      else if( IS_GPU_INDEX(consumerDeviceIndex) ){
+#       ifdef ENABLE_CUDA
         ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
         if(citer != consumerBitValues_.end()){
-#     ifndef NDEBUG
+#         ifndef NDEBUG
           if(citer->second == NULL) {
             std::ostringstream msg;
             msg << "Request for consumer mask pointer on a GPU_INDEX for which it has not been allocated\n"
                 << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
             throw(std::runtime_error(msg.str()));
           }
-#     endif
+#         endif
           return citer->second;
         }
-#     endif
+#       endif
       }
       else{
         std::ostringstream msg;
