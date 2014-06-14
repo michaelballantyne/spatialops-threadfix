@@ -63,6 +63,10 @@ namespace cuda { //ema::cuda
      * */
     void* get_raw_pointer(const unsigned long int N, const unsigned int K = 0);
 
+    /** \brief attempts to allocate N bytes on CPU, returns the explicit memory pointer
+      * */
+    void* get_pinned_pointer(const unsigned long int N, const unsigned int k = 0);
+
     /** \brief attempts to allocate N bytes on device K, returns a CUDASharedPointer object
      * that will free the allocated memory after all references have expired.
      */
@@ -73,6 +77,9 @@ namespace cuda { //ema::cuda
 
     /** \brief attempts to free the given pointer offset on device K **/
     void release(void* x, const unsigned int K = 0);
+
+    /** \brief attempts to free the given pinned pointer offset on device K **/
+    void releaseHost(void* x, const unsigned int K = 0);
 
     /** \brief copy a data block to a device**/
     void memcpy_to(void* dest, const void* src, const size_t sz, const unsigned int deviceID, cudaStream_t stream=0);

@@ -66,7 +66,9 @@ namespace cuda {
 /*---- CUDA wrappers with error checking/processing */
 void CudaSetDevice(const int device);
 void CudaMalloc(void** src, const size_t sz, const unsigned int device);
+void CudaHostAlloc(void**, const size_t sz, const unsigned int device);
 void CudaFree(void* src, const unsigned int device);
+void CudaFreeHost(void* src, const unsigned int device);
 void CudaMemcpy(void* src, const void* dest, const unsigned int device, const size_t sz,
                 cudaMemcpyKind cmkk);
 

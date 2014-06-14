@@ -60,17 +60,8 @@ Pool<T>::~Pool()
     FieldQueue& fq = i->second;
     while( !fq.empty() ){
 # ifdef ENABLE_CUDA
-      cudaError_t err;
-      if (pinned_) {
-        if (cudaSuccess != (err = cudaFreeHost(fq.top())) ) {
-          std::ostringstream msg;
-          msg << "Failed while freeing pinned memory " << __FILE__ << " : " << __LINE__
-            << std::endl;
-          msg << "\t - " << cudaGetErrorString(err);
-          throw(std::runtime_error(msg.str()));
-        }
-      }
-      else { delete [] fq.top(); }
+      if(pinned_) { ema::cuda::CUDADeviceInterface::self().releaseHost( fq.top() ); }
+      else        { delete [] fq.top(); }
 # else
       delete [] fq.top();
 # endif
@@ -136,16 +127,8 @@ Pool<T>::get( const short int deviceLocation, const size_t _n )
          * this operation is performed at memory pool level which is created
          * and destroyed only once.
          */
-        cudaError_t err;
-        if (cudaSuccess != (err = cudaMallocHost((void**)&field, n*sizeof(T)))) {
-          std::ostringstream msg;
-          msg << "WARNING : Pinned Memory allocation failed , at " << __FILE__ << " : " << __LINE__
-              << std::endl;
-          msg << "\t - " << cudaGetErrorString(err);
-          msg << "Allocating Pageable memory instead. \n";
-          field = new T[n];
-          pinned_ = false;
-        }
+        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+        field = (T*)CDI.get_pinned_pointer( n*sizeof(T) );
 #else
         // Pageable Memory mode
         field = new T[n];

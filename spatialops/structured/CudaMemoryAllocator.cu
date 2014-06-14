@@ -70,6 +70,30 @@ void CudaMalloc(void** src, const size_t sz, const unsigned int device) {
 #endif
 }
 
+void CudaHostAlloc(void** src, const size_t sz, const unsigned int device) {
+
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaHostAlloc wrapper called (src,size,device) -> (";
+  std::cout << src << "," << sz << "," << device << ")" << std::endl;
+#endif
+  cudaError err;
+
+  CudaSetDevice(device);
+  if (cudaSuccess != (err = cudaHostAlloc(src,sz,cudaHostAllocPortable))) {
+    std::ostringstream msg;
+    msg << "CudaHostAlloc failed, at " << __FILE__ << " : " << __LINE__
+        << std::endl;
+    msg << "\t - " << cudaGetErrorString(err);
+    throw(std::runtime_error(msg.str()));
+  }
+
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaHostAlloc pointer to allocated Pinned memory for Device context: " << device
+            << "," << " address : " << src << std::hex << " , " << src << std::endl;
+  std::cout << "CudaHostAlloc wrapper exiting \n";
+#endif
+}
+
 /*---------------------------------------------------------------------*/
 
 void CudaFree(void* src, const unsigned int device) {
@@ -90,6 +114,27 @@ void CudaFree(void* src, const unsigned int device) {
 
 #ifdef DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaFree wrapper exiting \n";
+#endif
+}
+
+void CudaFreeHost(void* src, const unsigned int device) {
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaFreeHost wrapper called (src, device) ->";
+  std::cout << "(" << src << "," << device << ")\n";
+#endif
+  cudaError err;
+
+  CudaSetDevice(device);
+  if (cudaSuccess != (err = cudaFreeHost(src))) {
+    std::ostringstream msg;
+    msg << "CudaFreeHost failed, at " << __FILE__ << " : " << __LINE__
+        << std::endl;
+    msg << "\t - " << cudaGetErrorString(err);
+    throw(std::runtime_error(msg.str()));
+  }
+
+#ifdef DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaFreeHost wrapper exiting \n";
 #endif
 }
 
@@ -382,8 +427,26 @@ void* CUDADeviceInterface::get_raw_pointer(unsigned long int N,
   }
 
   CudaMalloc(&devptr, N, K);
-
   return devptr;
+}
+
+void* CUDADeviceInterface::get_pinned_pointer(unsigned long int N,
+                                              unsigned int K) {
+  void* hostptr; //CPU Pinned pointer declaration
+
+#ifdef  DEBUG_EXT_ALLOC_MEM
+  std::cout << "CUDADeviceInterface::get_pinned_pointer -> Allocating new pinned pointer, " << N << " bytes on device context :" << K << std::endl;
+#endif
+  if (K >= CUDADeviceManager::self().device_count) {
+    std::ostringstream msg;
+    msg << "Failed call to get_pinned_pointer, at " << __FILE__ << " : " << __LINE__
+        << std::endl;
+    msg << "\t - Invalid device context '" << K << "'";
+    throw(std::range_error(msg.str()));
+  }
+
+  CudaHostAlloc(&hostptr, N, K);
+  return hostptr;
 }
 
 /*---------------------------------------------------------------------*/
@@ -444,6 +507,10 @@ void CUDADeviceInterface::release(CUDASharedPointer& x) {
 
 void CUDADeviceInterface::release(void* x, const unsigned int deviceID) {
   CudaFree(x, deviceID);
+}
+
+void CUDADeviceInterface::releaseHost(void* x, const unsigned int deviceID) {
+  CudaFreeHost(x, deviceID);
 }
 
 /******************* CUDASharedPointer Implementation *********************/
