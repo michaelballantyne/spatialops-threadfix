@@ -123,10 +123,18 @@ void CudaMemcpy(void* dest, const void* src, const size_t sz, const unsigned int
 #endif
    if (cudaSuccess != (err = cudaMemcpyAsync(dest, src, sz, cmkk, stream)) ) {
       std::ostringstream msg;
-      msg << "Cuda memcopy (Non-Blocking) failed, at" << __FILE__ << " : " << __LINE__ << std::endl;      msg << "Cuda memcopy (Non-Blocking) failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "Cuda memcopy (Non-Blocking) failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
       msg << "\t - " << cudaGetErrorString(err);
       throw(std::runtime_error(msg.str()));
    }
+#ifndef NDEBUG
+   if (cudaSuccess != (err = cudaStreamSynchronize(stream)) ) {
+      std::ostringstream msg;
+      msg << "CudaStreamSynchronize failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "\t - " << cudaGetErrorString(err);
+      throw(std::runtime_error(msg.str()));
+   }
+#endif
   }
 
 #ifdef  DEBUG_EXT_ALLOC_MEM
