@@ -1032,7 +1032,7 @@ SpatialField<Location,T>::SpatialFieldLoc::
   //        field location from add_field_loc(), the mode will still be the same
   //        which prevents the memory from being released but the memory has to be released
   //        as the FieldInfo reports the _builtField is true.
-  for(typename MultiFieldMap::iterator mapIter = multiFieldMap_.begin(); mapIter != multiFieldMap_.end(); mapIter++ ){
+  for( typename MultiFieldMap::iterator mapIter = multiFieldMap_.begin(); mapIter != multiFieldMap_.end(); ++mapIter ){
     if( !IS_VALID_INDEX(mapIter->first) ){
       std::ostringstream msg;
       msg << "Attempt to release field ( "
@@ -1042,10 +1042,8 @@ SpatialField<Location,T>::SpatialFieldLoc::
       throw( std::runtime_error( msg.str() ) );
     }
     if( builtField_ || mapIter->second._builtField ){
-      //std::cout << "Putting memory back to the pool ~SpatialFieldLoc() : " << mapIter->second.field << std::endl;
+//      std::cout << "Putting memory back to the pool ~SpatialFieldLoc() : " << mapIter->second.field << std::endl;
       Pool<T>::self().put( mapIter->first, mapIter->second.field );
-      mapIter->second.field = NULL;
-      multiFieldMap_.erase(mapIter->first);
     }
   }
 }

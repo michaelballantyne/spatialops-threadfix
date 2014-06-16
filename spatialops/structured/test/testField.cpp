@@ -366,7 +366,7 @@ int main()
     overall( test_store<SVolField,  SSurfZField>( IntVec(30,40,50), IntVec(0,0,0) ), "SVol,SSZ      store" );
     overall( test_store<XSurfXField,SVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,SVol     store" );
     overall( test_store<XSurfXField,ZVolField  >( IntVec(30,40,50), IntVec(0,0,0) ), "XSX ,ZVol     store" );
-    overall( test_store<YSurfZField,ZSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "YSZ ,ZSX     store" );
+    overall( test_store<YSurfZField,ZSurfXField>( IntVec(30,40,50), IntVec(0,0,0) ), "YSZ ,ZSX      store" );
   }
   catch(...){
     overall(false);
