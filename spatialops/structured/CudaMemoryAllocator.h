@@ -88,7 +88,7 @@ class CUDADeviceManager {
     int get_device_count() const;
 
     /** \brief Returns the memory structure associated with device K */
-    void get_memory_statistics(CUDAMemStats& cms, const int K = 0) const;
+    void get_memory_statistics( CUDAMemStats& cms, const int K = 0 ) const;
 
     /** \brief Updates the 'device_stats' structures with the most current memory usage statistics
      * Please note that it is possible memory can be allocated from other sources, this
@@ -113,18 +113,16 @@ class CUDADeviceManager {
      */
     class ExecMutex {
 #   ifdef ENABLE_THREADS
-        const boost::mutex::scoped_lock lock;
-        inline boost::mutex& get_mutex() const {static boost::mutex m; return m;}
+      const boost::mutex::scoped_lock lock;
+      inline boost::mutex& get_mutex() const {static boost::mutex m; return m;}
 
-        public:
-        ExecMutex() : lock( get_mutex() ) {}
-        ~ExecMutex() {}
+    public:
+      ExecMutex() : lock( get_mutex() ) {}
+      ~ExecMutex() {}
 #   else
-      public:
-        ExecMutex() {
-        }
-        ~ExecMutex() {
-        }
+    public:
+      ExecMutex(){}
+      ~ExecMutex(){}
 #   endif
     };
 };

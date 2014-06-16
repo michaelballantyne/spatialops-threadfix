@@ -40,9 +40,9 @@ namespace SpatialOps{
       offset_( offset ),
       extent_( extent )
     {
-#   ifndef NDEBUG
+#     ifndef NDEBUG
       assert( sanity_check() );
-#   endif
+#     endif
     }
 
     MemoryWindow::MemoryWindow( const IntVec& npts,
@@ -52,9 +52,9 @@ namespace SpatialOps{
       offset_( offset ),
       extent_( extent )
     {
-#   ifndef NDEBUG
+#     ifndef NDEBUG
       assert( sanity_check() );
-#   endif
+#     endif
    }
 
     MemoryWindow::MemoryWindow( const int npts[3] )
@@ -68,9 +68,9 @@ namespace SpatialOps{
     MemoryWindow::MemoryWindow( const IntVec& npts )
     : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
     {
-#   ifndef NDEBUG
+#     ifndef NDEBUG
       assert( sanity_check() );
-#   endif
+#     endif
     }
 
     //---------------------------------------------------------------

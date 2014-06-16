@@ -226,7 +226,7 @@ namespace structured{
 
       inline const_iterator cbegin(MemoryWindow const window) const {
         cmapIter mapIter = multiFieldMap_.find( CPU_INDEX );
-# ifndef NDEBUG
+#       ifndef NDEBUG
         if( mapIter == multiFieldMap_.end() || mapIter->second.field == NULL ){
           std::ostringstream msg;
           msg << "Field type "
@@ -243,13 +243,14 @@ namespace structured{
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
-# endif
+#       endif
         return const_iterator(mapIter->second.field, window);
       }
 
-      inline iterator begin(MemoryWindow const window) {
+      inline iterator begin( MemoryWindow const window )
+      {
         mapIter mapIter = multiFieldMap_.find( CPU_INDEX );
-# ifndef NDEBUG
+#       ifndef NDEBUG
         if( mapIter == multiFieldMap_.end() ){
           std::ostringstream msg;
           msg << "Field type "
@@ -266,11 +267,12 @@ namespace structured{
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
-# endif
+#       endif
         return iterator( mapIter->second.field, window );
       }
 
-      inline const_iterator cend(MemoryWindow const window) const {
+      inline const_iterator cend( MemoryWindow const window ) const
+      {
         cmapIter mapIter = multiFieldMap_.find( CPU_INDEX );
         if( mapIter == multiFieldMap_.end() || mapIter->second.field != NULL ){
           int extent = window.extent(0) * window.extent(1) * window.extent(2);
@@ -286,9 +288,10 @@ namespace structured{
         }
       }
 
-      inline iterator end(MemoryWindow const window) {
+      inline iterator end( MemoryWindow const window )
+      {
         mapIter mapIter = multiFieldMap_.find( CPU_INDEX );
-# ifndef NDEBUG
+#        ifndef NDEBUG
         if( mapIter == multiFieldMap_.end() ){
           std::ostringstream msg;
           msg << "Field type "
@@ -297,7 +300,7 @@ namespace structured{
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
-#endif
+#       endif
         if( activeDeviceIndex_ == CPU_INDEX ){
           int extent = window.extent(0) * window.extent(1) * window.extent(2);
           iterator i(mapIter->second.field, window);
@@ -313,66 +316,68 @@ namespace structured{
         }
       }
 
-       inline const_interior_iterator interior_begin() const {
-         cmapIter const_mapIter = multiFieldMap_.find(CPU_INDEX);
-# ifndef NDEBUG
-         if( disableInterior_ ){
-           std::ostringstream msg;
-           msg << "Interior iterators cannot be obtained on resized fields" << std::endl
-               << __FILE__ << " : " << __LINE__ << std::endl;
-           throw( std::runtime_error(msg.str()) );
-         }
-         if( const_mapIter == multiFieldMap_.end() || const_mapIter->second.field == NULL ){
-           std::ostringstream msg;
-           msg << "Field type ( "
-               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
-               << " doesn't exist in the map. Something wrong is with the memory.\n"
-               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-           throw(std::runtime_error(msg.str()));
-         }
-         if( !const_mapIter->second.isValid ){
-           std::ostringstream msg;
-           msg << "Field type ( "
-               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
-               << " is not valid. const_interior_iterator are not allowed on to a invalid field.\n"
-               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-           throw(std::runtime_error(msg.str()));
-         }
-#endif
-         return const_interior_iterator( const_mapIter->second.field, interiorFieldWindow_ );
-       }
+      inline const_interior_iterator interior_begin() const
+      {
+        cmapIter const_mapIter = multiFieldMap_.find(CPU_INDEX);
+#       ifndef NDEBUG
+        if( disableInterior_ ){
+          std::ostringstream msg;
+          msg << "Interior iterators cannot be obtained on resized fields" << std::endl
+              << __FILE__ << " : " << __LINE__ << std::endl;
+          throw( std::runtime_error(msg.str()) );
+        }
+        if( const_mapIter == multiFieldMap_.end() || const_mapIter->second.field == NULL ){
+          std::ostringstream msg;
+          msg << "Field type ( "
+              << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
+              << " doesn't exist in the map. Something wrong is with the memory.\n"
+              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+          throw(std::runtime_error(msg.str()));
+        }
+        if( !const_mapIter->second.isValid ){
+          std::ostringstream msg;
+          msg << "Field type ( "
+              << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
+              << " is not valid. const_interior_iterator are not allowed on to a invalid field.\n"
+              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+          throw(std::runtime_error(msg.str()));
+        }
+#       endif
+        return const_interior_iterator( const_mapIter->second.field, interiorFieldWindow_ );
+      }
 
-       inline interior_iterator interior_begin() {
-         mapIter mapIter = multiFieldMap_.find( CPU_INDEX );
-# ifndef NDEBUG
-         if( disableInterior_ ){
-           std::ostringstream msg;
-           msg << "Interior iterators cannot be obtained on resized fields" << std::endl
-               << __FILE__ << " : " << __LINE__ << std::endl;
-           throw( std::runtime_error(msg.str()) );
-         }
-         if( mapIter == multiFieldMap_.end() ){
-           std::ostringstream msg;
-           msg << "Field type "
-               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
-               << " doesn't exist in the map. Something is wrong with the memory allocation.\n"
-               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-           throw(std::runtime_error(msg.str()));
-         }
-         if (activeDeviceIndex_ != CPU_INDEX) {
-           std::ostringstream msg;
-           msg << "Field type ( "
-               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
-               << " does not support non-const iteration.\n"
-               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-           throw(std::runtime_error(msg.str()));
-         }
-#endif
-         return interior_iterator( mapIter->second.field, interiorFieldWindow_);
-       }
+      inline interior_iterator interior_begin()
+      {
+        mapIter mapIter = multiFieldMap_.find( CPU_INDEX );
+#       ifndef NDEBUG
+        if( disableInterior_ ){
+          std::ostringstream msg;
+          msg << "Interior iterators cannot be obtained on resized fields" << std::endl
+              << __FILE__ << " : " << __LINE__ << std::endl;
+          throw( std::runtime_error(msg.str()) );
+        }
+        if( mapIter == multiFieldMap_.end() ){
+          std::ostringstream msg;
+          msg << "Field type "
+              << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
+          << " doesn't exist in the map. Something is wrong with the memory allocation.\n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+          throw(std::runtime_error(msg.str()));
+        }
+        if( activeDeviceIndex_ != CPU_INDEX ){
+          std::ostringstream msg;
+          msg << "Field type ( "
+              << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
+              << " does not support non-const iteration.\n"
+              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+          throw(std::runtime_error(msg.str()));
+        }
+#       endif
+        return interior_iterator( mapIter->second.field, interiorFieldWindow_);
+      }
 
-       inline const_interior_iterator interior_end() const;
-       inline interior_iterator interior_end();
+      inline const_interior_iterator interior_end() const;
+      inline interior_iterator interior_end();
 
 
   #   ifdef ENABLE_CUDA
@@ -692,7 +697,7 @@ namespace structured{
      return sfsharedPtr_->active_device_index();
    }
 
-#   ifdef ENABLE_THREADS
+#  ifdef ENABLE_THREADS
    /**
     * Sets number of partitions Nebo uses in its thread-parallel backend when assigning to this field
     *
@@ -809,14 +814,14 @@ namespace structured{
 
 template<typename Location>
 struct SingleValueCheck {
-  static inline void check(MemoryWindow const & window,
-                           GhostData const & ghosts) {}
+  static inline void check( MemoryWindow const & window,
+                            GhostData const & ghosts ) {}
 };
 
 template<>
 struct SingleValueCheck<SingleValue> {
-  static inline void check(MemoryWindow const & window,
-                           GhostData const & ghosts)
+  static inline void check( MemoryWindow const & window,
+                            GhostData const & ghosts )
   {
 #   ifndef NDEBUG
     if( (window.extent(0) > 1) &&
@@ -916,20 +921,20 @@ SpatialFieldLoc( const MemoryWindow& window,
     }
     multiFieldMap_[activeDeviceIndex_] = FieldInfo( fieldValues_, true, builtField_ );
   }
-#     ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   else if( IS_GPU_INDEX(activeDeviceIndex_) ){
     if( mode == InternalStorage ){
       fieldValuesExtDevice_ = Pool<T>::self().get( activeDeviceIndex_, window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) );
     }
     multiFieldMap_[activeDeviceIndex_] = FieldInfo( fieldValuesExtDevice_, true, builtField_ );
   }
-#     endif
+# endif // ENABLE_CUDA
   else{
-      std::ostringstream msg;
-      msg << "Unsupported attempt to create field of type ( "
-          << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
-          << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      throw(std::runtime_error(msg.str()));
+    std::ostringstream msg;
+    msg << "Unsupported attempt to create field of type ( "
+        << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
+    << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+    throw(std::runtime_error(msg.str()));
   }
 
   if (mode == InternalStorage ){
@@ -955,12 +960,12 @@ SpatialFieldLoc( const SpatialFieldLoc& other )
   disableInterior_( other.disableInterior_ ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_THREADS
-  , partitionCount_( other.partitionCount_ )
+, partitionCount_( other.partitionCount_ )
 # endif
 # ifdef ENABLE_CUDA
-  , cudaStream_( other.cudaStream_ )
+, cudaStream_( other.cudaStream_ )
 # endif
-{ }
+{}
 
 //------------------------------------------------------------------
 // both the constructors can be taken out.
@@ -980,10 +985,10 @@ SpatialFieldLoc( const MemoryWindow& window, const SpatialFieldLoc& other )
   disableInterior_( other.disableInterior_ ),
   allocatedBytes_( other.allocatedBytes_ )
 # ifdef ENABLE_THREADS
-  , partitionCount_( other.partitionCount_ )
+, partitionCount_( other.partitionCount_ )
 # endif
 # ifdef ENABLE_CUDA
-    , cudaStream_( other.cudaStream_ )
+, cudaStream_( other.cudaStream_ )
 # endif
 {
   SingleValueCheck<Location>::check(fieldWindow_, ghosts_);
@@ -1076,7 +1081,7 @@ reset_values( const T* values )
       CDI.memcpy_to( mapIter->second.field, src, allocatedBytes_, activeDeviceIndex_, cudaStream_ );
     }
   }
-# endif
+# endif // ENABLE_CUDA
   else{
     std::ostringstream msg;
     msg << "Reset values called for unsupported field type ( "
@@ -1139,7 +1144,6 @@ field_values( const short int deviceLocation )
       }
     }
   }
-
 }
 
 //------------------------------------------------------------------
@@ -1182,7 +1186,6 @@ cfield_values( const short int deviceLocation ) const
       throw(std::runtime_error(msg.str()));
     }
   }
-
 }
 
 //------------------------------------------------------------------
@@ -1304,10 +1307,10 @@ void SpatialField<Location,T>::SpatialFieldLoc::
   remove_multiple_fields()
 {
   // Note this method is only accessed by fields that are locked.
-#ifdef DEBUG_SF_ALL
+# ifdef DEBUG_SF_ALL
   std::cout << "Caught call to SpatialField::remove_multiple_fields() for location : "
             << DeviceTypeTools::get_memory_type_description(actualDeviceIndex_) << std::endl;
-#endif
+# endif
 
   //Release any fields allocated for "multiple_fields" use
   if( !has_multiple_fields() ) return;
@@ -1321,7 +1324,7 @@ void SpatialField<Location,T>::SpatialFieldLoc::
   }
 }
 
-#endif
+#endif // ENABLE_CUDA
 
 //------------------------------------------------------------------
 
@@ -1514,7 +1517,7 @@ SpatialField<Location,T>::SpatialFieldLoc::interior_end()
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
-#endif
+# endif
   if( activeDeviceIndex_ == CPU_INDEX ){
     const size_t extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
     interior_iterator i(mapIter->second.field, interiorFieldWindow_);
@@ -1567,7 +1570,7 @@ SpatialField<Location,T>::SpatialFieldLoc::operator()(const IntVec& ijk)
 # endif
 
   if( activeDeviceIndex_ == CPU_INDEX ){
-  #   ifndef NDEBUG
+#   ifndef NDEBUG
     assert( (size_t)ijk[0] <  fieldWindow_.extent(0) );
     assert( (size_t)ijk[1] <  fieldWindow_.extent(1) );
     assert( (size_t)ijk[2] <  fieldWindow_.extent(2) );
@@ -1595,7 +1598,7 @@ const T& SpatialField<Location,T>::SpatialFieldLoc::
 operator()( const size_t i, const size_t j, const size_t k ) const
 {
   cmapIter const_mapIter = multiFieldMap_.find(CPU_INDEX);
-  if ( (const_mapIter!=multiFieldMap_.end() || const_mapIter->second.field != NULL) && const_mapIter->second.isValid ) {
+  if( (const_mapIter!=multiFieldMap_.end() || const_mapIter->second.field != NULL) && const_mapIter->second.isValid ){
 #   ifndef NDEBUG
     assert( i <  fieldWindow_.extent(0) );
     assert( j <  fieldWindow_.extent(1) );
@@ -1750,7 +1753,6 @@ SpatialField<Location,T>::SpatialFieldLoc::operator[](const size_t i) const
   }
 # endif
   return mapIter->second.field[i];
-
 }
 
 //------------------------------------------------------------------
@@ -1830,7 +1832,7 @@ SpatialField<Location,T>::operator=(const SpatialField& other)
     }
 
     } // else if
-# endif
+# endif // ENABLE_CUDA
   else{
     std::ostringstream msg;
     msg << "Attempted unsupported copy operation, at \n\t"

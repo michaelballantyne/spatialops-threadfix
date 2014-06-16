@@ -68,7 +68,7 @@ namespace structured{
       yExtent_(w.extent(1)),
       zExtent_(w.extent(2)),
       xyExtent_(w.extent(0) * w.extent(1))
-        {};
+  {}
 
     //immutable dereference
     inline bool operator*() const {
@@ -79,14 +79,14 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator's bitPosition_ is out of bounds";
         throw std::runtime_error(msg.str());
-      };
+      }
       if(blockPosition_ < 0 ||
          blockPosition_ >= size_) {
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator's blockPosition_ is out of bounds";
         throw std::runtime_error(msg.str());
-      };
+      }
       if(count_ != (xIndex_ +
                     yIndex_ * xExtent_ +
                     zIndex_ * xyExtent_)) {
@@ -94,7 +94,7 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator's internal count is off";
         throw std::runtime_error(msg.str());
-      };
+      }
       if(xIndex_ >= xExtent_ ||
          yIndex_ >= yExtent_ ||
          zIndex_ >= zExtent_ ||
@@ -105,10 +105,10 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator is in an invalid state for dereference";
         throw std::runtime_error(msg.str());
-      };
+      }
 #     endif
       return !!(*(bitField_ + blockPosition_) & (1 << bitPosition_));
-    };
+    }
 
     //increment
     inline MyType & operator++() {
@@ -123,8 +123,8 @@ namespace structured{
           bitPosition_ += zStep_; //zStep
           yIndex_ = 0;
           zIndex_++;
-        };
-      };
+        }
+      }
 
       //recalculate bitPosition_ and blockPosition_
       update_positions();
@@ -136,37 +136,38 @@ namespace structured{
 
     //decrement
     inline MyType & operator--() {
-      bitPosition_--; //xStep
-      count_--;
-      xIndex_--;
-      if(xIndex_ == -1){
+      --bitPosition_; //xStep
+      --count_;
+      --xIndex_;
+      if( xIndex_ == -1 ){
         bitPosition_ -= yStep_; //yStep
         xIndex_ = xExtent_ - 1;
-        yIndex_--;
-        if(yIndex_ == -1){
+        --yIndex_;
+        if( yIndex_ == -1 ){
           bitPosition_ -= zStep_; //zStep
           yIndex_ = yExtent_ - 1;
-          zIndex_--;
-        };
-      };
+          --zIndex_;
+        }
+      }
 
       //recalculate bitPosition_ and blockPosition_
       update_positions();
 
       return *this;
-    };
+    }
 
     inline MyType operator--(int) { MyType result = *this; --(*this); return result; };
 
     //compound assignment
     inline MyType & operator+=(int change) {
       //small change (only changes xIndex_)
-      if((change > 0 && change < xExtent_ - xIndex_) || //positive change
-         (change < 0 && - change < xIndex_)) { //negative change
+      if( (change > 0 && change < xExtent_ - xIndex_) || //positive change
+          (change < 0 && - change < xIndex_) ){ //negative change
         bitPosition_ += change;
         xIndex_ += change;
         count_ += change;
-      } else { //bigger change (changes yIndex_ and/or zIndex_)
+      }
+      else { //bigger change (changes yIndex_ and/or zIndex_)
         int new_count = count_ + change;
         int old_count = count_;
         bitPosition_ += (change + //xStep
@@ -176,33 +177,33 @@ namespace structured{
         xIndex_ = count_ % xExtent_;
         yIndex_ = (count_ % xyExtent_) / xExtent_;
         zIndex_ = count_ / xyExtent_;
-      };
+      }
 
       //recalculate bitPosition_ and blockPosition_
       update_positions();
 
       return *this;
-    };
+    }
 
-    inline MyType & operator-=(int change) { return *this += -change; };
+    inline MyType & operator-=(int change) { return *this += -change; }
 
     //addition/subtraction
-    inline MyType operator+ (int change) const { MyType result = *this; result += change; return result; };
+    inline MyType operator+ (int change) const { MyType result = *this; result += change; return result; }
     inline MyType operator- (int change) const { return *this + (-change); };
 
     //iterator subtraction
-    inline ptrdiff_t operator- (MyType const & other) const { return count_ - other.count_; };
+    inline ptrdiff_t operator- (MyType const & other) const { return count_ - other.count_; }
 
     //offset dereference
-    inline bool operator[](int change) { MyType result = *this; result += change; return *result; };
+    inline bool operator[](int change) { MyType result = *this; result += change; return *result; }
 
     //comparisons
-    inline bool operator==(MyType const & other) const { return bitField_ == other.bitField_ && count_ == other.count_; };
-    inline bool operator!=(MyType const & other) const { return bitField_ != other.bitField_ || count_ != other.count_; };
-    inline bool operator< (MyType const & other) const { return bitField_ == other.bitField_ && count_ <  other.count_; };
-    inline bool operator> (MyType const & other) const { return bitField_ == other.bitField_ && count_ > other.count_; };
-    inline bool operator<=(MyType const & other) const { return bitField_ == other.bitField_ && count_ <= other.count_; };
-    inline bool operator>=(MyType const & other) const { return bitField_ == other.bitField_ && count_ >= other.count_; };
+    inline bool operator==(MyType const & other) const { return bitField_ == other.bitField_ && count_ == other.count_; }
+    inline bool operator!=(MyType const & other) const { return bitField_ != other.bitField_ || count_ != other.count_; }
+    inline bool operator< (MyType const & other) const { return bitField_ == other.bitField_ && count_ <  other.count_; }
+    inline bool operator> (MyType const & other) const { return bitField_ == other.bitField_ && count_ >  other.count_; }
+    inline bool operator<=(MyType const & other) const { return bitField_ == other.bitField_ && count_ <= other.count_; }
+    inline bool operator>=(MyType const & other) const { return bitField_ == other.bitField_ && count_ >= other.count_; }
 
   private:
 
@@ -212,22 +213,18 @@ namespace structured{
         const int flatPosition = blockPosition_ * NEBO_INT_BIT + bitPosition_;
         blockPosition_ = flatPosition / NEBO_INT_BIT;
         bitPosition_ = flatPosition % NEBO_INT_BIT;
-      };
-    };
+      }
+    }
 
     unsigned int * bitField_;
     int bitPosition_;
     int blockPosition_;
     int count_;
     int size_;
-    int xIndex_;
-    int yIndex_;
-    int zIndex_;
+    int xIndex_, yIndex_, zIndex_;
     int yStep_;
     int zStep_;
-    int xExtent_;
-    int yExtent_;
-    int zExtent_;
+    int xExtent_, yExtent_, zExtent_;
     int xyExtent_;
   };
 
@@ -317,26 +314,27 @@ namespace structured{
 
     inline void add_point(const IntVec & point)
     {
-      if(bitValues_ != NULL) {
+      if( bitValues_ != NULL ){
         const int position = find_position(point);
         unsigned int * const blockPosition = bitValues_ + find_block(position);
         const int bitPosition = find_bit_position(position);
         //update block with new point
         *blockPosition = (*blockPosition | (1 << bitPosition));
-      } else {
+      }
+      else{
         std::ostringstream msg;
         msg << "Unsupported attempt to add points to a mask of type ( "
             << DeviceTypeTools::get_memory_type_description(deviceIndex_)
             << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
-      };
-    };
+      }
+    }
 
-    inline void add_points(const std::vector<IntVec> & points)
+    inline void add_points( const std::vector<IntVec> & points )
     {
       for(std::vector<IntVec>::const_iterator i = points.begin(); i != points.end(); i++)
         add_point(*i);
-    };
+    }
 
   public:
 
@@ -376,7 +374,7 @@ namespace structured{
         hasgpuConsumer_(false),
         deviceIndex_(other.deviceIndex_),
         consumerBitValues_(other.consumerBitValues_)
-    {};
+    {}
 
     ~BitField()
     {
@@ -390,7 +388,7 @@ namespace structured{
       consumerBitValues_.clear();
       myConsumerBitValues_.clear();
       hasgpuConsumer_ = false;
-#     endif
+#     endif // ENABLE_CUDA
 
       if ( builtMask_ && !hasgpuConsumer_ ) {
         if( deviceIndex_ == CPU_INDEX ){
@@ -406,8 +404,7 @@ namespace structured{
           throw( std::runtime_error( msg.str() ) );
         }
       }
-    };
-
+    }
 
     /**
      *  \brief Given an index in this mask, return whether or not index is a mask point.
@@ -422,14 +419,15 @@ namespace structured{
         const int bitPosition = find_bit_position(position);
         //update block with new point
         return !!(*block & (1 << bitPosition));
-      } else {
+      }
+      else {
         std::ostringstream msg;
         msg << "Unsupported attempt to add points to a mask of type ( "
             << DeviceTypeTools::get_memory_type_description(deviceIndex_)
             << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
-      };
-    };
+      }
+    }
 
     /**
      * \brief Iterator constructs for traversing memory windows.
@@ -467,7 +465,7 @@ namespace structured{
     {
       // CPU Masks are always exist and hence create only GPU Masks.
       if( consumerDeviceIndex == CPU_INDEX )  return;
-# ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       else if( IS_GPU_INDEX(consumerDeviceIndex) ){
         //CPU Mask needs to be available on GPU
         ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
@@ -482,7 +480,7 @@ namespace structured{
         hasgpuConsumer_ = true;
         return;
       }
-# endif
+#     endif // ENABLE_CUDA
       else{
         std::ostringstream msg;
         msg << "Failed call to add_consumer on Spatial Mask, unknown destination device type : " << consumerDeviceIndex << std::endl
@@ -490,17 +488,17 @@ namespace structured{
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
-    };
+    }
 
     inline bool find_consumer(const short int consumerDeviceIndex) const
     {
       //Check for local allocation
       if( consumerDeviceIndex == CPU_INDEX ) return true;
-# ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       else if( IS_GPU_INDEX(consumerDeviceIndex) ){
         return consumerBitValues_.find( consumerDeviceIndex ) != consumerBitValues_.end();
       }
-# endif
+#     endif // ENABLE_CUDA
       else
       {
         std::ostringstream msg;
@@ -509,20 +507,20 @@ namespace structured{
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
-    };
+    }
 
     inline bool has_consumers()
     {
       return consumerBitValues_.find(GPU_INDEX) != consumerBitValues_.end();
-    };
+    }
 
     inline short int device_index() const { return deviceIndex_; };
 
-    inline const unsigned int * mask_values(const short int consumerDeviceIndex = CPU_INDEX) const
+    inline const unsigned int * mask_values( const short int consumerDeviceIndex = CPU_INDEX ) const
     {
-      if(consumerDeviceIndex == CPU_INDEX){
+      if( consumerDeviceIndex == CPU_INDEX ){
 #       ifndef NDEBUG
-        if(bitValues_ == NULL) {
+        if( bitValues_ == NULL ){
           std::ostringstream msg;
           msg << "Request for consumer mask pointer on a CPU_INDEX for which it has not been allocated\n"
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -534,7 +532,7 @@ namespace structured{
       else if( IS_GPU_INDEX(consumerDeviceIndex) ){
 #       ifdef ENABLE_CUDA
         ConsumerMap::const_iterator citer = consumerBitValues_.find(consumerDeviceIndex);
-        if(citer != consumerBitValues_.end()){
+        if( citer != consumerBitValues_.end() ){
 #         ifndef NDEBUG
           if(citer->second == NULL) {
             std::ostringstream msg;
@@ -553,7 +551,7 @@ namespace structured{
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
-      return NULL;
+      return NULL;   // should never get here.  This line is just to eliminate compiler warnings.
     };
   };
 

@@ -229,7 +229,7 @@ namespace structured{
       yStep_(0), zStep_(0),
       xExtent_(0), yExtent_(0), zExtent_(0),
       xyExtent_(0)
-    {};
+    {}
 
     FieldIterator( AtomicType * field_values,
                    const MemoryWindow & w )
@@ -245,7 +245,7 @@ namespace structured{
       yExtent_(w.extent(1)),
       zExtent_(w.extent(2)),
       xyExtent_(w.extent(0) * w.extent(1))
-    {};
+    {}
 
     //mutable dereference
     inline AtomicType & operator*() {
@@ -257,7 +257,7 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator's internal count is off";
         throw std::runtime_error(msg.str());
-      };
+      }
       if( xIndex_ >= xExtent_ ||
           yIndex_ >= yExtent_ ||
           zIndex_ >= zExtent_ ||
@@ -268,22 +268,22 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator is in an invalid state for dereference";
         throw std::runtime_error(msg.str());
-      };
+      }
 #     endif
       return *current_;
-    };
+    }
 
     //immutable dereference
     inline AtomicType const & operator*() const {
 #     ifndef NDEBUG
       if(count_ != (xIndex_ +
           yIndex_ * xExtent_ +
-          zIndex_ * xyExtent_)) {
+          zIndex_ * xyExtent_) ){
         std::ostringstream msg;
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator's internal count is off";
         throw std::runtime_error(msg.str());
-      };
+      }
       if( xIndex_ >= xExtent_ ||
           yIndex_ >= yExtent_ ||
           zIndex_ >= zExtent_ ||
@@ -294,10 +294,10 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator is in an invalid state for dereference";
         throw std::runtime_error(msg.str());
-      };
+      }
 #     endif
       return *current_;
-    };
+    }
 
     //increment
     inline Self & operator++() {
@@ -312,11 +312,11 @@ namespace structured{
           current_ += zStep_; //zStep
           yIndex_ = 0;
           zIndex_++;
-        };
-      };
+        }
+      }
       return *this;
-    };
-    inline Self operator++(int) { Self result = *this; ++(*this); return result; };
+    }
+    inline Self operator++(int) { Self result = *this; ++(*this); return result; }
 
     //decrement
     inline Self & operator--() {
@@ -331,11 +331,11 @@ namespace structured{
           current_ -= zStep_; //zStep
           yIndex_ = yExtent_ - 1;
           zIndex_--;
-        };
-      };
+        }
+      }
       return *this;
-    };
-    inline Self operator--(int) { Self result = *this; --(*this); return result; };
+    }
+    inline Self operator--(int) { Self result = *this; --(*this); return result; }
 
     //compound assignment
     inline Self & operator+=(int change) {
@@ -357,43 +357,37 @@ namespace structured{
         xIndex_ = count_ % xExtent_;
         yIndex_ = (count_ % xyExtent_) / xExtent_;
         zIndex_ = count_ / xyExtent_;
-      };
+      }
       return *this;
-    };
-    inline Self & operator-=(int change) { return *this += -change; };
+    }
+    inline Self & operator-=(int change) { return *this += -change; }
 
     //addition/subtraction
-    inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
-    inline Self operator- (int change) const { return *this + (-change); };
+    inline Self operator+ (int change) const { Self result = *this; result += change; return result; }
+    inline Self operator- (int change) const { return *this + (-change); }
 
     //pointer subtraction
-    inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
+    inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; }
 
     //offset dereference
-    inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
+    inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; }
 
     //comparisons
-    inline bool operator==(Self const & other) const { return current_ == other.current_; };
-    inline bool operator!=(Self const & other) const { return current_ != other.current_; };
-    inline bool operator< (Self const & other) const { return current_ <  other.current_; };
-    inline bool operator> (Self const & other) const { return current_ >  other.current_; };
-    inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
-    inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
+    inline bool operator==(Self const & other) const { return current_ == other.current_; }
+    inline bool operator!=(Self const & other) const { return current_ != other.current_; }
+    inline bool operator< (Self const & other) const { return current_ <  other.current_; }
+    inline bool operator> (Self const & other) const { return current_ >  other.current_; }
+    inline bool operator<=(Self const & other) const { return current_ <= other.current_; }
+    inline bool operator>=(Self const & other) const { return current_ >= other.current_; }
 
     IntVec location() const{ return IntVec(xIndex_,yIndex_,zIndex_); }
 
   private:
     AtomicType * current_;
     int count_;
-    int xIndex_;
-    int yIndex_;
-    int zIndex_;
-    int yStep_;
-    int zStep_;
-    int xExtent_;
-    int yExtent_;
-    int zExtent_;
-    int xyExtent_;
+    int xIndex_, yIndex_, zIndex_;
+    int yStep_, zStep_;
+    int xExtent_, yExtent_, zExtent_, xyExtent_;
   };
 
   template<typename FieldType>
@@ -409,7 +403,7 @@ namespace structured{
       yStep_(0), zStep_(0),
       xExtent_(0), yExtent_(0), zExtent_(0),
       xyExtent_(0)
-  {};
+  {}
 
     ConstFieldIterator(AtomicType * field_values,
                        const MemoryWindow & w)
@@ -425,7 +419,7 @@ namespace structured{
       yExtent_(w.extent(1)),
       zExtent_(w.extent(2)),
       xyExtent_(w.extent(0) * w.extent(1))
-    {};
+    {}
 
     ConstFieldIterator(const FieldIterator<FieldType> it)
     : current_(it.current_),
@@ -439,11 +433,12 @@ namespace structured{
       yExtent_(it.yExtent_),
       zExtent_(it.zExtent_),
       xyExtent_(it.xyExtent_)
-    {};
+    {}
 
     //immutable dereference
-    inline AtomicType const & operator*() const {
-#         ifndef NDEBUG
+    inline AtomicType const & operator*() const
+    {
+#     ifndef NDEBUG
       if( count_ != (xIndex_ +
           yIndex_ * xExtent_ +
           zIndex_ * xyExtent_) ){
@@ -451,7 +446,7 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator's internal count is off";
         throw std::runtime_error(msg.str());
-      };
+      }
       if( xIndex_ >= xExtent_ ||
           yIndex_ >= yExtent_ ||
           zIndex_ >= zExtent_ ||
@@ -462,10 +457,10 @@ namespace structured{
         msg << __FILE__ << " : " << __LINE__ << std::endl
             << "iterator is in an invalid state for dereference";
         throw std::runtime_error(msg.str());
-      };
+      }
 #         endif
       return *current_;
-    };
+    }
 
     //increment
     inline Self & operator++() {
@@ -480,17 +475,17 @@ namespace structured{
           current_ += zStep_; //zStep
           yIndex_ = 0;
           zIndex_++;
-        };
-      };
+        }
+      }
       return *this;
-    };
-    inline Self operator++(int) { Self result = *this; ++(*this); return result; };
+    }
+    inline Self operator++(int) { Self result = *this; ++(*this); return result; }
 
     //decrement
     inline Self & operator--() {
-      current_--; //xStep
-      count_--;
-      xIndex_--;
+      --current_; //xStep
+      --count_;
+      --xIndex_;
       if( xIndex_ == -1 ){
         current_ -= yStep_; //yStep
         xIndex_ = xExtent_ - 1;
@@ -498,12 +493,12 @@ namespace structured{
         if( yIndex_ == -1 ){
           current_ -= zStep_; //zStep
           yIndex_ = yExtent_ - 1;
-          zIndex_--;
-        };
-      };
+          --zIndex_;
+        }
+      }
       return *this;
-    };
-    inline Self operator--(int) { Self result = *this; --(*this); return result; };
+    }
+    inline Self operator--(int) { Self result = *this; --(*this); return result; }
 
     //compound assignment
     inline Self & operator+=(int change) {
@@ -513,8 +508,8 @@ namespace structured{
           (change < 0 && //negative change
               - change < xIndex_) ){
         current_ += change;
-        xIndex_ += change;
-        count_ += change;
+        xIndex_  += change;
+        count_   += change;
       }
       //bigger change (changes yIndex_ and/or zIndex_)
       else {
@@ -527,43 +522,37 @@ namespace structured{
         xIndex_ = count_ % xExtent_;
         yIndex_ = (count_ % xyExtent_) / xExtent_;
         zIndex_ = count_ / xyExtent_;
-      };
+      }
       return *this;
-    };
-    inline Self & operator-=(int change) { return *this += -change; };
+    }
+    inline Self & operator-=(int change) { return *this += -change; }
 
     //addition/subtraction
-    inline Self operator+ (int change) const { Self result = *this; result += change; return result; };
-    inline Self operator- (int change) const { return *this + (-change); };
+    inline Self operator+ (int change) const { Self result = *this; result += change; return result; }
+    inline Self operator- (int change) const { return *this + (-change); }
 
     //iterator subtraction
-    inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; };
+    inline ptrdiff_t operator- (Self const & other) const { return count_ - other.count_; }
 
     //offset dereference
-    inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; };
+    inline AtomicType & operator[](int change) { Self result = *this; result += change; return *result; }
 
     IntVec location() const{ return IntVec(xIndex_,yIndex_,zIndex_); }
 
     //comparisons
-    inline bool operator==(Self const & other) const { return current_ == other.current_; };
-    inline bool operator!=(Self const & other) const { return current_ != other.current_; };
-    inline bool operator< (Self const & other) const { return current_ <  other.current_; };
-    inline bool operator> (Self const & other) const { return current_ >  other.current_; };
-    inline bool operator<=(Self const & other) const { return current_ <= other.current_; };
-    inline bool operator>=(Self const & other) const { return current_ >= other.current_; };
+    inline bool operator==(Self const & other) const { return current_ == other.current_; }
+    inline bool operator!=(Self const & other) const { return current_ != other.current_; }
+    inline bool operator< (Self const & other) const { return current_ <  other.current_; }
+    inline bool operator> (Self const & other) const { return current_ >  other.current_; }
+    inline bool operator<=(Self const & other) const { return current_ <= other.current_; }
+    inline bool operator>=(Self const & other) const { return current_ >= other.current_; }
 
   private:
     AtomicType * current_;
     int count_;
-    int xIndex_;
-    int yIndex_;
-    int zIndex_;
-    int yStep_;
-    int zStep_;
-    int xExtent_;
-    int yExtent_;
-    int zExtent_;
-    int xyExtent_;
+    int xIndex_, yIndex_, zIndex_;
+    int yStep_, zStep_;
+    int xExtent_, yExtent_, zExtent_, xyExtent_;
   };
 
 } // namespace structured

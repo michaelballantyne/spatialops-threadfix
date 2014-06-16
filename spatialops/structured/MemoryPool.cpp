@@ -59,12 +59,12 @@ Pool<T>::~Pool()
   for( typename FQSizeMap::iterator i=cpufqm_.begin(); i!=cpufqm_.end(); ++i ){
     FieldQueue& fq = i->second;
     while( !fq.empty() ){
-# ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       if(pinned_) { ema::cuda::CUDADeviceInterface::self().releaseHost( fq.top() ); }
       else        { delete [] fq.top(); }
-# else
+#     else
       delete [] fq.top();
-# endif
+#     endif
       fq.pop();
     }
   }
@@ -88,12 +88,12 @@ Pool<T>::self()
   //ensure CUDA driver is loaded before pool is initialized
   int deviceCount = 0;
   static cudaError_t err = cudaGetDeviceCount(&deviceCount);
-  if (cudaSuccess != err) {
-        std::ostringstream msg;
-        msg << "Error at CudaGetDeviceCount() API, at " << __FILE__ << " : " << __LINE__
-            << std::endl;
-        msg << "\t - " << cudaGetErrorString(err);
-        throw(std::runtime_error(msg.str()));
+  if( cudaSuccess != err ){
+    std::ostringstream msg;
+    msg << "Error at CudaGetDeviceCount() API, at " << __FILE__ << " : " << __LINE__
+        << std::endl;
+    msg << "\t - " << cudaGetErrorString(err);
+    throw(std::runtime_error(msg.str()));
   }
 # endif
   // see Modern C++ (Alexandrescu) chapter 6 for an excellent discussion on singleton implementation
@@ -121,7 +121,7 @@ Pool<T>::get( const short int deviceLocation, const size_t _n )
       ++cpuhighWater_;
       try{
 
-#ifdef ENABLE_CUDA
+#       ifdef ENABLE_CUDA
         /* Pinned Memory Mode
          * As the Pinned memory allocation and deallocation has higher overhead
          * this operation is performed at memory pool level which is created
@@ -129,10 +129,10 @@ Pool<T>::get( const short int deviceLocation, const size_t _n )
          */
         ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
         field = (T*)CDI.get_pinned_pointer( n*sizeof(T) );
-#else
+#       else
         // Pageable Memory mode
         field = new T[n];
-#endif
+#       endif
       }
       catch(std::runtime_error& e){
         std::cout << "Error occurred while allocating memory on CPU_INDEX" << std::endl
@@ -190,7 +190,7 @@ Pool<T>::put( const short int deviceLocation, T* t )
   if( deviceLocation == CPU_INDEX ){
     const size_t n = fsm_[t];
     const typename FQSizeMap::iterator ifq = cpufqm_.lower_bound( n );
-      assert( ifq != cpufqm_.end() );
+    assert( ifq != cpufqm_.end() );
     ifq->second.push(t);
   }
 # ifdef ENABLE_CUDA
@@ -203,11 +203,11 @@ Pool<T>::put( const short int deviceLocation, T* t )
 # endif
   else {
     std::ostringstream msg;
-        msg << "Error occurred while restoring memory back to memory pool ( "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation)
-            << " ) \n";
-        msg << "\t " << __FILE__ << " : " << __LINE__;
-        throw(std::runtime_error(msg.str()));
+    msg << "Error occurred while restoring memory back to memory pool ( "
+        << DeviceTypeTools::get_memory_type_description(deviceLocation)
+    << " ) \n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
   }
 }
 
