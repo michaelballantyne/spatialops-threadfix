@@ -553,6 +553,7 @@ namespace structured{
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
+      return NULL;
     };
   };
 
