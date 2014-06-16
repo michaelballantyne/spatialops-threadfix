@@ -443,12 +443,12 @@
 
                        ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
                        CUDADeviceInterface::self();
-
+                       const FieldType& ftmp_ = field_;
                        CDI.memcpy_to(gpu_field.field_values(GPU_INDEX),
-                                     field_.field_values(),
-                                     field_.allocated_bytes(),
+                                     ftmp_.field_values(),
+                                     ftmp_.allocated_bytes(),
                                      0,
-                                     field_.get_stream());
+                                     ftmp_.get_stream());
 
                        gpu_lhs.template gpu_assign<RhsType>(rhs,
                                                             xLow,
