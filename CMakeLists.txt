@@ -59,7 +59,7 @@ endif( ENABLE_THREADS )
 
 set(Boost_USE_MULTITHREAD ON)
 
-if( DEFINED BOOST_ROOT OR ( DEFINED BOOST_INCLUDEDIR AND DEFINED BOOST_LIBRARYDIR ) )
+if( DEFINED BOOST_ROOT )
   message( STATUS "Setting boost installation location as: " ${BOOST_ROOT} )
   set( Boost_NO_SYSTEM_PATHS ON )  # only look in the user-specified location - nowhere else!
 endif()
