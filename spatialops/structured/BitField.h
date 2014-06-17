@@ -382,7 +382,7 @@ namespace structured{
       //Release any masks allocated for consumer use
       if( hasgpuConsumer_ ){
         for( ConsumerMap::iterator i = myConsumerBitValues_.begin(); i != myConsumerBitValues_.end(); ++i ){
-          Pool<unsigned int>::self().put( GPU_INDEX, i->second );
+          Pool<unsigned int>::self().put( i->first, i->second );
         }
       }
       consumerBitValues_.clear();
@@ -511,7 +511,7 @@ namespace structured{
 
     inline bool has_consumers()
     {
-      return consumerBitValues_.find(GPU_INDEX) != consumerBitValues_.end();
+      return consumerBitValues_.size() > 0;
     }
 
     inline short int device_index() const { return deviceIndex_; };
@@ -536,7 +536,7 @@ namespace structured{
 #         ifndef NDEBUG
           if(citer->second == NULL) {
             std::ostringstream msg;
-            msg << "Request for consumer mask pointer on a GPU_INDEX for which it has not been allocated\n"
+            msg << "Request for consumer mask pointer on a GPU index for which it has not been allocated\n"
                 << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
             throw(std::runtime_error(msg.str()));
           }

@@ -292,7 +292,7 @@
 (define (compute-base field input-index)
   (let ([mem-type (if (equal? input-index 'none)
                       'CPU_INDEX
-                      'GPU_INDEX)])
+                      input-index)])
     (val-add (val-member-call field 'field_values mem-type)
              (val-add (base-offset-dir field 0)
                       (paren (val-multiply (base-global-dir field 0)

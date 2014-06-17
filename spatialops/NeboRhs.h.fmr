@@ -195,7 +195,7 @@
                 (bs-gpu-rhs (stmt-typedef SVFT-def-chunk SVFT-chunk)
                             (bm-constructor (list (function-pmtr (const 'int) DI-chunk)
                                                   (function-pmtr (ref (const SVFT-chunk)) 'f))
-                                            (val-construct 'pointer_ (val-member-call 'f 'field_values 'GPU_INDEX))
+                                            (val-construct 'pointer_ (val-member-call 'f 'field_values DI-chunk))
                                             null)
                             vt-chunk
                             (concat '* 'pointer_)

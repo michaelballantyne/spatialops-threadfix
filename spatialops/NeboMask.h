@@ -76,7 +76,7 @@
              }
 
              inline bool gpu_ready(int const deviceIndex) const {
-                return mask_.find_consumer(GPU_INDEX);
+                return mask_.find_consumer(deviceIndex);
              }
 
              inline GPUWalkType gpu_init(int const deviceIndex) const {
@@ -86,7 +86,7 @@
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
                    const_cast<structured::SpatialMask<FieldType> *>(&mask_)->
-                   add_consumer(GPU_INDEX);
+                   add_consumer(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -143,7 +143,7 @@
 
              NeboMask(int const deviceIndex,
                       structured::SpatialMask<FieldType> const & m)
-             : bitField_(m.mask_values(GPU_INDEX)),
+             : bitField_(m.mask_values(deviceIndex)),
                xOffset_(m.window_with_ghost().offset(0) + m.get_ghost_data().get_minus(0)),
                yOffset_(m.window_with_ghost().offset(1) + m.get_ghost_data().get_minus(1)),
                zOffset_(m.window_with_ghost().offset(2) + m.get_ghost_data().get_minus(2)),

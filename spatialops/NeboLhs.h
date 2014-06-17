@@ -588,8 +588,8 @@
              typename field_type::value_type typedef value_type;
 
              NeboField(FieldType f)
-             : base_(f.field_values(GPU_INDEX) + (f.window_with_ghost().offset(0)
-                                                  + f.get_valid_ghost_data().get_minus(0))
+             : base_(f.field_values(f.device_index()) + (f.window_with_ghost().offset(0)
+                                                         + f.get_valid_ghost_data().get_minus(0))
                      + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                               + f.get_valid_ghost_data().get_minus(1))
                                                              + (f.window_with_ghost().glob_dim(1)
