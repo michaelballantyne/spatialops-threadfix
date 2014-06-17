@@ -445,7 +445,7 @@
                        ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
                        CUDADeviceInterface::self();
 
-                       FieldType & const ftmp_ = field_;
+                       FieldType const & ftmp_ = field_;
 
                        CDI.memcpy_to(gpu_field.field_values(GPU_INDEX),
                                      ftmp_.field_values(),

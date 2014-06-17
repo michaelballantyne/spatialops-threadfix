@@ -386,7 +386,7 @@
                                                           (list (let ([CDI (scope (scope 'ema 'cuda)
                                                                                   'CUDADeviceInterface)])
                                                                   (val-typed-assign (ref CDI) 'CDI (val-call (scope CDI 'self))))
-                                                                (val-typed-assign (const (ref FT-chunk)) 'ftmp_ 'field_))
+                                                                (val-typed-assign (ref (const FT-chunk)) 'ftmp_ 'field_))
                                                           (val-member-call 'CDI
                                                                            'memcpy_to
                                                                            (val-member-call 'gpu_field
