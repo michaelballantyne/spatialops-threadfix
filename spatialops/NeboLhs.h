@@ -66,10 +66,11 @@
 
           template<typename RhsType>
            inline void assign(bool const useGhost, RhsType rhs) {
-//              field_.reset_valid_ghosts(calculate_actual_ghost(useGhost,
-//                                                               field_.get_ghost_data(),
-//                                                               field_.boundary_info(),
-//                                                               rhs.possible_ghosts()));
+              /* field_.reset_valid_ghosts(calculate_actual_ghost(useGhost,
+                                                                  field_.get_ghost_data(),
+                                                                  field_.boundary_info(),
+                                                                  rhs.possible_ghosts()))
+               */;
 
               structured::GhostData extents = calculate_limits(useGhost,
                                                                field_.window_with_ghost(),
@@ -405,7 +406,7 @@
              }
 
              inline bool gpu_ready(void) const {
-               return IS_GPU_INDEX(field_.device_index());
+                return IS_GPU_INDEX(field_.device_index());
              }
 
              inline int gpu_device_index(void) const {
@@ -443,7 +444,9 @@
 
                        ema::cuda::CUDADeviceInterface & CDI = ema::cuda::
                        CUDADeviceInterface::self();
-                       const FieldType& ftmp_ = field_;
+
+                       FieldType & const ftmp_ = field_;
+
                        CDI.memcpy_to(gpu_field.field_values(GPU_INDEX),
                                      ftmp_.field_values(),
                                      ftmp_.allocated_bytes(),
@@ -539,8 +542,8 @@
           NeboField(FieldType f)
           : xGlob_(f.window_with_ghost().glob_dim(0)),
             yGlob_(f.window_with_ghost().glob_dim(1)),
-            base_(f.field_values(CPU_INDEX) + (f.window_with_ghost().offset(0)
-                                                  + f.get_valid_ghost_data().get_minus(0))
+            base_(f.field_values(CPU_INDEX) + (f.window_with_ghost().offset(0) +
+                                               f.get_valid_ghost_data().get_minus(0))
                   + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                            + f.get_valid_ghost_data().get_minus(1))
                                                           + (f.window_with_ghost().glob_dim(1)
@@ -586,7 +589,7 @@
 
              NeboField(FieldType f)
              : base_(f.field_values(GPU_INDEX) + (f.window_with_ghost().offset(0)
-                                                                            + f.get_valid_ghost_data().get_minus(0))
+                                                  + f.get_valid_ghost_data().get_minus(0))
                      + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                               + f.get_valid_ghost_data().get_minus(1))
                                                              + (f.window_with_ghost().glob_dim(1)

@@ -290,15 +290,15 @@
        dir))
 
 (define (compute-base field input-index)
-  (let-values ([(mem-type index) (if (equal? input-index 'none)
-                                     (values 'LOCAL_RAM 0)
-                                     (values 'EXTERNAL_CUDA_GPU input-index))])
-              (val-add (val-member-call field 'field_values mem-type index)
-                  (val-add (base-offset-dir field 0)
+  (let ([mem-type (if (equal? input-index 'none)
+                      'CPU_INDEX
+                      'GPU_INDEX)])
+    (val-add (val-member-call field 'field_values mem-type)
+             (val-add (base-offset-dir field 0)
                       (paren (val-multiply (base-global-dir field 0)
-                                 (paren (val-add (base-offset-dir field 1)
-                                            (paren (val-multiply (base-global-dir field 1)
-                                                       (base-offset-dir field 2)))))))))))
+                                           (paren (val-add (base-offset-dir field 1)
+                                                           (paren (val-multiply (base-global-dir field 1)
+                                                                                (base-offset-dir field 2)))))))))))
 
 (define (build-error-with-call where . message)
   (define < '<<)

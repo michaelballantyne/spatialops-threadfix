@@ -97,13 +97,13 @@
                                               (val-member-call (val-member-call 'field_ 'get_valid_ghost_data) 'get_plus 'dir))
                                 'field_
                                 'field_
-                                (val-member-call 'field_ 'find_consumer 'LOCAL_RAM 0)
-                                (val-member-call 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
+                                (val-member-call 'field_ 'is_valid 'CPU_INDEX)
+                                (val-member-call 'field_ 'is_valid DI-chunk)
                                 (list DI-chunk 'field_)
                                 (concat (val-call (type-template 'const_cast (ptr FT-chunk))
                                                   (take-ptr 'field_))
                                         '->
-                                        (val-call 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
+                                        (val-call 'add_field_loc DI-chunk))
                                 null
                                 (stmt-dcl-variable (const FT-chunk) 'field_))
                 (bs-Resize-rhs null
@@ -165,15 +165,15 @@
                                 'false
                                 null
                                 0
-                                (add-spaces '* (val-member-call 'field_ 'field_values 'LOCAL_RAM))
-                                (add-spaces '* (val-member-call 'field_ 'field_values 'LOCAL_RAM))
-                                (val-member-call 'field_ 'find_consumer 'LOCAL_RAM 0)
-                                (val-member-call 'field_ 'find_consumer 'EXTERNAL_CUDA_GPU DI-chunk)
+                                (add-spaces '* (val-member-call 'field_ 'field_values 'CPU_INDEX))
+                                (add-spaces '* (val-member-call 'field_ 'field_values 'CPU_INDEX))
+                                (val-member-call 'field_ 'is_valid 'CPU_INDEX)
+                                (val-member-call 'field_ 'is_valid  DI-chunk)
                                 (list DI-chunk 'field_)
                                 (concat (val-call (type-template 'const_cast (ptr SVFT-chunk))
                                                   (take-ptr 'field_))
                                         '->
-                                        (val-call 'add_consumer 'EXTERNAL_CUDA_GPU DI-chunk))
+                                        (val-call 'add_field_loc DI-chunk))
                                 null
                                 (stmt-dcl-variable (const SVFT-chunk) 'field_))
                 (bs-Resize-rhs null
@@ -195,7 +195,7 @@
                 (bs-gpu-rhs (stmt-typedef SVFT-def-chunk SVFT-chunk)
                             (bm-constructor (list (function-pmtr (const 'int) DI-chunk)
                                                   (function-pmtr (ref (const SVFT-chunk)) 'f))
-                                            (val-construct 'pointer_ (val-member-call 'f 'field_values 'EXTERNAL_CUDA_GPU DI-chunk))
+                                            (val-construct 'pointer_ (val-member-call 'f 'field_values 'GPU_INDEX))
                                             null)
                             vt-chunk
                             (concat '* 'pointer_)

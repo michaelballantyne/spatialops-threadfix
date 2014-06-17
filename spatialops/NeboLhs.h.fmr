@@ -80,11 +80,11 @@
                                  (def-void-function 'assign
                                    (list (function-pmtr (const 'bool) 'useGhost)
                                          (function-pmtr 'RhsType 'rhs))
-                                   (val-member-call 'field_ 'reset_valid_ghosts (val-call 'calculate_actual_ghost
-                                                                                          'useGhost
-                                                                                          (val-member-call 'field_ 'get_ghost_data)
-                                                                                          (val-member-call 'field_ 'boundary_info)
-                                                                                          (val-member-call 'rhs 'possible_ghosts)))
+                                   (comment-env-chunk (val-member-call 'field_ 'reset_valid_ghosts (val-call 'calculate_actual_ghost
+                                                                                                             'useGhost
+                                                                                                             (val-member-call 'field_ 'get_ghost_data)
+                                                                                                             (val-member-call 'field_ 'boundary_info)
+                                                                                                             (val-member-call 'rhs 'possible_ghosts))))
                                    (val-typed-assign GhostData 'extents (val-call 'calculate_limits
                                                                                   'useGhost
                                                                                   (val-member-call 'field_ 'window_with_ghost)
@@ -367,12 +367,12 @@
                                         (pp-debug-only (stmt-if (val-not-equal 'cudaSuccess (paren (val-assign 'err (val-call 'cudaStreamSynchronize(val-member-call 'field_ 'get_stream)))))
                                                                 (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
                                                                                        '<< (val-call 'cudaGetErrorString 'err))))))
-                                (val-equal 'LOCAL_RAM (val-member-call 'field_ 'memory_device_type))
-                                (val-equal 'EXTERNAL_CUDA_GPU (val-member-call 'field_ 'memory_device_type))
+                                (val-call 'IS_CPU_INDEX (val-member-call 'field_ 'device_index))
+                                (val-call 'IS_GPU_INDEX (val-member-call 'field_ 'device_index))
                                 (val-member-call 'field_ 'device_index)
                                 'field_
                                 (list (val-member-call 'rhs 'gpu_prep 0)
-                                      (stmt-if-else (val-equal 'LOCAL_RAM (val-member-call 'field_ 'memory_device_type))
+                                      (stmt-if-else (val-equal 'CPU_INDEX (val-member-call 'field_ 'device_index))
                                                     (list (function-pmtr FT-chunk
                                                                          (val-call 'gpu_field
                                                                                    (val-member-call 'field_ 'window_with_ghost)
@@ -380,22 +380,22 @@
                                                                                    (val-member-call 'field_ 'get_valid_ghost_data)
                                                                                    'NULL
                                                                                    (scope 'structured 'InternalStorage)
-                                                                                   'EXTERNAL_CUDA_GPU
-                                                                                   0))
+                                                                                   'GPU_INDEX))
                                                           (function-pmtr (type-template NF-chunk 'Initial FT-chunk)
                                                                          (val-call 'gpu_lhs 'gpu_field))
-                                                          (let ([CDI (scope (scope 'ema 'cuda)
-                                                                            'CUDADeviceInterface)])
-                                                            (val-typed-assign (ref CDI) 'CDI (val-call (scope CDI 'self))))
+                                                          (list (let ([CDI (scope (scope 'ema 'cuda)
+                                                                                  'CUDADeviceInterface)])
+                                                                  (val-typed-assign (ref CDI) 'CDI (val-call (scope CDI 'self))))
+                                                                (val-typed-assign (const (ref FT-chunk)) 'ftmp_ 'field_))
                                                           (val-member-call 'CDI
                                                                            'memcpy_to
                                                                            (val-member-call 'gpu_field
                                                                                             'field_values
-                                                                                            'EXTERNAL_CUDA_GPU
-                                                                                            0)
-                                                                           (val-member-call 'field_ 'field_values)
-                                                                           (val-member-call 'field_ 'allocated_bytes)
-                                                                           0)
+                                                                                            'GPU_INDEX)
+                                                                           (val-member-call 'ftmp_ 'field_values)
+                                                                           (val-member-call 'ftmp_ 'allocated_bytes)
+                                                                           0
+                                                                           (val-member-call 'ftmp_ 'get_stream))
                                                           (val-member-call 'gpu_lhs
                                                                            (type-template-function 'gpu_assign 'RhsType)
                                                                            'rhs
@@ -405,10 +405,10 @@
                                                                            (val-member-call 'field_ 'field_values)
                                                                            (val-member-call 'gpu_field
                                                                                             'field_values
-                                                                                            'EXTERNAL_CUDA_GPU
-                                                                                            0)
+                                                                                            'GPU_INDEX)
                                                                            (val-member-call 'field_ 'allocated_bytes)
-                                                                           0))
+                                                                           0
+                                                                           (val-member-call 'field_ 'get_stream)))
                                                     (val-call (type-template 'gpu_assign 'RhsType)
                                                               'rhs
                                                               low-high-arg)))
