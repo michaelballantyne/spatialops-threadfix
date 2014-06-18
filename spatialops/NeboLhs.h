@@ -163,6 +163,8 @@
               /* __CUDACC__ */;
            }
 
+          inline SeqWalkType init(void) { return SeqWalkType(field_); }
+
          private:
           template<typename RhsType>
            inline void cpu_assign(RhsType rhs,
@@ -223,8 +225,6 @@
               #endif
               /* NEBO_REPORT_BACKEND */;
            }
-
-          inline SeqWalkType init(void) { return SeqWalkType(field_); }
 
           #ifdef FIELD_EXPRESSION_THREADS
              template<typename RhsType>
@@ -568,11 +568,11 @@
               };
            }
 
-         private:
           inline value_type & ref(int const x, int const y, int const z) {
              return base_[x + xGlob_ * (y + (yGlob_ * z))];
           }
 
+         private:
           int const xGlob_;
 
           int const yGlob_;

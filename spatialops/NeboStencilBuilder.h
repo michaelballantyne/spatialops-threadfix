@@ -606,7 +606,6 @@ namespace SpatialOps {
       typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, HighPoint>::result HighGammaPoint;
       typedef typename ListSubtract<NonLowPoints,  LowPoint>:: result                           NonLowSrcPoints;
       typedef typename ListSubtract<NonHighPoints, HighPoint>::result                           NonHighSrcPoints;
-      typedef NeboMask<Initial, GammaFieldType>                                                 GammaMask;
       typedef NeboMaskShiftBuilder<OperatorType, GammaFieldType, PhiFieldType>                  Shift;
 
       typedef NeboStencilCoefCollection<PointCollection::length> CoefCollection; ///< collection of coefficients
@@ -615,6 +614,10 @@ namespace SpatialOps {
       typedef NeboEdgelessStencilBuilder<NeboNil, NEBO_FIRST_POINT_WO_TN(HighGammaPoint), GammaFieldType, PhiFieldType> PlusGammaType;
       typedef NeboEdgelessStencilBuilder<NeboNil, NonLowSrcPoints,                        PhiFieldType,   PhiFieldType> MinusPhiType;
       typedef NeboEdgelessStencilBuilder<NeboNil, NonHighSrcPoints,                       PhiFieldType,   PhiFieldType> PlusPhiType;
+
+      typedef structured::IntVec IntVec;
+      typedef std::vector<IntVec> Points;
+      typedef Points::const_iterator PointIterator;
 
       /**
        *  \brief construct a boundary condition
@@ -637,17 +640,75 @@ namespace SpatialOps {
        * \param phi the field to modify
        * \param gamma the Nebo expression to read
        */
+      template<typename ExprType, typename ShiftGamma, typename ShiftPhi>
+      inline void cpu_apply(const Points & points,
+                            const IntVec & shift,
+                            const ShiftGamma & shiftGamma,
+                            const ShiftPhi & shiftPhi,
+                            PhiFieldType & phi,
+                            const NeboExpression<ExprType, GammaFieldType> & gamma,
+                            const double coef) const {
+        typedef NeboField<Initial, PhiFieldType> LhsTypeInit;
+        typedef typename LhsTypeInit::SeqWalkType LhsType;
+        LhsTypeInit lhsInit(phi);
+        LhsType lhs = lhsInit.init();
+
+        typedef typename ShiftGamma::template WithArg<ExprType>::Stencil GammaType;
+        typedef typename ShiftPhi::FieldStencil PhiType;
+        typedef DiffOp<Initial, GammaType, PhiType> DiffType;
+        typedef NeboScalar<Initial, double> NumType;
+        typedef DivOp<Initial, DiffType, NumType> RhsTypeInit;
+        typedef typename RhsTypeInit::SeqWalkType RhsType;
+        RhsType rhs = RhsTypeInit(DiffType(shiftGamma(gamma).expr(),
+                                           shiftPhi(phi).expr()),
+                                  NumType(coef)).init();
+
+        PointIterator       ip = points.begin();
+        PointIterator const ep = points.end();
+        for(; ip != ep; ip++) {
+          const int x = (*ip)[0] - shift[0];
+          const int y = (*ip)[1] - shift[1];
+          const int z = (*ip)[2] - shift[2];
+          lhs.ref(x, y, z) = rhs.eval(x, y, z);
+        }
+      }
+
+      /**
+       * \brief Apply boundary condition with gamma as an expression
+       * \param mask the mask of points where boundary condition applies
+       * \param phi the field to modify
+       * \param gamma the Nebo expression to read
+       */
       template<typename ExprType>
       inline void operator()(structured::SpatialMask<GammaFieldType> mask,
                              PhiFieldType & phi,
                              const NeboExpression<ExprType, GammaFieldType> & gamma,
                              bool minus) const {
-        if(minus)
-          phi <<= cond(shift_.minus(mask), (minusGamma_(gamma) - minusPhi_(phi)) / lowCoef_)
-                      (phi);
-        else
-          phi <<= cond(shift_.plus(mask), (plusGamma_(gamma) - plusPhi_(phi)) / highCoef_)
-                      (phi);
+        if(phi.device_index() == CPU_INDEX) {
+          if(minus)
+            cpu_apply<ExprType, MinusGammaType, MinusPhiType>(mask.points(),
+                                                              Shift::MinusPoint::int_vec(),
+                                                              minusGamma_,
+                                                              minusPhi_,
+                                                              phi,
+                                                              gamma,
+                                                              lowCoef_);
+          else
+            cpu_apply<ExprType, PlusGammaType, PlusPhiType>(mask.points(),
+                                                            Shift::PlusPoint::int_vec(),
+                                                            plusGamma_,
+                                                            plusPhi_,
+                                                            phi,
+                                                            gamma,
+                                                            highCoef_);
+        } else {
+          if(minus)
+            phi <<= cond(shift_.minus(mask), (minusGamma_(gamma) - minusPhi_(phi)) / lowCoef_)
+                        (phi);
+          else
+            phi <<= cond(shift_.plus(mask), (plusGamma_(gamma) - plusPhi_(phi)) / highCoef_)
+                        (phi);
+        }
       }
 
       /**

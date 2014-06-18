@@ -190,6 +190,15 @@ namespace structured{
     ~SpatialMask() {};
 
     /**
+     *  \brief return reference to list of points in given list
+     *  NOTE: Not supported for external field types
+     */
+    inline const std::vector<IntVec> & points(void) const
+    {
+      return points_;
+    };
+
+    /**
      *  \brief Given an index in this mask, return whether or not index is a mask point.
      *  WARNING: slow!
      *  NOTE: Not supported for external field types

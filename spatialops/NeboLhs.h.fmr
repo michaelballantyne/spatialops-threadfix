@@ -109,6 +109,9 @@
                                                                                                         (assign-error #true 'CPU))
                                                                                           (assign-error #false (cout-break 'unknown '(device - not on CPU or GPU))))))
                                               (assign-call 'cpu_assign))))
+                               (def-returning-function (dcl-function 'init 'SeqWalkType)
+                                 null
+                                 (val-call 'SeqWalkType SW-cons-args))
                                publics)
                          (list (assign 'cpu_assign
                                        (pp-threads-or (stmt-if-else (val-call 'is_thread_parallel)
@@ -116,9 +119,6 @@
                                                                     (assign-call 'sequential_assign))
                                                       (assign-call 'sequential_assign)))
                                (assign 'sequential_assign sequential-assign-body 'sequential)
-                               (def-returning-function (dcl-function 'init 'SeqWalkType)
-                                 null
-                                 (val-call 'SeqWalkType SW-cons-args))
                                (pp-threads-only (add-blank-lines (assign 'thread_parallel_assign
                                                                          (list (add-spaces 'Semaphore
                                                                                            (val-call 'semaphore 0))
@@ -204,13 +204,13 @@
                                    (list (function-pmtr 'RhsType 'rhs)
                                          low-high-pmtr)
                                    assign-body))
-                               publics)
-                         (list (def-returning-function (dcl-function 'ref
+                               (def-returning-function (dcl-function 'ref
                                                                      (ref vt-chunk)
                                                                      index-pmtr)
                                  null
                                  ref-result)
-                               privates)))
+                               publics)
+                         privates))
 (define bs-SeqWalk-lhs (arg-swap build-SeqWalk-lhs 6 4 "bs-SeqWalk-lhs"))
 (define (build-gpu-lhs name
                        FT
