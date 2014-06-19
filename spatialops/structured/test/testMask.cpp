@@ -2,7 +2,7 @@
 #include <spatialops/structured/FVTools.h>
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
-#include <test/FieldHelper.h>
+#include <spatialops/structured/FieldHelper.h>
 #include <spatialops/structured/ExternalAllocators.h>
 
 #ifdef ENABLE_THREADS

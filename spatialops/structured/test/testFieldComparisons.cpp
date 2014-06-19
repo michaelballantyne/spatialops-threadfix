@@ -1,7 +1,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
-#include <test/FieldHelper.h>
+#include <spatialops/structured/FieldHelper.h>
 
 #include <spatialops/structured/FieldComparisons.h>
 
