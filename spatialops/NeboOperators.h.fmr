@@ -73,8 +73,6 @@
                             op_-lst
                             op-lst)
                     null))
-  (define next
-    (between/attach ";" space (op_-mfc 'next)))
   (define (exec-check n-logical fcn . args)
     (paren (n-logical (op_-mfc fcn args))))
   (define (exec-or-check fcn)
@@ -85,27 +83,34 @@
     (mapper (lambda (Op op_) (stmt-dcl-variable Op op_))
             Op-lst
             op_-lst))
-  (define (assign-extent remaining)
-    (define assignment (val-assign 'extent (val-member-call (car remaining) 'extent 'dir)))
+  (define (assign-IntVec name remaining)
+    (define assignment (val-assign name (val-member-call (car remaining) name)))
     (if (= 1 (length remaining))
         assignment
-        (stmt-if-else (val-member-call (car remaining) 'has_extent)
+        (stmt-if-else (val-member-call (car remaining) 'has_extents)
                       assignment
-                      (assign-extent (cdr remaining)))))
-  (define (check-extent remaining)
-    (define assert (stmt-if (val-member-call (car remaining) 'has_extent)
-                            (val-call 'assert (val-equal 'extent (val-member-call (car remaining) 'extent 'dir)))))
+                      (assign-IntVec name (cdr remaining)))))
+  (define (check-IntVec name remaining)
+    (define assert (stmt-if (val-member-call (car remaining) 'has_extents)
+                            (val-call 'assert (val-equal name (val-member-call (car remaining) name)))))
     (if (= 1 (length remaining))
         assert
         (list assert
-              (check-extent (cdr remaining)))))
-  (define (return-extent remaining)
-    (define returned (val-member-call (car remaining) 'extent 'dir))
+              (check-IntVec name (cdr remaining)))))
+  (define (assign-check-IntVec name)
+    (if (= 1 number)
+        null
+        (stmt-if (exec-or-check 'has_extents)
+                 (function-pmtr IntVec 'extents)
+                 (assign-IntVec 'extents op_-lst)
+                 (check-IntVec 'extents op_-lst))))
+  (define (return-IntVec name remaining)
+    (define returned (val-member-call (car remaining) name))
     (if (= 1 (length remaining))
         returned
-        (ter-cond (val-member-call (car remaining) 'has_extent)
+        (ter-cond (val-member-call (car remaining) 'has_extents)
                   returned
-                  (paren (return-extent (cdr remaining))))))
+                  (paren (return-IntVec name (cdr remaining))))))
   (build-struct name
                 no-FT
                 null
@@ -113,28 +118,25 @@
                 (bs-Initial-rhs null
                                 null
                                 gen-constructor
-                                (ghosts 'possible_ghosts)
-                                (ghosts 'minimum_ghosts)
-                                (exec-or-check 'has_extent)
-                                (if (= 1 number)
-                                    null
-                                    (stmt-if (exec-or-check 'has_extent)
-                                             (function-pmtr 'int 'extent)
-                                             (assign-extent op_-lst)
-                                             (check-extent op_-lst)))
-                                (return-extent op_-lst)
-                                (op_-mfc 'init)
+                                (ghosts 'ghosts_with_bc)
+                                (ghosts 'ghosts_without_bc)
+                                (exec-or-check 'has_extents)
+                                (assign-check-IntVec 'extents)
+                                (return-IntVec 'extents op_-lst)
+                                null
+                                (return-IntVec 'has_bc op_-lst)
+                                (op_-mfc 'init init-arg)
                                 (op_-mfc 'resize)
                                 (exec-and-check 'cpu_ready)
                                 (exec-and-check 'gpu_ready DI-chunk)
-                                (op_-mfc 'gpu_init DI-chunk)
+                                (op_-mfc 'gpu_init gpu-init-arg)
                                 (between/attach ";" space (op_-mfc 'gpu_prep DI-chunk))
                                 null
                                 gen-data-mems)
                 (bs-Resize-rhs null
                                null
                                gen-constructor
-                               (op_-mfc 'init)
+                               (op_-mfc 'init init-arg)
                                null
                                gen-data-mems)
                 (bs-SeqWalk-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))

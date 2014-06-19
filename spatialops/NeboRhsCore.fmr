@@ -32,11 +32,13 @@
                            typedefs
                            tpl-irreg-args
                            constructor
-                           possible-ghosts
-                           minimum-ghosts
-                           has-extent
-                           extent-check
-                           extent-expr
+                           ghosts-with-bc
+                           ghosts-without-bc
+                           has-extents
+                           extents-check
+                           extents-expr
+                           has-bc-check
+                           has-bc-expr
                            SW-cons-args
                            RS-cons-args
                            cpu-ready-body
@@ -52,21 +54,26 @@
                          typedefs
                          tpl-irreg-args
                          constructor
-                         (list (def-returning-function (constize (dcl-function 'possible_ghosts GhostData))
+                         (list (def-returning-function (constize (dcl-function 'ghosts_with_bc GhostData))
                                  null
-                                 possible-ghosts)
-                               (def-returning-function (constize (dcl-function 'minimum_ghosts GhostData))
+                                 ghosts-with-bc)
+                               (def-returning-function (constize (dcl-function 'ghosts_without_bc GhostData))
                                  null
-                                 minimum-ghosts)
-                               (def-returning-function (constize (dcl-function 'has_extent 'bool))
+                                 ghosts-without-bc)
+                               (def-returning-function (constize (dcl-function 'has_extents 'bool))
                                  null
-                                 has-extent)
-                               (def-returning-function (constize (dcl-function 'extent 'int (function-pmtr (const 'int) 'dir)))
-                                 (if (not (null? extent-check))
-                                     (pp-debug-only extent-check)
+                                 has-extents)
+                               (def-returning-function (constize (dcl-function 'extents IntVec))
+                                 (if (not (null? extents-check))
+                                     (pp-debug-only extents-check)
                                      null)
-                                 extent-expr)
-                               (def-returning-function (constize (dcl-function 'init 'SeqWalkType))
+                                 extents-expr)
+                               (def-returning-function (constize (dcl-function 'has_bc IntVec))
+                                 (if (not (null? has-bc-check))
+                                     (pp-debug-only has-bc-check)
+                                     null)
+                                 has-bc-expr)
+                               (def-returning-function (constize (dcl-function 'init 'SeqWalkType init-pmtr))
                                  null
                                  (val-call 'SeqWalkType SW-cons-args))
                                (pp-threads-only (def-returning-function (constize (dcl-function 'resize 'ResizeType))
@@ -78,14 +85,14 @@
                                                              (def-returning-function (constize (dcl-function 'gpu_ready 'bool (function-pmtr (const 'int) DI-chunk)))
                                                                null
                                                                gpu-ready-body)
-                                                             (def-returning-function (constize (dcl-function 'gpu_init 'GPUWalkType (function-pmtr (const 'int) DI-chunk)))
+                                                             (def-returning-function (constize (dcl-function 'gpu_init 'GPUWalkType gpu-init-pmtr))
                                                                null
                                                                (val-call 'GPUWalkType gpu-cons-args))
                                                              (pp-gpu-test-only (def-function (constize (dcl-function 'gpu_prep 'void (function-pmtr (const 'int) DI-chunk)))
                                                                                  gpu-prep-body))))
                                publics)
                          privates))
-(define bs-Initial-rhs (arg-swap build-Initial-rhs 16 4 "bs-Initial-rhs"))
+(define bs-Initial-rhs (arg-swap build-Initial-rhs 18 4 "bs-Initial-rhs"))
 (define (build-Resize-rhs name
                           FT
                           tpl-irreg-pars
@@ -103,8 +110,7 @@
                         typedefs
                         tpl-irreg-args
                         constructor
-                        (list (def-returning-function (constize (dcl-function 'init
-                                                                              'SeqWalkType))
+                        (list (def-returning-function (constize (dcl-function 'init 'SeqWalkType init-pmtr))
                                 null
                                 (val-call 'SeqWalkType SW-cons-args))
                               publics)

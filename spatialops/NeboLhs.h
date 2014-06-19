@@ -66,50 +66,45 @@
 
           template<typename RhsType>
            inline void assign(bool const useGhost, RhsType rhs) {
-              /* field_.reset_valid_ghosts(calculate_actual_ghost(useGhost,
-                                                                  field_.get_ghost_data(),
-                                                                  field_.boundary_info(),
-                                                                  rhs.possible_ghosts()))
-               */;
+              structured::GhostData const ghosts = calculate_actual_ghost(useGhost,
+                                                                          field_.get_ghost_data(),
+                                                                          field_.boundary_info(),
+                                                                          rhs.ghosts_with_bc());
 
-              structured::GhostData extents = calculate_limits(useGhost,
-                                                               field_.window_with_ghost(),
-                                                               field_.get_valid_ghost_data(),
-                                                               field_.get_ghost_data(),
-                                                               field_.boundary_info(),
-                                                               rhs.possible_ghosts());
+              /* field_.reset_valid_ghosts(ghosts) */;
 
-              const int xLow = - extents.get_minus(0);
+              structured::IntVec const extents = field_.window_with_ghost().extent()
+              - field_.get_valid_ghost_data().get_minus() - field_.get_valid_ghost_data().get_plus();
 
-              const int xHigh = extents.get_plus(0);
+              structured::IntVec const hasBC = field_.boundary_info().has_bc();
 
-              const int yLow = - extents.get_minus(1);
-
-              const int yHigh = extents.get_plus(1);
-
-              const int zLow = - extents.get_minus(2);
-
-              const int zHigh = extents.get_plus(2);
+              const structured::GhostData limits = structured::GhostData(-
+                                                                         ghosts.get_minus(0),
+                                                                         extents[
+                                                                         0] +
+                                                                         ghosts.get_plus(0),
+                                                                         -
+                                                                         ghosts.get_minus(1),
+                                                                         extents[
+                                                                         1] +
+                                                                         ghosts.get_plus(1),
+                                                                         -
+                                                                         ghosts.get_minus(2),
+                                                                         extents[
+                                                                         2] +
+                                                                         ghosts.get_plus(2));
 
               #ifdef __CUDACC__
                  #ifdef NEBO_GPU_TEST
-                    gpu_test_assign<RhsType>(rhs,
-                                             xLow,
-                                             xHigh,
-                                             yLow,
-                                             yHigh,
-                                             zLow,
-                                             zHigh)
+                    gpu_test_assign<RhsType>(rhs, extents, ghosts, hasBC, limits)
                  #else
                     if(gpu_ready()) {
                        if(rhs.gpu_ready(gpu_device_index())) {
                           gpu_assign<RhsType>(rhs,
-                                              xLow,
-                                              xHigh,
-                                              yLow,
-                                              yHigh,
-                                              zLow,
-                                              zHigh);
+                                              extents,
+                                              ghosts,
+                                              hasBC,
+                                              limits);
                        }
                        else {
                           std::ostringstream msg;
@@ -119,19 +114,17 @@
                           msg << "(completely) accessible on the same GPU";
                           msg << "\n";
                           msg << "\t - " << __FILE__ << " : " << __LINE__;
-                          throw(std::runtime_error(msg.str()));;
+                          throw(std::runtime_error(msg.str()));
                        };
                     }
                     else {
                        if(cpu_ready()) {
                           if(rhs.cpu_ready()) {
                              cpu_assign<RhsType>(rhs,
-                                                 xLow,
-                                                 xHigh,
-                                                 yLow,
-                                                 yHigh,
-                                                 zLow,
-                                                 zHigh);
+                                                 extents,
+                                                 ghosts,
+                                                 hasBC,
+                                                 limits);
                           }
                           else {
                              std::ostringstream msg;
@@ -142,7 +135,7 @@
                              msg << "(completely) accessible on the same CPU";
                              msg << "\n";
                              msg << "\t - " << __FILE__ << " : " << __LINE__;
-                             throw(std::runtime_error(msg.str()));;
+                             throw(std::runtime_error(msg.str()));
                           };
                        }
                        else {
@@ -152,13 +145,13 @@
                           msg << "unknown device - not on CPU or GPU";
                           msg << "\n";
                           msg << "\t - " << __FILE__ << " : " << __LINE__;
-                          throw(std::runtime_error(msg.str()));;
+                          throw(std::runtime_error(msg.str()));
                        };
                     }
                  #endif
                  /* NEBO_GPU_TEST */
               #else
-                 cpu_assign<RhsType>(rhs, xLow, xHigh, yLow, yHigh, zLow, zHigh)
+                 cpu_assign<RhsType>(rhs, extents, ghosts, hasBC, limits)
               #endif
               /* __CUDACC__ */;
            }
@@ -168,57 +161,43 @@
          private:
           template<typename RhsType>
            inline void cpu_assign(RhsType rhs,
-                                  int const xLow,
-                                  int const xHigh,
-                                  int const yLow,
-                                  int const yHigh,
-                                  int const zLow,
-                                  int const zHigh) {
+                                  structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC,
+                                  structured::GhostData const limits) {
               #ifdef FIELD_EXPRESSION_THREADS
                  if(is_thread_parallel()) {
                     thread_parallel_assign<RhsType>(rhs,
-                                                    xLow,
-                                                    xHigh,
-                                                    yLow,
-                                                    yHigh,
-                                                    zLow,
-                                                    zHigh);
+                                                    extents,
+                                                    ghosts,
+                                                    hasBC,
+                                                    limits);
                  }
                  else {
                     sequential_assign<RhsType>(rhs,
-                                               xLow,
-                                               xHigh,
-                                               yLow,
-                                               yHigh,
-                                               zLow,
-                                               zHigh);
+                                               extents,
+                                               ghosts,
+                                               hasBC,
+                                               limits);
                  }
               #else
-                 sequential_assign<RhsType>(rhs,
-                                            xLow,
-                                            xHigh,
-                                            yLow,
-                                            yHigh,
-                                            zLow,
-                                            zHigh)
+                 sequential_assign<RhsType>(rhs, extents, ghosts, hasBC, limits)
               #endif
               /* FIELD_EXPRESSION_THREADS */;
            }
 
           template<typename RhsType>
            inline void sequential_assign(RhsType rhs,
-                                         int const xLow,
-                                         int const xHigh,
-                                         int const yLow,
-                                         int const yHigh,
-                                         int const zLow,
-                                         int const zHigh) {
+                                         structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         structured::GhostData const limits) {
               #ifdef NEBO_REPORT_BACKEND
                  std::cout << "Starting Nebo sequential" << std::endl
               #endif
               /* NEBO_REPORT_BACKEND */;
 
-              init().assign(rhs.init(), xLow, xHigh, yLow, yHigh, zLow, zHigh);
+              init().assign(rhs.init(extents, ghosts, hasBC), limits);
 
               #ifdef NEBO_REPORT_BACKEND
                  std::cout << "Finished Nebo sequential" << std::endl
@@ -229,12 +208,14 @@
           #ifdef FIELD_EXPRESSION_THREADS
              template<typename RhsType>
               inline void thread_parallel_assign(RhsType rhs,
-                                                 int const xLow,
-                                                 int const xHigh,
-                                                 int const yLow,
-                                                 int const yHigh,
-                                                 int const zLow,
-                                                 int const zHigh) {
+                                                 structured::IntVec const &
+                                                 extents,
+                                                 structured::GhostData const &
+                                                 ghosts,
+                                                 structured::IntVec const &
+                                                 hasBC,
+                                                 structured::GhostData const
+                                                 limits) {
                  #ifdef NEBO_REPORT_BACKEND
                     std::cout << "Starting Nebo thread parallel" << std::endl
                  #endif
@@ -250,28 +231,18 @@
 
                  RhsResizeType new_rhs = rhs.resize();
 
-                 int localXLow;
-
-                 int localXHigh;
-
-                 int localYLow;
-
-                 int localYHigh;
-
-                 int localZLow;
-
-                 int localZHigh;
+                 structured::GhostData localLimits;
 
                  const structured::IntVec split = nebo_find_partition(structured::
-                                                                      IntVec(xHigh
+                                                                      IntVec(limits.get_plus(0)
                                                                              -
-                                                                             xLow,
-                                                                             yHigh
+                                                                             limits.get_minus(0),
+                                                                             limits.get_plus(1)
                                                                              -
-                                                                             yLow,
-                                                                             zHigh
+                                                                             limits.get_minus(1),
+                                                                             limits.get_plus(2)
                                                                              -
-                                                                             zLow),
+                                                                             limits.get_minus(2)),
                                                                       thread_count);
 
                  const int max = nebo_partition_count(split);
@@ -279,31 +250,16 @@
                  structured::IntVec location = structured::IntVec(0, 0, 0);
 
                  for(int count = 0; count < max; count++) {
-                    nebo_set_up_extents(location,
-                                        split,
-                                        localXLow,
-                                        localXHigh,
-                                        localYLow,
-                                        localYHigh,
-                                        localZLow,
-                                        localZHigh,
-                                        xLow,
-                                        xHigh,
-                                        yLow,
-                                        yHigh,
-                                        zLow,
-                                        zHigh);
+                    nebo_set_up_extents(location, split, localLimits, limits);
 
                     ThreadPoolFIFO::self().schedule(boost::bind(&ResizeType::
                                                                 template assign<RhsResizeType>,
                                                                 new_lhs,
                                                                 new_rhs,
-                                                                localXLow,
-                                                                localXHigh,
-                                                                localYLow,
-                                                                localYHigh,
-                                                                localZLow,
-                                                                localZHigh,
+                                                                extents,
+                                                                ghosts,
+                                                                hasBC,
+                                                                localLimits,
                                                                 &semaphore));
 
                     location = nebo_next_partition(location, split);
@@ -324,12 +280,10 @@
           #ifdef __CUDACC__
              template<typename RhsType>
               inline void gpu_assign(RhsType rhs,
-                                     int const xLow,
-                                     int const xHigh,
-                                     int const yLow,
-                                     int const yHigh,
-                                     int const zLow,
-                                     int const zHigh) {
+                                     structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC,
+                                     structured::GhostData const limits) {
                  #ifdef NEBO_REPORT_BACKEND
                     std::cout << "Starting Nebo CUDA" << std::endl
                  #endif
@@ -337,9 +291,9 @@
 
                  typename RhsType::GPUWalkType typedef RhsGPUWalkType;
 
-                 int xExtent = xHigh - xLow;
+                 int xExtent = limits.get_plus(0) - limits.get_minus(0);
 
-                 int yExtent = yHigh - yLow;
+                 int yExtent = limits.get_plus(1) - limits.get_minus(1);
 
                  int blockDim = 16;
 
@@ -373,13 +327,16 @@
                                                                   dimBlock,
                                                                   0,
                                                                   field_.get_stream()>>>(gpu_init(),
-                                                                                         rhs.gpu_init(gpu_device_index()),
-                                                                                         xLow,
-                                                                                         xHigh,
-                                                                                         yLow,
-                                                                                         yHigh,
-                                                                                         zLow,
-                                                                                         zHigh);
+                                                                                         rhs.gpu_init(extents,
+                                                                                                      ghosts,
+                                                                                                      hasBC,
+                                                                                                      gpu_device_index()),
+                                                                                         limits.get_minus(0),
+                                                                                         limits.get_plus(0),
+                                                                                         limits.get_minus(1),
+                                                                                         limits.get_plus(1),
+                                                                                         limits.get_minus(2),
+                                                                                         limits.get_plus(2));
 
                  #ifndef NDEBUG
                     if(cudaSuccess != (err = cudaStreamSynchronize(field_.get_stream())))
@@ -418,12 +375,11 @@
              #ifdef NEBO_GPU_TEST
                 template<typename RhsType>
                  inline void gpu_test_assign(RhsType rhs,
-                                             int const xLow,
-                                             int const xHigh,
-                                             int const yLow,
-                                             int const yHigh,
-                                             int const zLow,
-                                             int const zHigh) {
+                                             structured::IntVec const & extents,
+                                             structured::GhostData const &
+                                             ghosts,
+                                             structured::IntVec const & hasBC,
+                                             structured::GhostData const limits) {
                     #ifdef NEBO_REPORT_BACKEND
                        std::cout << "Starting Nebo CUDA with Nebo copying" <<
                        std::endl
@@ -454,12 +410,10 @@
                                      ftmp_.get_stream());
 
                        gpu_lhs.template gpu_assign<RhsType>(rhs,
-                                                            xLow,
-                                                            xHigh,
-                                                            yLow,
-                                                            yHigh,
-                                                            zLow,
-                                                            zHigh);
+                                                            extents,
+                                                            ghosts,
+                                                            hasBC,
+                                                            limits);
 
                        CDI.memcpy_from(field_.field_values(),
                                        gpu_field.field_values(GPU_INDEX),
@@ -468,13 +422,7 @@
                                        field_.get_stream());
                     }
                     else {
-                       gpu_assign<RhsType>(rhs,
-                                           xLow,
-                                           xHigh,
-                                           yLow,
-                                           yHigh,
-                                           zLow,
-                                           zHigh);
+                       gpu_assign<RhsType>(rhs, extents, ghosts, hasBC, limits);
                     };
 
                     #ifdef NEBO_REPORT_BACKEND
@@ -505,20 +453,12 @@
              #ifdef FIELD_EXPRESSION_THREADS
                 template<typename RhsType>
                  inline void assign(RhsType const & rhs,
-                                    int const xLow,
-                                    int const xHigh,
-                                    int const yLow,
-                                    int const yHigh,
-                                    int const zLow,
-                                    int const zHigh,
+                                    structured::IntVec const & extents,
+                                    structured::GhostData const & ghosts,
+                                    structured::IntVec const & hasBC,
+                                    structured::GhostData const limits,
                                     Semaphore * semaphore) {
-                    init().assign(rhs.init(),
-                                  xLow,
-                                  xHigh,
-                                  yLow,
-                                  yHigh,
-                                  zLow,
-                                  zHigh);
+                    init().assign(rhs.init(extents, ghosts, hasBC), limits);
 
                     semaphore->post();
                  }
@@ -552,18 +492,11 @@
           {}
 
           template<typename RhsType>
-           inline void assign(RhsType rhs,
-                              int const xLow,
-                              int const xHigh,
-                              int const yLow,
-                              int const yHigh,
-                              int const zLow,
-                              int const zHigh) {
-              for(int z = zLow; z < zHigh; z++) {
-                 for(int y = yLow; y < yHigh; y++) {
-                    for(int x = xLow; x < xHigh; x++) {
-                       ref(x, y, z) = rhs.eval(x, y, z);
-                    };
+           inline void assign(RhsType rhs, structured::GhostData const limits) {
+              for(int z = limits.get_minus(2); z < limits.get_plus(2); z++) {
+                 for(int y = limits.get_minus(1); y < limits.get_plus(1); y++) {
+                    for(int x = limits.get_minus(0); x < limits.get_plus(0); x++)
+                    { ref(x, y, z) = rhs.eval(x, y, z); };
                  };
               };
            }

@@ -43,11 +43,12 @@
                                                 null)
                                 (val-add (val-member-call 'mask_ 'get_valid_ghost_data)
                                          (val-call 'point_to_ghost (val-member-call (val-member-call 'mask_ 'boundary_info) 'has_extra)))
-                                (val-call 'point_to_ghost (val-member-call (val-member-call 'mask_ 'boundary_info) 'has_extra))
+                                (val-member-call 'mask_ 'get_valid_ghost_data)
                                 'true
                                 null
-                                (val-subtract (val-member-call (val-member-call 'mask_ 'window_without_ghost) 'extent 'dir)
-                                              (val-member-call (val-member-call 'mask_ 'boundary_info) 'has_extra 'dir))
+                                (val-member-call (val-member-call 'mask_ 'window_without_ghost) 'extents)
+                                null
+                                (val-call 'point_to_ghost (val-member-call (val-member-call 'mask_ 'boundary_info) 'has_bc))
                                 'mask_
                                 'mask_
                                 (val-member-call 'mask_ 'find_consumer 'CPU_INDEX)

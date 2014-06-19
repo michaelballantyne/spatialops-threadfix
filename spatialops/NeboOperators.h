@@ -53,42 +53,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -107,8 +114,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -137,8 +154,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -799,42 +819,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -853,8 +880,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -883,8 +920,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -1545,42 +1585,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -1599,8 +1646,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -1629,8 +1686,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -2291,42 +2351,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -2345,8 +2412,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -2375,8 +2452,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -3031,20 +3111,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -3061,8 +3151,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3087,8 +3183,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -3217,20 +3315,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -3247,8 +3355,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3273,8 +3387,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -3403,20 +3519,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -3433,8 +3559,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3459,8 +3591,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -3589,20 +3723,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -3619,8 +3763,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3645,8 +3795,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -3776,20 +3928,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -3806,8 +3968,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3833,8 +4001,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -3963,20 +4133,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -3993,8 +4173,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -4019,8 +4205,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -4149,20 +4337,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -4179,8 +4377,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -4205,8 +4409,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -4344,42 +4550,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -4398,8 +4611,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -4428,8 +4651,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -5090,20 +5316,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -5120,8 +5356,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5147,8 +5389,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -5277,20 +5521,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -5307,8 +5561,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5333,8 +5593,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -5464,20 +5726,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -5494,8 +5766,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5521,8 +5799,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -5652,20 +5932,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -5682,8 +5972,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5708,8 +6004,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -5839,20 +6137,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -5869,8 +6177,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5896,8 +6210,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -6027,20 +6343,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -6057,8 +6383,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -6084,8 +6416,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -6219,20 +6553,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -6249,8 +6593,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -6276,8 +6626,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -6411,42 +6763,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -6465,8 +6824,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -6495,8 +6864,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -7233,42 +7605,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -7287,8 +7666,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -7317,8 +7706,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -8058,42 +8450,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -8112,8 +8511,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -8142,8 +8551,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -8866,42 +9278,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -8920,8 +9339,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -8952,8 +9381,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -9716,42 +10148,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -9770,8 +10209,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -9800,8 +10249,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -10538,42 +10990,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -10592,8 +11051,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -10624,8 +11093,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -11399,42 +11871,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -11453,8 +11932,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -11483,8 +11972,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -11738,42 +12230,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -11792,8 +12291,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -11822,8 +12331,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -12069,20 +12581,30 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
 
-          inline int extent(int const dir) const { return operand_.extent(dir); }
+          inline structured::IntVec extents(void) const {
+             return operand_.extents();
+          }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline structured::IntVec has_bc(void) const {
+             return operand_.has_bc();
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -12099,8 +12621,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -12125,8 +12653,10 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -12227,42 +12757,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -12281,8 +12818,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -12311,8 +12858,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -12980,42 +13530,49 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline structured::GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline structured::IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   structured::IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline structured::IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
           }
 
           #ifdef FIELD_EXPRESSION_THREADS
@@ -13034,8 +13591,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -13064,8 +13631,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:

@@ -49,21 +49,29 @@
           : mask_(m)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
+          inline structured::GhostData ghosts_with_bc(void) const {
              return mask_.get_valid_ghost_data() + point_to_ghost(mask_.boundary_info().has_extra());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return point_to_ghost(mask_.boundary_info().has_extra());
+          inline structured::GhostData ghosts_without_bc(void) const {
+             return mask_.get_valid_ghost_data();
           }
 
-          inline bool has_extent(void) const { return true; }
+          inline bool has_extents(void) const { return true; }
 
-          inline int extent(int const dir) const {
-             return mask_.window_without_ghost().extent(dir) - mask_.boundary_info().has_extra(dir);
+          inline structured::IntVec extents(void) const {
+             return mask_.window_without_ghost().extents();
           }
 
-          inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
+          inline structured::IntVec has_bc(void) const {
+             return point_to_ghost(mask_.boundary_info().has_bc());
+          }
+
+          inline SeqWalkType init(structured::IntVec const & extents,
+                                  structured::GhostData const & ghosts,
+                                  structured::IntVec const & hasBC) const {
+             return SeqWalkType(mask_);
+          }
 
           #ifdef FIELD_EXPRESSION_THREADS
              inline ResizeType resize(void) const { return ResizeType(mask_); }
@@ -79,7 +87,10 @@
                 return mask_.find_consumer(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
+             inline GPUWalkType gpu_init(structured::IntVec const & extents,
+                                         structured::GhostData const & ghosts,
+                                         structured::IntVec const & hasBC,
+                                         int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, mask_);
              }
 
@@ -108,7 +119,11 @@
              : mask_(m)
              {}
 
-             inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
+             inline SeqWalkType init(structured::IntVec const & extents,
+                                     structured::GhostData const & ghosts,
+                                     structured::IntVec const & hasBC) const {
+                return SeqWalkType(mask_);
+             }
 
             private:
              structured::SpatialMask<FieldType> const mask_;

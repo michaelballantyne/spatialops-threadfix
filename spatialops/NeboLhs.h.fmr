@@ -54,6 +54,7 @@
       (def-template (typename 'RhsType)
         (def-void-function name
           (list (function-pmtr 'RhsType 'rhs)
+                init-pmtr
                 low-high-pmtr)
           report-start
           body
@@ -61,6 +62,7 @@
   (define (assign-call name)
     (val-call (type-template name 'RhsType)
               'rhs
+              init-arg
               low-high-arg))
   (define (assign-error standard message)
     (build-error (list 'Nebo 'Assignment)
@@ -80,24 +82,34 @@
                                  (def-void-function 'assign
                                    (list (function-pmtr (const 'bool) 'useGhost)
                                          (function-pmtr 'RhsType 'rhs))
-                                   (comment-env-chunk (val-member-call 'field_ 'reset_valid_ghosts (val-call 'calculate_actual_ghost
-                                                                                                             'useGhost
-                                                                                                             (val-member-call 'field_ 'get_ghost_data)
-                                                                                                             (val-member-call 'field_ 'boundary_info)
-                                                                                                             (val-member-call 'rhs 'possible_ghosts))))
-                                   (val-typed-assign GhostData 'extents (val-call 'calculate_limits
-                                                                                  'useGhost
-                                                                                  (val-member-call 'field_ 'window_with_ghost)
-                                                                                  (val-member-call 'field_ 'get_valid_ghost_data)
-                                                                                  (val-member-call 'field_ 'get_ghost_data)
-                                                                                  (val-member-call 'field_ 'boundary_info)
-                                                                                  (val-member-call 'rhs 'possible_ghosts)))
-                                   (val-typed-const-assign 'int 'xLow (add-spaces '- (val-member-call 'extents 'get_minus 0)))
-                                   (val-typed-const-assign 'int 'xHigh (val-member-call 'extents 'get_plus 0))
-                                   (val-typed-const-assign 'int 'yLow (add-spaces '- (val-member-call 'extents 'get_minus 1)))
-                                   (val-typed-const-assign 'int 'yHigh (val-member-call 'extents 'get_plus 1))
-                                   (val-typed-const-assign 'int 'zLow (add-spaces '- (val-member-call 'extents 'get_minus 2)))
-                                   (val-typed-const-assign 'int 'zHigh (val-member-call 'extents 'get_plus 2))
+                                   (val-typed-assign (const GhostData)
+                                                     'ghosts
+                                                     (val-call 'calculate_actual_ghost
+                                                               'useGhost
+                                                               (val-member-call 'field_ 'get_ghost_data)
+                                                               (val-member-call 'field_ 'boundary_info)
+                                                               (val-member-call 'rhs 'ghosts_with_bc)))
+                                   (comment-env-chunk (val-member-call 'field_ 'reset_valid_ghosts 'ghosts))
+                                   (val-typed-assign (const IntVec) 'extents (val-subtract (val-subtract (val-member-call (val-member-call 'field_ 'window_with_ghost)
+                                                                                                                          'extent)
+                                                                                                         (val-member-call (val-member-call 'field_ 'get_valid_ghost_data)
+                                                                                                                          'get_minus))
+                                                                                           (val-member-call (val-member-call 'field_ 'get_valid_ghost_data)
+                                                                                                            'get_plus)))
+                                   (val-typed-assign (const IntVec) 'hasBC (val-member-call (val-member-call 'field_ 'boundary_info)
+                                                                                            'has_bc))
+                                   (val-typed-const-assign GhostData
+                                                           'limits
+                                                           (val-call GhostData
+                                                                     (add-spaces '- (val-member-call 'ghosts 'get_minus 0))
+                                                                     (val-add (array-access 'extents 0)
+                                                                              (val-member-call 'ghosts 'get_plus 0))
+                                                                     (add-spaces '- (val-member-call 'ghosts 'get_minus 1))
+                                                                     (val-add (array-access 'extents 1)
+                                                                              (val-member-call 'ghosts 'get_plus 1))
+                                                                     (add-spaces '- (val-member-call 'ghosts 'get_minus 2))
+                                                                     (val-add (array-access 'extents 2)
+                                                                              (val-member-call 'ghosts 'get_plus 2))))
                                    (pp-gpu-or (pp-gpu-test-or (assign-call 'gpu_test_assign)
                                                               (stmt-if-else (val-call 'gpu_ready)
                                                                             (stmt-if-else (val-member-call 'rhs 'gpu_ready (val-call 'gpu_device_index))
@@ -172,6 +184,7 @@
                                (def-template (typename 'RhsType)
                                  (def-void-function 'assign
                                    (list (function-pmtr (ref (const 'RhsType)) 'rhs)
+                                         init-pmtr
                                          low-high-pmtr
                                          (function-pmtr (ptr 'Semaphore) 'semaphore))
                                    (list assign-body
@@ -233,12 +246,16 @@
                      (list (def-template (typename 'RhsType)
                              (device-only (def-void-function 'assign
                                             (list (function-pmtr 'RhsType 'rhs)
-                                                  low-high-pmtr)
+                                                  gpu-low-high-pmtr)
                                             (val-typed-const-assign 'int 'ii (val-add (val-multiply 'blockIdx.x 'blockDim.x) 'threadIdx.x))
                                             (val-typed-const-assign 'int 'jj (val-add (val-multiply 'blockIdx.y 'blockDim.y) 'threadIdx.y))
                                             (val-typed-const-assign 'int 'x (val-add 'ii 'xLow))
                                             (val-typed-const-assign 'int 'y (val-add 'jj 'yLow))
-                                            (val-call 'start 'x 'y 'xHigh 'yHigh)
+                                            (val-call 'start
+                                                      'x
+                                                      'y
+                                                      'xHigh
+                                                      'yHigh)
                                             assign-body)))
                            publics)
                      (list (device-only (def-returning-function (dcl-function 'valid 'bool)
@@ -268,8 +285,8 @@
                                                                       'void
                                                                       (list (function-pmtr 'LhsType 'lhs)
                                                                             (function-pmtr 'RhsType 'rhs)
-                                                                            low-high-pmtr))
-                                (val-member-call 'lhs 'assign 'rhs low-high-arg)))))
+                                                                            gpu-low-high-pmtr))
+                                (val-member-call 'lhs 'assign 'rhs gpu-low-high-arg)))))
 
   (build-struct NF-chunk
                 std-FT
@@ -283,24 +300,22 @@
                                 null
                                 (list (val-member-call (val-call 'init)
                                                        'assign
-                                                       (val-member-call 'rhs 'init)
+                                                       (val-member-call 'rhs 'init init-arg)
                                                        low-high-arg))
                                 'field_
                                 (list (typedef (typename (scope 'RhsType 'ResizeType))
                                                'RhsResizeType)
                                       (val-typed-assign 'ResizeType 'new_lhs (val-call 'resize))
                                       (val-typed-assign 'RhsResizeType 'new_rhs (val-member-call 'rhs 'resize))
-                                      (function-pmtr 'int 'localXLow)
-                                      (function-pmtr 'int 'localXHigh)
-                                      (function-pmtr 'int 'localYLow)
-                                      (function-pmtr 'int 'localYHigh)
-                                      (function-pmtr 'int 'localZLow)
-                                      (function-pmtr 'int 'localZHigh)
+                                      (function-pmtr GhostData 'localLimits)
                                       (val-typed-const-assign IntVec 'split (val-call 'nebo_find_partition
                                                                                       (val-call IntVec
-                                                                                                (val-subtract 'xHigh 'xLow)
-                                                                                                (val-subtract 'yHigh 'yLow)
-                                                                                                (val-subtract 'zHigh 'zLow))
+                                                                                                (val-subtract (val-member-call 'limits 'get_plus 0)
+                                                                                                              (val-member-call 'limits 'get_minus 0))
+                                                                                                (val-subtract (val-member-call 'limits 'get_plus 1)
+                                                                                                              (val-member-call 'limits 'get_minus 1))
+                                                                                                (val-subtract (val-member-call 'limits 'get_plus 2)
+                                                                                                              (val-member-call 'limits 'get_minus 2)))
                                                                                       'thread_count))
                                       (val-typed-const-assign 'int 'max (val-call 'nebo_partition_count 'split))
                                       (val-typed-assign IntVec 'location ZeroIntVec)
@@ -310,30 +325,16 @@
                                                 (val-call 'nebo_set_up_extents
                                                           'location
                                                           'split
-                                                          'localXLow
-                                                          'localXHigh
-                                                          'localYLow
-                                                          'localYHigh
-                                                          'localZLow
-                                                          'localZHigh
-                                                          'xLow
-                                                          'xHigh
-                                                          'yLow
-                                                          'yHigh
-                                                          'zLow
-                                                          'zHigh)
+                                                          'localLimits
+                                                          'limits)
                                                 (val-member-call (val-call (scope 'ThreadPoolFIFO 'self))
                                                                  'schedule
                                                                  (val-call (scope 'boost 'bind)
                                                                            (take-ptr (scope 'ResizeType (type-template-function 'assign 'RhsResizeType)))
                                                                            'new_lhs
                                                                            'new_rhs
-                                                                           'localXLow
-                                                                           'localXHigh
-                                                                           'localYLow
-                                                                           'localYHigh
-                                                                           'localZLow
-                                                                           'localZHigh
+                                                                           init-arg
+                                                                           'localLimits
                                                                            (take-ptr 'semaphore)))
                                                 (val-assign 'location (val-call 'nebo_next_partition 'location 'split))))
                                 'field_
@@ -345,8 +346,10 @@
                                                                                                 0))))])
                                   (list (typedef (typename (scope 'RhsType 'GPUWalkType))
                                                  'RhsGPUWalkType)
-                                        (val-typed-assign 'int 'xExtent (val-subtract 'xHigh 'xLow))
-                                        (val-typed-assign 'int 'yExtent (val-subtract 'yHigh 'yLow))
+                                        (val-typed-assign 'int 'xExtent (val-subtract (val-member-call 'limits 'get_plus 0)
+                                                                                      (val-member-call 'limits 'get_minus 0)))
+                                        (val-typed-assign 'int 'yExtent (val-subtract (val-member-call 'limits 'get_plus 1)
+                                                                                      (val-member-call 'limits 'get_minus 1)))
                                         (val-typed-assign 'int 'blockDim 16)
                                         (dim-def 'xGDim 'xExtent)
                                         (dim-def 'yGDim 'yExtent)
@@ -362,8 +365,13 @@
                                                                0
                                                                (val-member-call 'field_ 'get_stream))
                                                   (val-call 'gpu_init)
-                                                  (val-member-call 'rhs 'gpu_init (val-call 'gpu_device_index))
-                                                  low-high-arg)
+                                                  (val-member-call 'rhs 'gpu_init init-arg (val-call 'gpu_device_index))
+                                                  (val-member-call 'limits 'get_minus 0)
+                                                  (val-member-call 'limits 'get_plus 0)
+                                                  (val-member-call 'limits 'get_minus 1)
+                                                  (val-member-call 'limits 'get_plus 1)
+                                                  (val-member-call 'limits 'get_minus 2)
+                                                  (val-member-call 'limits 'get_plus 2))
                                         (pp-debug-only (stmt-if (val-not-equal 'cudaSuccess (paren (val-assign 'err (val-call 'cudaStreamSynchronize(val-member-call 'field_ 'get_stream)))))
                                                                 (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
                                                                                        '<< (val-call 'cudaGetErrorString 'err))))))
@@ -399,6 +407,7 @@
                                                           (val-member-call 'gpu_lhs
                                                                            (type-template-function 'gpu_assign 'RhsType)
                                                                            'rhs
+                                                                           init-arg
                                                                            low-high-arg)
                                                           (val-member-call 'CDI
                                                                            'memcpy_from
@@ -411,6 +420,7 @@
                                                                            (val-member-call 'field_ 'get_stream)))
                                                     (val-call (type-template 'gpu_assign 'RhsType)
                                                               'rhs
+                                                              init-arg
                                                               low-high-arg)))
                                 (stmt-dcl-variable FT-chunk 'field_))
                 (bs-Resize-lhs null
@@ -420,7 +430,7 @@
                                                null)
                                (val-member-call (val-call 'init)
                                                 'assign
-                                                (val-member-call 'rhs 'init)
+                                                (val-member-call 'rhs 'init init-arg)
                                                 low-high-arg)
                                null
                                'field_
@@ -435,14 +445,14 @@
                                                                                               1))
                                                       (val-construct 'base_ (compute-base 'f 'none)))
                                                 null)
-                                (stmt-for (val-typed-assign 'int 'z 'zLow)
-                                          (val-less-than 'z 'zHigh)
+                                (stmt-for (val-typed-assign 'int 'z (val-member-call 'limits 'get_minus 2))
+                                          (val-less-than 'z (val-member-call 'limits 'get_plus 2))
                                           (val-increment 'z)
-                                          (stmt-for (val-typed-assign 'int 'y 'yLow)
-                                                    (val-less-than 'y 'yHigh)
+                                          (stmt-for (val-typed-assign 'int 'y (val-member-call 'limits 'get_minus 1))
+                                                    (val-less-than 'y (val-member-call 'limits 'get_plus 1))
                                                     (val-increment 'y)
-                                                    (stmt-for (val-typed-assign 'int 'x 'xLow)
-                                                              (val-less-than 'x 'xHigh)
+                                                    (stmt-for (val-typed-assign 'int 'x (val-member-call 'limits 'get_minus 0))
+                                                              (val-less-than 'x (val-member-call 'limits 'get_plus 0))
                                                               (val-increment 'x)
                                                               (val-assign (val-call 'ref index-arg)
                                                                           (val-member-call 'rhs 'eval index-arg)))))

@@ -101,23 +101,6 @@
                 - point_to_ghost(bc.has_extra()));
       };
 
-      inline structured::GhostData calculate_limits(bool const useGhost,
-                                                    structured::MemoryWindow const & lhsMemoryWindow,
-                                                    structured::GhostData const & lhsCurrentGhosts,
-                                                    structured::GhostData const & lhsPossibleGhosts,
-                                                    structured::BoundaryCellInfo const & bc,
-                                                    structured::GhostData const rhsPossibleGhosts) {
-        structured::GhostData lhsActualGhosts = calculate_actual_ghost(useGhost,
-                                                                       lhsPossibleGhosts,
-                                                                       bc,
-                                                                       rhsPossibleGhosts);
-
-        return structured::GhostData(lhsActualGhosts.get_minus(),
-                                     (lhsMemoryWindow.extent() - lhsCurrentGhosts.get_minus() - lhsCurrentGhosts.get_plus() +
-                                      lhsActualGhosts.get_plus()));
-                                      
-      };
-
       template<typename Type1, typename Type2>
        struct NeboFieldCheck;
 
@@ -143,24 +126,14 @@
 
       inline void nebo_set_up_extents(structured::IntVec const & current,
                                       structured::IntVec const & split,
-                                      int & localXLow,
-                                      int & localXHigh,
-                                      int & localYLow,
-                                      int & localYHigh,
-                                      int & localZLow,
-                                      int & localZHigh,
-                                      int const xLow,
-                                      int const xHigh,
-                                      int const yLow,
-                                      int const yHigh,
-                                      int const zLow,
-                                      int const zHigh) {
+                                      structured::GhostData & localLimits,
+                                      structured::GhostData const & limits) {
         using namespace structured;
 
         //full extent indexed from 0 rather than DLow (which is nonpositive - zero or below)
-        IntVec const fullExtent(xHigh - xLow,
-                                yHigh - yLow,
-                                zHigh - zLow);
+        IntVec const fullExtent(limits.get_plus(0) - limits.get_minus(0),
+                                limits.get_plus(1) - limits.get_minus(1),
+                                limits.get_plus(2) - limits.get_minus(2));
 
         //sanity checks
 #       ifndef NDEBUG
@@ -195,12 +168,12 @@
         IntVec const high = low + stdExtent + currentExtra;
 
         //shift back to indexing from DLow rather than zero
-        localXLow = low[0] + xLow;
-        localYLow = low[1] + yLow;
-        localZLow = low[2] + zLow;
-        localXHigh = high[0] + xLow;
-        localYHigh = high[1] + yLow;
-        localZHigh = high[2] + zLow;
+        localLimits = structured::GhostData(low[0] + limits.get_minus(0),
+                                            high[0] + limits.get_minus(0),
+                                            low[1] + limits.get_minus(1),
+                                            high[1] + limits.get_minus(1),
+                                            low[2] + limits.get_minus(2),
+                                            high[2] + limits.get_minus(2));
       };
 
       inline structured::IntVec nebo_next_partition(structured::IntVec const & current,

@@ -659,9 +659,12 @@ namespace SpatialOps {
         typedef NeboScalar<Initial, double> NumType;
         typedef DivOp<Initial, DiffType, NumType> RhsTypeInit;
         typedef typename RhsTypeInit::SeqWalkType RhsType;
+        //arguments to init() call are meaningless, but they are not used at all...
         RhsType rhs = RhsTypeInit(DiffType(shiftGamma(gamma).expr(),
                                            shiftPhi(phi).expr()),
-                                  NumType(coef)).init();
+                                  NumType(coef)).init(IntVec(0,0,0),
+                                                      structured::GhostData(0),
+                                                      IntVec(0,0,0));
 
         PointIterator       ip = points.begin();
         PointIterator const ep = points.end();
