@@ -66,6 +66,7 @@
 (define low-high-arg (list 'xLow 'xHigh 'yLow 'yHigh 'zLow 'zHigh))
 (define IntVec (scope 'structured 'IntVec))
 (define GhostData (scope 'structured 'GhostData))
+(define SpatialMask (scope 'structured (type-template 'SpatialMask FT-chunk)))
 (define ghost-pmtr (function-pmtr (ref (const GhostData)) 'ghosts))
 (define ghost-arg 'ghosts)
 (define ZeroIntVec (val-call IntVec 0 0 0))

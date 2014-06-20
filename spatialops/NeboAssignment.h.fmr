@@ -49,6 +49,7 @@
                              use-ghost
                              rhs-expr))
       'lhs)))
+
 (define (assigns name use-ghost)
   (internal-smt-list
    blank-line
@@ -125,6 +126,33 @@
                   #false
                   (val-member-call 'rhs 'expr))))
 
+(define (masked-assign name
+                       tpl-pmtrs
+                       rhs-input-type
+                       rhs-type
+                       rhs-expr)
+  (def-template (map typename (flatten* tpl-pmtrs FT-chunk))
+    (def-returning-function (dcl-function name
+                                          (ref (const FT-chunk))
+                                          (function-pmtr (ref (const SpatialMask)) 'mask)
+                                          (function-pmtr (ref FT-chunk) 'lhs)
+                                          (function-pmtr (ref (const rhs-input-type)) 'rhs))
+      (list (if rhs-type
+                (typedef rhs-type 'RhsType)
+                null)
+            (let ([cpu (val-member-call (val-call (type-template NF-chunk 'Initial FT-chunk)
+                                                  'lhs)
+                                        (type-template-function 'masked_assign 'RhsType)
+                                        'mask
+                                        rhs-expr)])
+              (pp-gpu-or (stmt-if (val-equal (val-member-call 'lhs 'device_index)
+                                             'CPU_INDEX)
+                                  cpu
+                                  (val-nebo-assign 'lhs (val-call (val-call 'cond 'mask (val-call (type-template NE-chunk 'RhsType FT-chunk) 'rhs))
+                                                                  'lhs)))
+                         cpu)))
+      'lhs)))
+
                                         ; beginnning of file
 (pp-header-file
  'NEBO_ASSIGNMENT_H
@@ -133,4 +161,19 @@
            'true)
   (assigns 'interior_assign
            'false)
+  (masked-assign 'masked_assign
+                 null
+                 (typename (scope FT-chunk vt-chunk))
+                 (type-template NS-chunk 'Initial (typename (scope FT-chunk vt-chunk)))
+                 (val-call 'RhsType 'rhs))
+  (masked-assign 'masked_assign
+                 null
+                 FT-chunk
+                 (type-template NCF-chunk 'Initial FT-chunk)
+                 (val-call 'RhsType 'rhs))
+  (masked-assign 'masked_assign
+                 'RhsType
+                 (type-template NE-chunk 'RhsType FT-chunk)
+                 #false
+                 (val-member-call 'rhs 'expr))
   ))

@@ -35,6 +35,7 @@
                            constructor
                            publics
                            sequential-assign-body
+                           masked-assign-body
                            SW-cons-args
                            thread-parallel-assign-body
                            RS-cons-args
@@ -109,6 +110,23 @@
                                                                                                         (assign-error #true 'CPU))
                                                                                           (assign-error #false (cout-break 'unknown '(device - not on CPU or GPU))))))
                                               (assign-call 'cpu_assign))))
+                               (def-template (typename 'RhsType)
+                                 (def-void-function 'masked_assign
+                                   (list (function-pmtr (ref (const SpatialMask)) 'mask)
+                                         (function-pmtr 'RhsType 'rhs))
+                                   (report-backend-start (add-spaces 'masked 'assignment))
+                                   masked-assign-body
+                                   (pp-gpu-or (stmt-if-else (val-call 'gpu_ready)
+                                                            (build-error (list 'Nebo 'Masked 'Assignment)
+                                                                         (list '(Left-hand side of masked assignment allocated on)
+                                                                               (cout-break 'GPU 'and 'this 'backend 'does 'not 'support 'GPU 'execution)))
+                                                            (stmt-if-else (val-call 'cpu_ready)
+                                                                          (stmt-if-else (val-member-call 'rhs 'cpu_ready)
+                                                                                        masked-assign-body
+                                                                                        (assign-error #true 'CPU))
+                                                                          (assign-error #false (cout-break 'unknown '(device - not on CPU or GPU)))))
+                                              (body masked-assign-body))
+                                   (report-backend-finish (add-spaces 'masked 'assignment))))
                                (def-returning-function (dcl-function 'init 'SeqWalkType)
                                  null
                                  (val-call 'SeqWalkType SW-cons-args))
@@ -149,7 +167,7 @@
                                                                                        gpu-test-assign-body
                                                                                        (add-spaces 'CUDA 'with 'Nebo 'copying)))))
                                privates)))
-(define bs-Initial-lhs (arg-swap build-Initial-lhs 15 4 "bs-Initial-lhs"))
+(define bs-Initial-lhs (arg-swap build-Initial-lhs 16 4 "bs-Initial-lhs"))
 (define (build-Resize-lhs name
                           FT
                           tpl-irreg-pars
@@ -285,6 +303,22 @@
                                                        'assign
                                                        (val-member-call 'rhs 'init)
                                                        low-high-arg))
+                                (let* ([Points (scope 'std (type-template 'vector IntVec))]
+                                       [PointIterator (scope Points 'const_iterator)])
+                                  (list (val-typed-assign 'SeqWalkType 'lhs (val-call 'init))
+                                        (val-typed-assign (typename (scope 'RhsType 'SeqWalkType)) 'expr (val-member-call 'rhs 'init))
+                                        (val-typed-assign PointIterator 'ip (val-member-call (val-member-call 'mask 'points)
+                                                                                              'begin))
+                                        (val-typed-assign (const PointIterator) 'ep (val-member-call (val-member-call 'mask 'points)
+                                                                                                      'end))
+                                        (stmt-for null
+                                                  (val-not-equal 'ip 'ep)
+                                                  (val-increment 'ip)
+                                                  (val-typed-assign (const 'int) 'x (array-access (paren '*ip) 0))
+                                                  (val-typed-assign (const 'int) 'y (array-access (paren '*ip) 1))
+                                                  (val-typed-assign (const 'int) 'z (array-access (paren '*ip) 2))
+                                                  (val-assign (val-member-call 'lhs 'ref 'x 'y 'z)
+                                                               (val-member-call 'expr 'eval 'x 'y 'z)))))
                                 'field_
                                 (list (typedef (typename (scope 'RhsType 'ResizeType))
                                                'RhsResizeType)

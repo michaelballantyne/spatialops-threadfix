@@ -163,6 +163,119 @@
               /* __CUDACC__ */;
            }
 
+          template<typename RhsType>
+           inline void masked_assign(structured::SpatialMask<FieldType> const &
+                                     mask,
+                                     RhsType rhs) {
+              #ifdef NEBO_REPORT_BACKEND
+                 std::cout << "Starting Nebo masked assignment" << std::endl
+              #endif
+              /* NEBO_REPORT_BACKEND */;
+
+              SeqWalkType lhs = init();
+
+              typename RhsType::SeqWalkType expr = rhs.init();
+
+              std::vector<structured::IntVec>::const_iterator ip = mask.points().begin();
+
+              std::vector<structured::IntVec>::const_iterator const ep = mask.points().end();
+
+              for(; ip != ep; ip++) {
+                 int const x = (*ip)[0];
+
+                 int const y = (*ip)[1];
+
+                 int const z = (*ip)[2];
+
+                 lhs.ref(x, y, z) = expr.eval(x, y, z);
+              };
+
+              #ifdef __CUDACC__
+                 if(gpu_ready()) {
+                    std::ostringstream msg;
+                    msg << "Nebo error in " << "Nebo Masked Assignment" << ":\n"
+                    ;
+                    msg << "Left-hand side of masked assignment allocated on ";
+                    msg << "GPU and this backend does not support GPU execution"
+                    ;
+                    msg << "\n";
+                    msg << "\t - " << __FILE__ << " : " << __LINE__;
+                    throw(std::runtime_error(msg.str()));;
+                 }
+                 else {
+                    if(cpu_ready()) {
+                       if(rhs.cpu_ready()) {
+                          SeqWalkType lhs = init();
+
+                          typename RhsType::SeqWalkType expr = rhs.init();
+
+                          std::vector<structured::IntVec>::const_iterator ip =
+                          mask.points().begin();
+
+                          std::vector<structured::IntVec>::const_iterator const
+                          ep = mask.points().end();
+
+                          for(; ip != ep; ip++) {
+                             int const x = (*ip)[0];
+
+                             int const y = (*ip)[1];
+
+                             int const z = (*ip)[2];
+
+                             lhs.ref(x, y, z) = expr.eval(x, y, z);
+                          };
+                       }
+                       else {
+                          std::ostringstream msg;
+                          msg << "Nebo error in " << "Nebo Assignment" << ":\n";
+                          msg << "Left-hand side of assignment allocated on ";
+                          msg << "CPU but right-hand side is not ";
+                          msg << "(completely) accessible on the same CPU";
+                          msg << "\n";
+                          msg << "\t - " << __FILE__ << " : " << __LINE__;
+                          throw(std::runtime_error(msg.str()));;
+                       };
+                    }
+                    else {
+                       std::ostringstream msg;
+                       msg << "Nebo error in " << "Nebo Assignment" << ":\n";
+                       msg << "Left-hand side of assignment allocated on ";
+                       msg << "unknown device - not on CPU or GPU";
+                       msg << "\n";
+                       msg << "\t - " << __FILE__ << " : " << __LINE__;
+                       throw(std::runtime_error(msg.str()));;
+                    };
+                 }
+              #else
+                 {
+                    SeqWalkType lhs = init();
+
+                    typename RhsType::SeqWalkType expr = rhs.init();
+
+                    std::vector<structured::IntVec>::const_iterator ip = mask.points().begin();
+
+                    std::vector<structured::IntVec>::const_iterator const ep =
+                    mask.points().end();
+
+                    for(; ip != ep; ip++) {
+                       int const x = (*ip)[0];
+
+                       int const y = (*ip)[1];
+
+                       int const z = (*ip)[2];
+
+                       lhs.ref(x, y, z) = expr.eval(x, y, z);
+                    };
+                 }
+              #endif
+              /* __CUDACC__ */;
+
+              #ifdef NEBO_REPORT_BACKEND
+                 std::cout << "Finished Nebo masked assignment" << std::endl
+              #endif
+              /* NEBO_REPORT_BACKEND */;
+           }
+
           inline SeqWalkType init(void) { return SeqWalkType(field_); }
 
          private:
