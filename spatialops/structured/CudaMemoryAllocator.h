@@ -87,6 +87,9 @@ class CUDADeviceManager {
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
 
+    /** \brief return sthe best possible device from multiple GPUs */
+    int get_best_device() const;
+
     /** \brief Returns the memory structure associated with device K */
     void get_memory_statistics( CUDAMemStats& cms, const int K = 0 ) const;
 
