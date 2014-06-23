@@ -35,10 +35,10 @@
 
           NeboMask<SeqWalk, FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboMask<Resize, FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboMask<GPUWalk, FieldType> typedef GPUWalkType;
@@ -65,10 +65,10 @@
 
           inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const { return ResizeType(mask_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -96,7 +96,7 @@
          private:
           structured::SpatialMask<FieldType> const mask_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename FieldType>
           struct NeboMask<Resize, FieldType> {
             public:
@@ -114,7 +114,7 @@
              structured::SpatialMask<FieldType> const mask_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename FieldType>
        struct NeboMask<SeqWalk, FieldType> {
          public:

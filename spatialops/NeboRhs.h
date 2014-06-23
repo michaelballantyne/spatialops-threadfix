@@ -35,10 +35,10 @@
 
           NeboScalar<SeqWalk, AtomicType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboScalar<Resize, AtomicType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboScalar<GPUWalk, AtomicType> typedef GPUWalkType;
@@ -63,10 +63,10 @@
 
           inline SeqWalkType init(void) const { return SeqWalkType(value_); }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const { return ResizeType(value_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return true; }
@@ -87,7 +87,7 @@
          private:
           value_type const value_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename AtomicType>
           struct NeboScalar<Resize, AtomicType> {
             public:
@@ -105,7 +105,7 @@
              value_type const value_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename AtomicType>
        struct NeboScalar<SeqWalk, AtomicType> {
          public:
@@ -153,10 +153,10 @@
 
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboConstField<Resize, FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboConstField<GPUWalk, FieldType> typedef GPUWalkType;
@@ -184,10 +184,10 @@
 
           inline SeqWalkType init(void) const { return SeqWalkType(field_); }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const { return ResizeType(field_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -214,7 +214,7 @@
          private:
           FieldType const field_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename FieldType>
           struct NeboConstField<Resize, FieldType> {
             public:
@@ -232,7 +232,7 @@
              FieldType const field_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename FieldType>
        struct NeboConstField<SeqWalk, FieldType> {
          public:
@@ -314,10 +314,10 @@
 
           NeboConstSingleValueField<SeqWalk, T> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboConstSingleValueField<Resize, T> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboConstSingleValueField<GPUWalk, T> typedef GPUWalkType;
@@ -344,12 +344,12 @@
              return SeqWalkType(* field_.field_values(CPU_INDEX));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(* field_.field_values(CPU_INDEX));
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -376,7 +376,7 @@
          private:
           SingleValueFieldType const field_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename T>
           struct NeboConstSingleValueField<Resize, T> {
             public:
@@ -396,7 +396,7 @@
              double const value_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename T>
        struct NeboConstSingleValueField<SeqWalk, T> {
          public:

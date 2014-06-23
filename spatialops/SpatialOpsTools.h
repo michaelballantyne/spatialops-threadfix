@@ -25,7 +25,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
 # include <spatialops/ThreadPool.h>
 #endif
 
@@ -46,7 +46,7 @@ namespace SpatialOps{
   template< typename T1, typename T2> struct IsSameType       { enum{ result=0 }; };
   template< typename T1             > struct IsSameType<T1,T1>{ enum{ result=1 }; };
 
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
 
   /* used within nebo to determine if thread parallelism should be used */
   inline bool is_thread_parallel(){
@@ -71,7 +71,7 @@ namespace SpatialOps{
     return ThreadPoolFIFO::set_pool_capacity( threadCount );
   }
 
-#endif // FIELD_EXPRESSION_THREADS
+#endif // ENABLE_THREADS
 
 }
 

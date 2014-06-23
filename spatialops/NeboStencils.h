@@ -300,11 +300,11 @@
           NeboStencil<SeqWalk, Pts, typename Arg::SeqWalkType, FieldType>
           typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType>
              typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboStencil<GPUWalk, Pts, typename Arg::GPUWalkType, FieldType>
@@ -332,12 +332,12 @@
              return SeqWalkType(arg_.init(), coefs_);
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize(), coefs_);
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -364,7 +364,7 @@
 
           Coefs const coefs_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Pts, typename Arg, typename FieldType>
           struct NeboStencil<Resize, Pts, Arg, FieldType> {
             public:
@@ -389,7 +389,7 @@
              Coefs const coefs_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboStencil<SeqWalk, Pts, Arg, FieldType> {
          public:
@@ -533,13 +533,13 @@
           NeboEdgelessStencil<SeqWalk, Pts, typename Arg::SeqWalkType, FieldType>
           typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboEdgelessStencil<Resize,
                                  Pts,
                                  typename Arg::ResizeType,
                                  FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboEdgelessStencil<GPUWalk,
@@ -572,7 +572,7 @@
                                 highest_indicies());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize(),
                                   coefs_,
@@ -580,7 +580,7 @@
                                   highest_indicies());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -621,7 +621,7 @@
 
           Coefs const coefs_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Pts, typename Arg, typename FieldType>
           struct NeboEdgelessStencil<Resize, Pts, Arg, FieldType> {
             public:
@@ -655,7 +655,7 @@
              structured::IntVec const high_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboEdgelessStencil<SeqWalk, Pts, Arg, FieldType> {
          public:
@@ -817,11 +817,11 @@
           NeboSumStencil<SeqWalk, Pts, typename Arg::SeqWalkType, FieldType>
           typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboSumStencil<Resize, Pts, typename Arg::ResizeType, FieldType>
              typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboSumStencil<GPUWalk, Pts, typename Arg::GPUWalkType, FieldType>
@@ -849,12 +849,12 @@
              return SeqWalkType(arg_.init());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -879,7 +879,7 @@
          private:
           Arg const arg_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Pts, typename Arg, typename FieldType>
           struct NeboSumStencil<Resize, Pts, Arg, FieldType> {
             public:
@@ -900,7 +900,7 @@
              Arg const arg_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboSumStencil<SeqWalk, Pts, Arg, FieldType> {
          public:
@@ -1041,11 +1041,11 @@
           NeboMaskShift<SeqWalk, Point, ArgSeqWalkType, FieldType> typedef
           SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboMaskShift<Resize, Point, typename Arg::ResizeType, FieldType>
              typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboMaskShift<GPUWalk, Point, ArgGPUWalkType, FieldType> typedef
@@ -1073,12 +1073,12 @@
              return SeqWalkType(arg_.init());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -1103,7 +1103,7 @@
          private:
           Arg const arg_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Point, typename Arg, typename FieldType>
           struct NeboMaskShift<Resize, Point, Arg, FieldType> {
             public:
@@ -1126,7 +1126,7 @@
              Arg const arg_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Point, typename Arg, typename FieldType>
        struct NeboMaskShift<SeqWalk, Point, Arg, FieldType> {
          public:

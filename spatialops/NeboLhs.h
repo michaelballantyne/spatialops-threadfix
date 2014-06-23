@@ -50,10 +50,10 @@
 
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboField<Resize, FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboField<GPUWalk, FieldType> typedef GPUWalkType;
@@ -287,7 +287,7 @@
                                   int const yHigh,
                                   int const zLow,
                                   int const zHigh) {
-              #ifdef FIELD_EXPRESSION_THREADS
+              #ifdef ENABLE_THREADS
                  if(is_thread_parallel()) {
                     thread_parallel_assign<RhsType>(rhs,
                                                     xLow,
@@ -315,7 +315,7 @@
                                             zLow,
                                             zHigh)
               #endif
-              /* FIELD_EXPRESSION_THREADS */;
+              /* ENABLE_THREADS */;
            }
 
           template<typename RhsType>
@@ -339,7 +339,7 @@
               /* NEBO_REPORT_BACKEND */;
            }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              template<typename RhsType>
               inline void thread_parallel_assign(RhsType rhs,
                                                  int const xLow,
@@ -432,7 +432,7 @@
 
              inline ResizeType resize(void) { return ResizeType(field_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              template<typename RhsType>
@@ -603,7 +603,7 @@
 
           FieldType field_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename FieldType>
           struct NeboField<Resize, FieldType> {
             public:
@@ -615,7 +615,7 @@
              : field_(f)
              {}
 
-             #ifdef FIELD_EXPRESSION_THREADS
+             #ifdef ENABLE_THREADS
                 template<typename RhsType>
                  inline void assign(RhsType const & rhs,
                                     int const xLow,
@@ -636,7 +636,7 @@
                     semaphore->post();
                  }
              #endif
-             /* FIELD_EXPRESSION_THREADS */
+             /* ENABLE_THREADS */
 
             private:
              inline SeqWalkType init(void) { return SeqWalkType(field_); }
@@ -644,7 +644,7 @@
              FieldType field_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename FieldType>
        struct NeboField<SeqWalk, FieldType> {
          public:

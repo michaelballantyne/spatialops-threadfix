@@ -27,10 +27,10 @@
 
    namespace SpatialOps {
       struct NeboNil {
-         #ifdef FIELD_EXPRESSION_THREADS
+         #ifdef ENABLE_THREADS
             NeboNil typedef ResizeType;
          #endif
-         /* FIELD_EXPRESSION_THREADS */
+         /* ENABLE_THREADS */
 
          NeboNil typedef SeqWalkType;
 
@@ -57,13 +57,13 @@
                      typename Expr::SeqWalkType,
                      FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboClause<Resize,
                         typename Test::ResizeType,
                         typename Expr::ResizeType,
                         FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboClause<GPUWalk,
@@ -104,12 +104,12 @@
              return SeqWalkType(test_.init(), expr_.init());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(test_.resize(), expr_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -140,7 +140,7 @@
 
           Expr const expr_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Test, typename Expr, typename FieldType>
           struct NeboClause<Resize, Test, Expr, FieldType> {
             public:
@@ -165,7 +165,7 @@
              Expr const expr_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Test, typename Expr, typename FieldType>
        struct NeboClause<SeqWalk, Test, Expr, FieldType> {
          public:
@@ -235,13 +235,13 @@
                    typename Otherwise::SeqWalkType,
                    FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboCond<Resize,
                       typename ClauseType::ResizeType,
                       typename Otherwise::ResizeType,
                       FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboCond<GPUWalk,
@@ -282,12 +282,12 @@
              return SeqWalkType(clause_.init(), otherwise_.init());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(clause_.resize(), otherwise_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -322,7 +322,7 @@
 
           Otherwise const otherwise_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename ClauseType, typename Otherwise, typename FieldType>
           struct NeboCond<Resize, ClauseType, Otherwise, FieldType> {
             public:
@@ -347,7 +347,7 @@
              Otherwise const otherwise_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename ClauseType, typename Otherwise, typename FieldType>
        struct NeboCond<SeqWalk, ClauseType, Otherwise, FieldType> {
          public:
