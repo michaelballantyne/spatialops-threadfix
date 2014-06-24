@@ -554,12 +554,11 @@ class FieldComparisonHelper
       }
 #     ifdef ENABLE_CUDA
       else if( IS_GPU_INDEX(field.device_index()) ){
-        field.add_field_loc(CPU_INDEX);
-        field.sync_location(CPU_INDEX);
         fcopy = SpatialFieldStore::get<FieldT>(field);
         *fcopy <<= field;
-        fcopy.add_field_loc(CPU_INDEX);
-        fcopy.sync_location(CPU_INDEX);
+        fcopy->add_field_loc(CPU_INDEX);
+        fcopy->set_field_loc_active(CPU_INDEX);
+        fcopy->sync_location(CPU_INDEX);
         ibegin = fcopy->begin();
         iend   = fcopy->end();
         return;
