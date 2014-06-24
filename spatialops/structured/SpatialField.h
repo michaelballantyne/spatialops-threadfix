@@ -1339,44 +1339,53 @@ void SpatialField<Location, T>::SpatialFieldLoc::
     }
 
 # ifndef NDEBUG
+    // Source field Values is NULL
     if(validfieldValues_ == NULL){
       std::ostringstream msg;
       msg << "Error : valid fieldValues is NULL in sync_location() \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
+    // Dest Location doesn't have it's entry in FieldInfo.
+    typename std::map<short int, FieldInfo>::iterator destIter = multiFieldMap_.find(deviceLocation);
+    if( destIter == multiFieldMap_.end() ){
+      std::ostringstream msg;
+      msg << "Error : Destination memory doesn't exist. Please check if add_field_loc() is called. \n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    }
 # endif
 
     ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-    for( typename std::map<short int, FieldInfo>::iterator iter =  multiFieldMap_.begin(); iter != multiFieldMap_.end(); ++iter){
-      if( !iter->second.isValid ){
-        if( validIndex == CPU_INDEX && IS_GPU_INDEX(deviceLocation) ){
+
+    // CPU->GPU
+    if( validIndex == CPU_INDEX && IS_GPU_INDEX(deviceLocation) ){
 # ifdef DEBUG_SF_ALL
-          std::cout << "data transfer from CPU to GPU (0/1)" << std::endl;
+      std::cout << "data transfer from CPU to GPU (0/1)" << std::endl;
 # endif
-          CDI.memcpy_to( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, deviceLocation, cudaStream_);
-          iter->second.isValid = true;
-          return;
-        }
-        else if( IS_GPU_INDEX(validIndex) && deviceLocation == CPU_INDEX ){
+      CDI.memcpy_to( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, deviceLocation, cudaStream_);
+      multiFieldMap_[deviceLocation].isValid = true;
+      return;
+    }
+
+    //GPU->CPU
+    else if( IS_GPU_INDEX(validIndex) && deviceLocation == CPU_INDEX ){
 # ifdef DEBUG_SF_ALL
-          std::cout << "data transfer from GPU (0/1) to CPU" << std::endl;
+      std::cout << "data transfer from GPU (0/1) to CPU" << std::endl;
 # endif
-          CDI.memcpy_from( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, validIndex, cudaStream_);
-          iter->second.isValid = true;
-          return;
-        }
-        else{
-          std::ostringstream msg;
-          msg << "Error : sync_location() called on the field"
-              << DeviceTypeTools::get_memory_type_description(deviceLocation)
-              << "for a GPU-GPU peer copy that is not yet supported. \n"
-              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
-      }
-    } // for loop
-  }
+      CDI.memcpy_from( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, validIndex, cudaStream_);
+      multiFieldMap_[deviceLocation].isValid = true;
+      return;
+    }
+    else{
+      std::ostringstream msg;
+      msg << "Error : sync_location() called on the field"
+          << DeviceTypeTools::get_memory_type_description(deviceLocation)
+          << "for a GPU-GPU peer copy that is not yet supported. \n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    }
+  } //else
 }
 
 //------------------------------------------------------------------
