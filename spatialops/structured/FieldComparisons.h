@@ -557,10 +557,20 @@ class FieldComparisonHelper
         fcopy = SpatialFieldStore::get<FieldT>(field);
         *fcopy <<= field;
         fcopy->add_field_loc(CPU_INDEX);
-        fcopy->set_field_loc_active(CPU_INDEX);
-        fcopy->sync_location(CPU_INDEX);
-        ibegin = fcopy->begin();
-        iend   = fcopy->end();
+        //
+        // jcs hack to get things working.  There are two issues here:
+        //
+        //   1. in order to get begin() to use the const version, we need to have
+        //      a const field, which "fcopy" is not.
+        //
+        //   2. For the non-const field to work with a non-const version of begin()
+        //      we need to first set the active field location to the CPU.  This
+        //      Seems to cause problems with the memory pool due to a bug that
+        //      has not yet been resolved.
+        //
+        const FieldT* const fcopyA = &(*fcopy);
+        ibegin = fcopyA->begin();
+        iend   = fcopyA->end();
         return;
       }
 #     endif
