@@ -773,14 +773,14 @@ class TestFieldEqualScalar
 
 int main(int argc, const char *argv[])
 {
-
   int nx, ny, nz;
   po::options_description desc("Supported Options");
   desc.add_options()
     ( "help", "print help message\n" )
     ( "nx",   po::value<int>(&nx)->default_value(10), "number of points in x-dir for base mesh" )
     ( "ny",   po::value<int>(&ny)->default_value(11), "number of points in y-dir for base mesh" )
-    ( "nz",   po::value<int>(&nz)->default_value(12), "number of points in z-dir for base mesh" );
+    ( "nz",   po::value<int>(&nz)->default_value(12), "number of points in z-dir for base mesh" )
+    ( "verbose", "enable verbose output" );
 
   po::variables_map args;
   po::store( po::parse_command_line(argc,argv,desc), args );
@@ -794,9 +794,10 @@ int main(int argc, const char *argv[])
     return -1;
   }
 
+  const bool fieldEqualVerbose = ( args.count("verbose") > 0 );
+
   TestHelper overall(true);
 
-  bool fieldEqualVerbose = false;
   IntVec winSize(nx, ny, nz);
 
   //test field comparison functions
