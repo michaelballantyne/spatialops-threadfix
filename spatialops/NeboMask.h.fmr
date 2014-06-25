@@ -27,8 +27,6 @@
 (require "NeboCore.fmr")
 (require "NeboRhsCore.fmr")
 
-(define SpatialMask (scope 'structured (type-template 'SpatialMask FT-chunk)))
-
 (pp-header-file
  'NEBO_MASK_H
  (SpatialOps-namespace

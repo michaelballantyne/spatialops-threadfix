@@ -27,7 +27,7 @@ namespace cuda {
 
 void CudaSetDevice(const unsigned int device) {
       #ifdef DEBUG_EXT_ALLOC_CUDA_DEVICE_MNGR
-        std::cout << "CudaSetdevice wrapper called, setting thread device as : " << std::endl; 
+        std::cout << "CudaSetdevice wrapper called, setting thread device as : " << std::endl;
       #endif
 cudaError err;
 
@@ -64,7 +64,7 @@ void CudaMalloc(void** src, const size_t sz, const unsigned int device) {
   }
 
 #ifdef  DEBUG_EXT_ALLOC_MEM
-  std::cout << "CudaMalloc pointer pointing to allocated memory on Device : " << device 
+  std::cout << "CudaMalloc pointer pointing to allocated memory on Device : " << device
             << "," << " address : " << *src << std::endl;
   std::cout << "CudaMalloc wrapper exiting \n";
 #endif
@@ -245,6 +245,24 @@ int CUDADeviceManager::get_device_count() const {
   return device_count;
 }
 
+int CUDADeviceManager::get_best_device() const {
+  int max_SMprocessors = 0, max_device = 0;
+  if (device_count > 1) { // multiple GPUs
+    for(int device = 0; device < device_count; device++) {
+      cudaDeviceProp properties;
+      cudaGetDeviceProperties(&properties, device);
+      if (max_SMprocessors < properties.multiProcessorCount) {
+        max_SMprocessors = properties.multiProcessorCount;
+        max_device = device;
+      }
+    }
+   return max_device;
+  }
+  else { // single GPU
+    return max_device;
+  }
+}
+
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceManager::get_memory_statistics(CUDAMemStats& cms, const int K) const {
@@ -367,6 +385,10 @@ CUDADeviceInterface& CUDADeviceInterface::self() {
 
 int CUDADeviceInterface::get_device_count() const {
   return CUDADeviceManager::self().get_device_count();
+}
+
+int CUDADeviceInterface::get_best_device() const {
+  return CUDADeviceManager::self().get_best_device();
 }
 
 /*---------------------------------------------------------------------*/

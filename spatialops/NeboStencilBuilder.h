@@ -626,8 +626,8 @@ namespace SpatialOps {
       : lowCoef_(op.coefs().last()),
         highCoef_(op.coefs().coef()),
         minusGamma_(1.0),
-        minusPhi_(op.coefs().all_but_last()),
         plusGamma_(1.0),
+        minusPhi_(op.coefs().all_but_last()),
         plusPhi_(op.coefs().others()),
         shift_()
       {}

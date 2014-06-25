@@ -45,9 +45,6 @@ set( SpatialOps_CONFIG_INSTALL
 set( boost_comps "program_options" )
 
 if( ENABLE_THREADS )
-  set( TILL_THREADS ON )
-  set( FIELD_EXPRESSION_THREADS ON )
-  set( STENCIL_THREADS ON )
   find_package( Threads REQUIRED )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
   set( boost_comps ${boost_comps} "thread;system" )

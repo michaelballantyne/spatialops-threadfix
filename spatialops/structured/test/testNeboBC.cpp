@@ -23,7 +23,7 @@
 
 #include <spatialops/structured/Grid.h>
 #include <test/TestHelper.h>
-#include <test/FieldHelper.h>
+#include <spatialops/structured/FieldHelper.h>
 
 using namespace SpatialOps;
 using namespace structured;

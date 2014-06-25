@@ -381,19 +381,63 @@ namespace structured{
 
 
   #   ifdef ENABLE_CUDA
+      /**
+       * @brief Adds a location to a field. If the field location already exists,
+       *        check if it is valid and make it as the active field Location.
+       *        Else, use sync_location() and set the field as active.
+       *
+       *        increases the memory held by the the spatial field by 'allocated_bytes' for each
+       *        unique device added.
+       *        Note: This operation is guaranteed to be atomic
+       *
+       * @param deviceLocation -- Index to the proper device
+       */
       void add_field_loc(short int deviceLocation);
 
+      /**
+       * @brief synchronizes all the invalid field location (deviceLocation)
+       *        with the valid field location. Allocates memory and performs
+       *        data-transfer whenever needed.
+       *
+       * @param deviceLocation -- Index to the proper device
+       */
       void sync_location(short int deviceLocation);
 
+      /**
+       * @brief Finds if the field has any other locations using has_multiple_fields().
+       *        Frees all the multiple-field locations back to the relevant Memory Pool
+       *        using remove_multiple_fields() expect the initial field.
+       *
+       */
       void remove_multiple_fields();
   #   endif
 
+      /**
+       * @brief sets a field location as active. This method will update active device location so that
+       *        writes can be performed.
+       *
+       * @param deviceLocation -- Device type where this field should be made as active
+       */
       void set_field_loc_active(short int deviceLocation);
 
+      /**
+       * @brief queries for the availability of the field location which is mostly being used by Nebo
+       *
+       * @param deviceLocation -- Device type under query
+       */
       bool find_field_loc( const short int deviceLocation ) const;
 
+      /**
+       * @brief checks if the field location is valid.
+       *
+       * @param deviceLocation -- Device type under query
+       */
       bool is_valid( const short int deviceLocation ) const;
 
+      /**
+       * @brief reports if the spatial field has multiple field locations
+       *
+       */
       bool has_multiple_fields() const;
 
       const BoundaryCellInfo& boundary_info() const{ return bcInfo_; }
@@ -406,23 +450,61 @@ namespace structured{
         return fieldWindow_;
       }
 
+      /**
+       * @brief returns the current active device index.
+       *
+       */
       short int active_device_index() const {
         return activeDeviceIndex_;
       }
 
   #   ifdef ENABLE_THREADS
+      /**
+       * Sets number of partitions Nebo uses in its thread-parallel backend when assigning to this field
+       *
+       */
       void set_partition_count( const int count) { partitionCount_ = count; }
 
+      /**
+       * Returns number of partitions Nebo uses in its thread-parallel backend when assigning to this field
+       *
+       */
       int get_partition_count() { return partitionCount_; }
   #   endif
 
   #   ifdef ENABLE_CUDA
+      /**
+       * @brief sets the cuda stream to aid the kernel execution and async data transfer
+       */
       void set_stream( const cudaStream_t& stream ) { cudaStream_ = stream; }
 
+      /**
+       * @brief returns the cuda stream for the SpatialField
+       */
       cudaStream_t const & get_stream() const { return cudaStream_; }
   #   endif
 
+      /**
+       * Field values will return a pointer to the field type, which is valid on the device and context supplied to
+       * the function ( CPU_INDEX ) by default.
+       *
+       * Note: This method will invalidate all the other device locations apart from the deviceLocation.
+       *
+       * @param deviceLocation -- Index of the device
+       * @return
+       */
       inline T* field_values(const short int deviceLocation = CPU_INDEX);
+
+      /**
+       * cField values will return a pointer to the field type, which is valid on the device and context supplied to
+       * the function ( CPU_INDEX ) by default.
+       *
+       * Note: This method will perform a check if the deviceLocation is valid and not necessary to be active
+       * field Location.
+       *
+       * @param deviceLocation -- Index of the device
+       * @return
+       */
       inline const T* cfield_values(const short int deviceLocation = CPU_INDEX) const;
 
       const GhostData& get_ghost_data() const{ return ghosts_; }
@@ -602,6 +684,7 @@ namespace structured{
 
    inline field_type& operator =(const field_type&);
 
+#   ifdef ENABLE_CUDA
    /**
     * @brief Adds a location to a field. If the field location already exists,
     *        check if it is valid and make it as the active field Location.
@@ -613,8 +696,6 @@ namespace structured{
     *
     * @param deviceLocation -- Index to the proper device
     */
-
-#   ifdef ENABLE_CUDA
    inline void add_field_loc(short int deviceLocation){
       sfsharedPtr_->add_field_loc( deviceLocation );
    };
@@ -1258,44 +1339,53 @@ void SpatialField<Location, T>::SpatialFieldLoc::
     }
 
 # ifndef NDEBUG
+    // Source field Values is NULL
     if(validfieldValues_ == NULL){
       std::ostringstream msg;
       msg << "Error : valid fieldValues is NULL in sync_location() \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
+    // Dest Location doesn't have it's entry in FieldInfo.
+    typename std::map<short int, FieldInfo>::iterator destIter = multiFieldMap_.find(deviceLocation);
+    if( destIter == multiFieldMap_.end() ){
+      std::ostringstream msg;
+      msg << "Error : Destination memory doesn't exist. Please check if add_field_loc() is called. \n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    }
 # endif
 
     ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-    for( typename std::map<short int, FieldInfo>::iterator iter =  multiFieldMap_.begin(); iter != multiFieldMap_.end(); ++iter){
-      if( !iter->second.isValid ){
-        if( validIndex == CPU_INDEX && IS_GPU_INDEX(deviceLocation) ){
+
+    // CPU->GPU
+    if( validIndex == CPU_INDEX && IS_GPU_INDEX(deviceLocation) ){
 # ifdef DEBUG_SF_ALL
-          std::cout << "data transfer from CPU to GPU (0/1)" << std::endl;
+      std::cout << "data transfer from CPU to GPU (0/1)" << std::endl;
 # endif
-          CDI.memcpy_to( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, deviceLocation, cudaStream_);
-          iter->second.isValid = true;
-          return;
-        }
-        else if( IS_GPU_INDEX(validIndex) && deviceLocation == CPU_INDEX ){
+      CDI.memcpy_to( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, deviceLocation, cudaStream_);
+      multiFieldMap_[deviceLocation].isValid = true;
+      return;
+    }
+
+    //GPU->CPU
+    else if( IS_GPU_INDEX(validIndex) && deviceLocation == CPU_INDEX ){
 # ifdef DEBUG_SF_ALL
-          std::cout << "data transfer from GPU (0/1) to CPU" << std::endl;
+      std::cout << "data transfer from GPU (0/1) to CPU" << std::endl;
 # endif
-          CDI.memcpy_from( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, validIndex, cudaStream_);
-          iter->second.isValid = true;
-          return;
-        }
-        else{
-          std::ostringstream msg;
-          msg << "Error : sync_location() called on the field"
-              << DeviceTypeTools::get_memory_type_description(deviceLocation)
-              << "for a GPU-GPU peer copy that is not yet supported. \n"
-              << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
-      }
-    } // for loop
-  }
+      CDI.memcpy_from( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, validIndex, cudaStream_);
+      multiFieldMap_[deviceLocation].isValid = true;
+      return;
+    }
+    else{
+      std::ostringstream msg;
+      msg << "Error : sync_location() called on the field"
+          << DeviceTypeTools::get_memory_type_description(deviceLocation)
+          << "for a GPU-GPU peer copy that is not yet supported. \n"
+          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+      throw(std::runtime_error(msg.str()));
+    }
+  } //else
 }
 
 //------------------------------------------------------------------

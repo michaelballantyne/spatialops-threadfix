@@ -1,7 +1,7 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
-#include <test/FieldHelper.h>
+#include <spatialops/structured/FieldHelper.h>
 
 #include <spatialops/structured/FieldComparisons.h>
 
@@ -61,7 +61,7 @@ void fill_field_range(FieldT * f1, double start, double range)
  *
  * Parameters:
  *     f1 = field to fill
- *     vals = array contianing values to insert into field
+ *     vals = array containing values to insert into field
  *     size = size of vals array
  *
  * Return:
@@ -70,7 +70,7 @@ void fill_field_range(FieldT * f1, double start, double range)
  * Evenly space the values in vals array within the field.
  */
 template<typename FieldT>
-void sprinkle_in_field(FieldT * f1, typename FieldT::value_type* vals, size_t size)
+void sprinkle_in_field( FieldT * f1, const typename FieldT::value_type* const vals, const size_t size )
 {
   size_t cells = f1->window_with_ghost().local_npts();
   if(size > cells) {
@@ -78,9 +78,9 @@ void sprinkle_in_field(FieldT * f1, typename FieldT::value_type* vals, size_t si
   }
 
   FieldT * f;
-  bool created_field = false;
+  bool createdField = false;
   if(f1->device_index() == GPU_INDEX) {
-    created_field = true;
+    createdField = true;
     f = new FieldT(f1->window_with_ghost(), f1->boundary_info(), f1->get_valid_ghost_data(), NULL, InternalStorage);
     *f = *f1;
   }
@@ -95,7 +95,7 @@ void sprinkle_in_field(FieldT * f1, typename FieldT::value_type* vals, size_t si
   }
 
 
-  if(created_field) {
+  if(createdField) {
     *f1 = *f;
     delete f;
   }
@@ -111,8 +111,8 @@ bool manual_error_compare(FieldT& f1,
                     const ErrorType et,
                     const bool testFieldNotEqualFunction,
                     const bool verboseOutput,
-                    bool expected_equal,
-                    const double abs_error)
+                    bool expectedEqual,
+                    const double absError)
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
@@ -131,14 +131,14 @@ bool manual_error_compare(FieldT& f1,
   std::numeric_limits<double> nl;
 
   //manually determine equality
-  bool man_equal = true;
+  bool manEqual = true;
   for(; if1 != if1e; ++if1, ++if2) {
     double diff = *if1 - *if2;
     switch(et) {
       case RELATIVE:
         double denom;
-        if(abs_error) {
-          denom = std::abs(*if1) + abs_error;
+        if(absError) {
+          denom = std::abs(*if1) + absError;
         }
         else {
           //Defualt absolute error in SpatialField
@@ -146,12 +146,12 @@ bool manual_error_compare(FieldT& f1,
         }
 
         if( std::abs(diff)/denom > error ) {
-          man_equal = false;
+          manEqual = false;
         }
         break;
       case ABSOLUTE:
         if( std::abs(diff) > error ) {
-          man_equal = false;
+          manEqual = false;
         }
         break;
       case ULP:
@@ -167,49 +167,49 @@ bool manual_error_compare(FieldT& f1,
           }
         }
         if( std::abs(diff) > std::abs(*if1 - limit) ) {
-          man_equal = false;
+          manEqual = false;
         }
         break;
     }
-    if (!man_equal) break;
+    if (!manEqual) break;
   }
 
   std::ostringstream msg;
-  msg << "Manual Compare Result: " << (man_equal ? "Equal" : "Not Equal");
+  msg << "Manual Compare Result: " << (manEqual ? "Equal" : "Not Equal");
   TestHelper tmp(verboseOutput);
-  tmp(man_equal == expected_equal, msg.str());
+  tmp(manEqual == expectedEqual, msg.str());
 
   //switch expected_equal and manual equal result based on testFieldNotEqualFunction compare
-  if(testFieldNotEqualFunction) {man_equal = !man_equal; expected_equal = !expected_equal;}
+  if(testFieldNotEqualFunction) {manEqual = !manEqual; expectedEqual = !expectedEqual;}
 
   //compare manual to function
   switch(et) {
     case RELATIVE:
       if(testFieldNotEqualFunction) {
-        if(abs_error)
-          return (man_equal == field_not_equal(f1, f2, error, abs_error)) && (man_equal == expected_equal);
+        if(absError)
+          return (manEqual == field_not_equal(f1, f2, error, absError)) && (manEqual == expectedEqual);
         else
-          return (man_equal == field_not_equal(f1, f2, error)) && (man_equal == expected_equal);
+          return (manEqual == field_not_equal(f1, f2, error)) && (manEqual == expectedEqual);
       }
       else {
-        if(abs_error)
-          return (man_equal == field_equal(f1, f2, error, abs_error)) && (man_equal == expected_equal);
+        if(absError)
+          return (manEqual == field_equal(f1, f2, error, absError)) && (manEqual == expectedEqual);
         else
-          return (man_equal == field_equal(f1, f2, error)) && (man_equal == expected_equal);
+          return (manEqual == field_equal(f1, f2, error)) && (manEqual == expectedEqual);
       }
     case ABSOLUTE:
       if(testFieldNotEqualFunction) {
-        return (man_equal == field_not_equal_abs(f1, f2, error)) && (man_equal == expected_equal);
+        return (manEqual == field_not_equal_abs(f1, f2, error)) && (manEqual == expectedEqual);
       }
       else {
-        return (man_equal == field_equal_abs(f1, f2, error)) && (man_equal == expected_equal);
+        return (manEqual == field_equal_abs(f1, f2, error)) && (manEqual == expectedEqual);
       }
     case ULP:
       if(testFieldNotEqualFunction) {
-        return (man_equal == field_not_equal_ulp(f1, f2, error)) && (man_equal == expected_equal);
+        return (manEqual == field_not_equal_ulp(f1, f2, error)) && (manEqual == expectedEqual);
       }
       else {
-        return (man_equal == field_equal_ulp(f1, f2, error)) && (man_equal == expected_equal);
+        return (manEqual == field_equal_ulp(f1, f2, error)) && (manEqual == expectedEqual);
       }
   }
   return false;
@@ -548,8 +548,8 @@ bool manual_error_compare(double d,
                     const ErrorType et,
                     const bool testFieldNotEqualFunction,
                     const bool verboseOutput,
-                    bool expected_equal,
-                    const double abs_error)
+                    bool expectedEqual,
+                    const double absError)
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
@@ -563,10 +563,10 @@ bool manual_error_compare(double d,
   std::numeric_limits<double> nl;
 
   //manually determine equality
-  bool man_equal = true;
+  bool manEqual = true;
   double denom;
-  if(abs_error) {
-    denom = std::abs(d) + abs_error;
+  if(absError) {
+    denom = std::abs(d) + absError;
   }
   else {
     //Defualt absolute error in SpatialField
@@ -578,12 +578,12 @@ bool manual_error_compare(double d,
       case RELATIVE:
 
         if( std::abs(diff)/denom > error ) {
-          man_equal = false;
+          manEqual = false;
         }
         break;
       case ABSOLUTE:
         if( std::abs(diff) > error ) {
-          man_equal = false;
+          manEqual = false;
         }
         break;
       case ULP:
@@ -599,49 +599,49 @@ bool manual_error_compare(double d,
           }
         }
         if( std::abs(diff) > std::abs(d - limit) ) {
-          man_equal = false;
+          manEqual = false;
         }
         break;
     }
-    if (!man_equal) break;
+    if (!manEqual) break;
   }
 
   std::ostringstream msg;
-  msg << "Manual Compare Result: " << (man_equal ? "Equal" : "Not Equal");
+  msg << "Manual Compare Result: " << (manEqual ? "Equal" : "Not Equal");
   TestHelper tmp(verboseOutput);
-  tmp(man_equal == expected_equal, msg.str());
+  tmp(manEqual == expectedEqual, msg.str());
 
   //switch expected_equal and manual equal result based on testFieldNotEqualFunction compare
-  if(testFieldNotEqualFunction) {man_equal = !man_equal; expected_equal = !expected_equal;}
+  if(testFieldNotEqualFunction) {manEqual = !manEqual; expectedEqual = !expectedEqual;}
 
   //compare manual to function
   switch(et) {
     case RELATIVE:
       if(testFieldNotEqualFunction) {
-        if(abs_error)
-          return (man_equal == field_not_equal(d, f1, error, abs_error)) && (man_equal == expected_equal);
+        if(absError)
+          return (manEqual == field_not_equal(d, f1, error, absError)) && (manEqual == expectedEqual);
         else
-          return (man_equal == field_not_equal(d, f1, error)) && (man_equal == expected_equal);
+          return (manEqual == field_not_equal(d, f1, error)) && (manEqual == expectedEqual);
       }
       else {
-        if(abs_error)
-          return (man_equal == field_equal(d, f1, error, abs_error)) && (man_equal == expected_equal);
+        if(absError)
+          return (manEqual == field_equal(d, f1, error, absError)) && (manEqual == expectedEqual);
         else
-          return (man_equal == field_equal(d, f1, error)) && (man_equal == expected_equal);
+          return (manEqual == field_equal(d, f1, error)) && (manEqual == expectedEqual);
       }
     case ABSOLUTE:
       if(testFieldNotEqualFunction) {
-        return (man_equal == field_not_equal_abs(d, f1, error)) && (man_equal == expected_equal);
+        return (manEqual == field_not_equal_abs(d, f1, error)) && (manEqual == expectedEqual);
       }
       else {
-        return (man_equal == field_equal_abs(d, f1, error)) && (man_equal == expected_equal);
+        return (manEqual == field_equal_abs(d, f1, error)) && (manEqual == expectedEqual);
       }
     case ULP:
       if(testFieldNotEqualFunction) {
-        return (man_equal == field_not_equal_ulp(d, f1, error)) && (man_equal == expected_equal);
+        return (manEqual == field_not_equal_ulp(d, f1, error)) && (manEqual == expectedEqual);
       }
       else {
-        return (man_equal == field_equal_ulp(d, f1, error)) && (man_equal == expected_equal);
+        return (manEqual == field_equal_ulp(d, f1, error)) && (manEqual == expectedEqual);
       }
   }
   return false;
@@ -773,14 +773,14 @@ class TestFieldEqualScalar
 
 int main(int argc, const char *argv[])
 {
-
   int nx, ny, nz;
   po::options_description desc("Supported Options");
   desc.add_options()
     ( "help", "print help message\n" )
     ( "nx",   po::value<int>(&nx)->default_value(10), "number of points in x-dir for base mesh" )
     ( "ny",   po::value<int>(&ny)->default_value(11), "number of points in y-dir for base mesh" )
-    ( "nz",   po::value<int>(&nz)->default_value(12), "number of points in z-dir for base mesh" );
+    ( "nz",   po::value<int>(&nz)->default_value(12), "number of points in z-dir for base mesh" )
+    ( "verbose", "enable verbose output" );
 
   po::variables_map args;
   po::store( po::parse_command_line(argc,argv,desc), args );
@@ -794,9 +794,10 @@ int main(int argc, const char *argv[])
     return -1;
   }
 
+  const bool fieldEqualVerbose = ( args.count("verbose") > 0 );
+
   TestHelper overall(true);
 
-  bool fieldEqualVerbose = false;
   IntVec winSize(nx, ny, nz);
 
   //test field comparison functions

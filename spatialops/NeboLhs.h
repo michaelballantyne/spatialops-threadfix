@@ -50,10 +50,10 @@
 
           NeboField<SeqWalk, FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboField<Resize, FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboField<GPUWalk, FieldType> typedef GPUWalkType;
@@ -156,6 +156,140 @@
               /* __CUDACC__ */;
            }
 
+          template<typename RhsType>
+           inline void masked_assign(structured::SpatialMask<FieldType> const &
+                                     mask,
+                                     RhsType rhs) {
+              #ifdef NEBO_REPORT_BACKEND
+                 std::cout << "Starting Nebo masked assignment" << std::endl
+              #endif
+              /* NEBO_REPORT_BACKEND */;
+
+              SeqWalkType lhs = init();
+
+              typename RhsType::SeqWalkType expr = rhs.init(structured::IntVec(0,
+                                                                               0,
+                                                                               0),
+                                                            structured::
+                                                            GhostData(0),
+                                                            structured::IntVec(0,
+                                                                               0,
+                                                                               0));
+
+              std::vector<structured::IntVec>::const_iterator ip = mask.points().begin();
+
+              std::vector<structured::IntVec>::const_iterator const ep = mask.points().end();
+
+              for(; ip != ep; ip++) {
+                 int const x = (*ip)[0];
+
+                 int const y = (*ip)[1];
+
+                 int const z = (*ip)[2];
+
+                 lhs.ref(x, y, z) = expr.eval(x, y, z);
+              };
+
+              #ifdef __CUDACC__
+                 if(gpu_ready()) {
+                    std::ostringstream msg;
+                    msg << "Nebo error in " << "Nebo Masked Assignment" << ":\n"
+                    ;
+                    msg << "Left-hand side of masked assignment allocated on ";
+                    msg << "GPU and this backend does not support GPU execution"
+                    ;
+                    msg << "\n";
+                    msg << "\t - " << __FILE__ << " : " << __LINE__;
+                    throw(std::runtime_error(msg.str()));
+                 }
+                 else {
+                    if(cpu_ready()) {
+                       if(rhs.cpu_ready()) {
+                          SeqWalkType lhs = init();
+
+                          typename RhsType::SeqWalkType expr = rhs.init(structured::
+                                                                        IntVec(0,
+                                                                               0,
+                                                                               0),
+                                                                        structured::
+                                                                        GhostData(0),
+                                                                        structured::
+                                                                        IntVec(0,
+                                                                               0,
+                                                                               0));
+
+                          std::vector<structured::IntVec>::const_iterator ip =
+                          mask.points().begin();
+
+                          std::vector<structured::IntVec>::const_iterator const
+                          ep = mask.points().end();
+
+                          for(; ip != ep; ip++) {
+                             int const x = (*ip)[0];
+
+                             int const y = (*ip)[1];
+
+                             int const z = (*ip)[2];
+
+                             lhs.ref(x, y, z) = expr.eval(x, y, z);
+                          };
+                       }
+                       else {
+                          std::ostringstream msg;
+                          msg << "Nebo error in " << "Nebo Assignment" << ":\n";
+                          msg << "Left-hand side of assignment allocated on ";
+                          msg << "CPU but right-hand side is not ";
+                          msg << "(completely) accessible on the same CPU";
+                          msg << "\n";
+                          msg << "\t - " << __FILE__ << " : " << __LINE__;
+                          throw(std::runtime_error(msg.str()));
+                       };
+                    }
+                    else {
+                       std::ostringstream msg;
+                       msg << "Nebo error in " << "Nebo Assignment" << ":\n";
+                       msg << "Left-hand side of assignment allocated on ";
+                       msg << "unknown device - not on CPU or GPU";
+                       msg << "\n";
+                       msg << "\t - " << __FILE__ << " : " << __LINE__;
+                       throw(std::runtime_error(msg.str()));
+                    };
+                 }
+              #else
+                 {
+                    SeqWalkType lhs = init();
+
+                    typename RhsType::SeqWalkType expr = rhs.init(structured::
+                                                                  IntVec(0, 0, 0),
+                                                                  structured::
+                                                                  GhostData(0),
+                                                                  structured::
+                                                                  IntVec(0, 0, 0));
+
+                    std::vector<structured::IntVec>::const_iterator ip = mask.points().begin();
+
+                    std::vector<structured::IntVec>::const_iterator const ep =
+                    mask.points().end();
+
+                    for(; ip != ep; ip++) {
+                       int const x = (*ip)[0];
+
+                       int const y = (*ip)[1];
+
+                       int const z = (*ip)[2];
+
+                       lhs.ref(x, y, z) = expr.eval(x, y, z);
+                    };
+                 }
+              #endif
+              /* __CUDACC__ */;
+
+              #ifdef NEBO_REPORT_BACKEND
+                 std::cout << "Finished Nebo masked assignment" << std::endl
+              #endif
+              /* NEBO_REPORT_BACKEND */;
+           }
+
           inline SeqWalkType init(void) { return SeqWalkType(field_); }
 
          private:
@@ -165,7 +299,7 @@
                                   structured::GhostData const & ghosts,
                                   structured::IntVec const & hasBC,
                                   structured::GhostData const limits) {
-              #ifdef FIELD_EXPRESSION_THREADS
+              #ifdef ENABLE_THREADS
                  if(is_thread_parallel()) {
                     thread_parallel_assign<RhsType>(rhs,
                                                     extents,
@@ -183,7 +317,7 @@
               #else
                  sequential_assign<RhsType>(rhs, extents, ghosts, hasBC, limits)
               #endif
-              /* FIELD_EXPRESSION_THREADS */;
+              /* ENABLE_THREADS */;
            }
 
           template<typename RhsType>
@@ -205,7 +339,7 @@
               /* NEBO_REPORT_BACKEND */;
            }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              template<typename RhsType>
               inline void thread_parallel_assign(RhsType rhs,
                                                  structured::IntVec const &
@@ -275,7 +409,7 @@
 
              inline ResizeType resize(void) { return ResizeType(field_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              template<typename RhsType>
@@ -438,7 +572,7 @@
 
           FieldType field_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename FieldType>
           struct NeboField<Resize, FieldType> {
             public:
@@ -450,7 +584,7 @@
              : field_(f)
              {}
 
-             #ifdef FIELD_EXPRESSION_THREADS
+             #ifdef ENABLE_THREADS
                 template<typename RhsType>
                  inline void assign(RhsType const & rhs,
                                     structured::IntVec const & extents,
@@ -463,7 +597,7 @@
                     semaphore->post();
                  }
              #endif
-             /* FIELD_EXPRESSION_THREADS */
+             /* ENABLE_THREADS */
 
             private:
              inline SeqWalkType init(void) { return SeqWalkType(field_); }
@@ -471,7 +605,7 @@
              FieldType field_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename FieldType>
        struct NeboField<SeqWalk, FieldType> {
          public:

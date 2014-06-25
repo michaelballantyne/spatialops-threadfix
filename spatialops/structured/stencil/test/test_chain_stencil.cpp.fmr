@@ -503,7 +503,7 @@
              'spatialops/structured/stencil/FVStaggeredOperatorTypes.h
              'spatialops/structured/stencil/StencilBuilder.h
              'test/TestHelper.h
-             'test/FieldHelper.h
+             'spatialops/structured/FieldHelper.h
              'spatialops/Nebo.h
              'boost/program_options.hpp
              'string

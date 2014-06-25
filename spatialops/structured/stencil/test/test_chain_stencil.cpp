@@ -29,7 +29,7 @@
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 #include <test/TestHelper.h>
-#include <test/FieldHelper.h>
+#include <spatialops/structured/FieldHelper.h>
 #include <spatialops/Nebo.h>
 #include <boost/program_options.hpp>
 #include <string>

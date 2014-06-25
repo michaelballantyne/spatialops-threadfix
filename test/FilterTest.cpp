@@ -76,7 +76,7 @@ int main(int iarg, char* carg[]) {
     int nx, ny, nz;
     int number_of_runs;
     double Lx, Ly, Lz;
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
   int thread_count;
 #endif
 
@@ -92,7 +92,7 @@ int main(int iarg, char* carg[]) {
 	  ( "Ly", po::value<double>(&Ly)->default_value(1.0),"Length in y")
 	  ( "Lz", po::value<double>(&Lz)->default_value(1.0),"Length in z")
 	  ( "check", po::value<bool>(&test)->default_value(true),"Compare results of old and new versions")
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
       ( "tc", po::value<int>(&thread_count)->default_value(NTHREADS), "Number of threads for Nebo")
 #endif
 	  ( "runs", po::value<int>(&number_of_runs)->default_value(1), "Number of iterations of each test");
@@ -106,7 +106,7 @@ int main(int iarg, char* carg[]) {
 	    return 1;
 	}
 
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     set_hard_thread_count(thread_count);
 #endif
     }

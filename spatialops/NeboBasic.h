@@ -39,7 +39,7 @@
 #  endif
    /* NEBO_REPORT_BACKEND */
 
-#  ifdef FIELD_EXPRESSION_THREADS
+#  ifdef ENABLE_THREADS
 #     include <spatialops/SpatialOpsTools.h>
 #     include <vector>
 #     include <boost/bind.hpp>
@@ -47,7 +47,7 @@
 #     include <spatialops/structured/IntVec.h>
 #     include <spatialops/Semaphore.h>
 #  endif
-   /* FIELD_EXPRESSION_THREADS */
+   /* ENABLE_THREADS */
 
 #  ifdef __CUDACC__
 #     include <sstream>
@@ -259,10 +259,10 @@
 
       /* Modes: */
       struct Initial;
-#     ifdef FIELD_EXPRESSION_THREADS
+#     ifdef ENABLE_THREADS
          struct Resize;
 #     endif
-      /* FIELD_EXPRESSION_THREADS */
+      /* ENABLE_THREADS */
       struct SeqWalk;
 #     ifdef __CUDACC__
         struct GPUWalk;

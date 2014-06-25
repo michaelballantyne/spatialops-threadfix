@@ -337,6 +337,75 @@
 
           return lhs;
        };
+
+      template<typename FieldType>
+       inline FieldType const & masked_assign(structured::SpatialMask<FieldType>
+                                              const & mask,
+                                              FieldType & lhs,
+                                              typename FieldType::value_type
+                                              const & rhs) {
+          NeboScalar<Initial, typename FieldType::value_type> typedef RhsType;
+
+          #ifdef __CUDACC__
+             if(lhs.device_index() == CPU_INDEX) {
+                NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
+                                                                                   RhsType(rhs));
+
+                lhs <<= cond(mask, NeboExpression<RhsType, FieldType>(rhs))(lhs);
+             }
+          #else
+             NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
+                                                                                RhsType(rhs))
+          #endif
+          /* __CUDACC__ */;
+
+          return lhs;
+       };
+
+      template<typename FieldType>
+       inline FieldType const & masked_assign(structured::SpatialMask<FieldType>
+                                              const & mask,
+                                              FieldType & lhs,
+                                              FieldType const & rhs) {
+          NeboConstField<Initial, FieldType> typedef RhsType;
+
+          #ifdef __CUDACC__
+             if(lhs.device_index() == CPU_INDEX) {
+                NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
+                                                                                   RhsType(rhs));
+
+                lhs <<= cond(mask, NeboExpression<RhsType, FieldType>(rhs))(lhs);
+             }
+          #else
+             NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
+                                                                                RhsType(rhs))
+          #endif
+          /* __CUDACC__ */;
+
+          return lhs;
+       };
+
+      template<typename RhsType, typename FieldType>
+       inline FieldType const & masked_assign(structured::SpatialMask<FieldType>
+                                              const & mask,
+                                              FieldType & lhs,
+                                              NeboExpression<RhsType, FieldType>
+                                              const & rhs) {
+          #ifdef __CUDACC__
+             if(lhs.device_index() == CPU_INDEX) {
+                NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
+                                                                                   rhs.expr());
+
+                lhs <<= cond(mask, NeboExpression<RhsType, FieldType>(rhs))(lhs);
+             }
+          #else
+             NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
+                                                                                rhs.expr())
+          #endif
+          /* __CUDACC__ */;
+
+          return lhs;
+       };
    } /* SpatialOps */
 
 #endif
