@@ -253,22 +253,24 @@ namespace structured{
 #       ifndef NDEBUG
         if( mapIter == multiFieldMap_.end() ){
           std::ostringstream msg;
-          msg << "Field type "
+          msg << "Error ! Field type "
               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
               << " doesn't exist in the map. Something is wrong with the memory allocation.\n"
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
-        if( activeDeviceIndex_ != CPU_INDEX ) {
+#       endif
+        if( activeDeviceIndex_ == CPU_INDEX ) {
+          return iterator( mapIter->second.field, window );
+        }
+        else{
           std::ostringstream msg;
-          msg << "Field type ( "
+          msg << "Error ! Field type ( "
               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
               << " does not support direct iteration.\n"
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
-#       endif
-        return iterator( mapIter->second.field, window );
       }
 
       inline const_iterator cend( MemoryWindow const window ) const
@@ -294,7 +296,7 @@ namespace structured{
 #        ifndef NDEBUG
         if( mapIter == multiFieldMap_.end() ){
           std::ostringstream msg;
-          msg << "Field type "
+          msg << "Error ! Field type "
               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
               << " doesn't exist in the map. Something is wrong with the memory allocation.\n"
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -309,7 +311,7 @@ namespace structured{
         else{
           std::ostringstream msg;
           msg << __FILE__ << " : " << __LINE__ << std::endl
-              << "Unsupported request for iterator to external field type ( "
+              << "Error ! Unsupported request for iterator to external field type ( "
               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " )"
               << std::endl;
           throw std::runtime_error( msg.str() );
