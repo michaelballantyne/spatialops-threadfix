@@ -430,11 +430,11 @@ namespace structured{
       bool find_field_loc( const short int deviceLoc ) const;
 
       /**
-       * @brief checks if the field location is valid.
+       * @brief checks if the field has valid field values
        *
        * @param deviceLoc -- Device type under query
        */
-      bool is_valid( const short int deviceLoc ) const;
+      bool has_valid_field_values( const short int deviceLoc ) const;
 
       /**
        * @brief reports if the spatial field has multiple field locations
@@ -443,11 +443,11 @@ namespace structured{
       bool has_multiple_fields() const;
 
       /**
-       * @brief reports if the field has device location
+       * @brief reports if the field has a device location registered in the multiFieldMap
        *
        * @param deviceLoc -- Device type under query
        */
-      bool has_field_location(short int deviceLoc ) const;
+      bool has_field_location(short int deviceLoc) const;
 
       const BoundaryCellInfo& boundary_info() const{ return bcInfo_; }
 
@@ -751,12 +751,12 @@ namespace structured{
    };
 
   /**
-   * @brief checks if the field location is valid.
+   * @brief checks if the field has valid field values
    *
    * @param deviceLoc -- Device type under query
    */
-   bool is_valid( const short int deviceLoc ) const{
-     return sfsharedPtr_->is_valid( deviceLoc );
+   bool has_valid_field_values( const short int deviceLoc ) const{
+     return sfsharedPtr_->has_valid_field_values( deviceLoc );
    }
 
   /**
@@ -765,6 +765,15 @@ namespace structured{
    */
    inline bool has_multiple_fields() const{
      return sfsharedPtr_->has_multiple_fields();
+   }
+
+  /**
+   * @brief reports if the field has a device location registered in the multiFieldMap
+   *
+   * @param deviceLoc -- Device type under query
+   */
+   inline bool has_field_location( short int deviceLoc ) const{
+     return sfsharedPtr_->has_field_location( deviceLoc );
    }
 
    const BoundaryCellInfo& boundary_info() const{
@@ -1526,17 +1535,17 @@ find_field_loc( const short int deviceLoc ) const
 
 template<typename Location, typename T>
 bool SpatialField<Location,T>::SpatialFieldLoc::
-is_valid( const short int deviceLoc ) const
+has_valid_field_values( const short int deviceLoc ) const
 {
 # ifdef DEBUG_SF_ALL
-  std::cout << "Call to SpatialField::is_valid() for field Location : "
+  std::cout << "Call to SpatialField::has_valid_field_values() for field Location : "
             << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
   cmapIter MapIter = multiFieldMap_.find( deviceLoc );
   if( MapIter == multiFieldMap_.end() ) return false;
 
-  // check if it is valid
+  // check if it field at deviceLoc has valid field values
   if( !MapIter->second.isValid ) return false;
   else                           return true;
 }
@@ -1880,8 +1889,8 @@ SpatialField<Location,T>::operator=(const SpatialField& other)
     throw(std::runtime_error(msg.str()));
   }
 
-  // check if the other is a valid field
-  if( !other.is_valid( other.device_index() ) ){
+  // check if the other has valid field values
+  if( !other.has_valid_field_values( other.device_index() ) ){
     std::ostringstream msg;
     msg << "Error : Attempted to assign from field that is invalid !\n"
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;

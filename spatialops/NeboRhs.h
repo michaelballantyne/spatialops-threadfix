@@ -216,11 +216,11 @@
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
-                return field_.is_valid(CPU_INDEX);
+                return field_.has_valid_field_values(CPU_INDEX);
              }
 
              inline bool gpu_ready(int const deviceIndex) const {
-                return field_.is_valid(deviceIndex);
+                return field_.has_valid_field_values(deviceIndex);
              }
 
              inline GPUWalkType gpu_init(structured::IntVec const & extents,
@@ -393,11 +393,11 @@
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
-                return field_.is_valid(CPU_INDEX);
+                return field_.has_valid_field_values(CPU_INDEX);
              }
 
              inline bool gpu_ready(int const deviceIndex) const {
-                return field_.is_valid(deviceIndex);
+                return field_.has_valid_field_values(deviceIndex);
              }
 
              inline GPUWalkType gpu_init(structured::IntVec const & extents,
