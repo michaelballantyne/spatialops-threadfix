@@ -390,18 +390,18 @@ namespace structured{
        *        unique device added.
        *        Note: This operation is guaranteed to be atomic
        *
-       * @param deviceLocation -- Index to the proper device
+       * @param deviceLoc -- Index to the proper device
        */
-      void add_field_loc(short int deviceLocation);
+      void add_field_loc(short int deviceLoc);
 
       /**
-       * @brief synchronizes all the invalid field location (deviceLocation)
+       * @brief synchronizes all the invalid field location (deviceLoc)
        *        with the valid field location. Allocates memory and performs
        *        data-transfer whenever needed.
        *
-       * @param deviceLocation -- Index to the proper device
+       * @param deviceLoc -- Index to the proper device
        */
-      void sync_location(short int deviceLocation);
+      void sync_location(short int deviceLoc);
 
       /**
        * @brief Finds if the field has any other locations using has_multiple_fields().
@@ -416,29 +416,36 @@ namespace structured{
        * @brief sets a field location as active. This method will update active device location so that
        *        writes can be performed.
        *
-       * @param deviceLocation -- Device type where this field should be made as active
+       * @param deviceLoc -- Device type where this field should be made as active
        */
-      void set_field_loc_active(short int deviceLocation);
+      void set_field_loc_active(short int deviceLoc);
 
       /**
        * @brief queries for the availability of the field location which is mostly being used by Nebo
        *
-       * @param deviceLocation -- Device type under query
+       * @param deviceLoc -- Device type under query
        */
-      bool find_field_loc( const short int deviceLocation ) const;
+      bool find_field_loc( const short int deviceLoc ) const;
 
       /**
        * @brief checks if the field location is valid.
        *
-       * @param deviceLocation -- Device type under query
+       * @param deviceLoc -- Device type under query
        */
-      bool is_valid( const short int deviceLocation ) const;
+      bool is_valid( const short int deviceLoc ) const;
 
       /**
        * @brief reports if the spatial field has multiple field locations
        *
        */
       bool has_multiple_fields() const;
+
+      /**
+       * @brief reports if the field has device location
+       *
+       * @param deviceLoc -- Device type under query
+       */
+      bool has_field_location(short int deviceLoc ) const;
 
       const BoundaryCellInfo& boundary_info() const{ return bcInfo_; }
 
@@ -488,24 +495,24 @@ namespace structured{
        * Field values will return a pointer to the field type, which is valid on the device and context supplied to
        * the function ( CPU_INDEX ) by default.
        *
-       * Note: This method will invalidate all the other device locations apart from the deviceLocation.
+       * Note: This method will invalidate all the other device locations apart from the deviceLoc.
        *
-       * @param deviceLocation -- Index of the device
+       * @param deviceLoc -- Index of the device
        * @return
        */
-      inline T* field_values(const short int deviceLocation = CPU_INDEX);
+      inline T* field_values(const short int deviceLoc = CPU_INDEX);
 
       /**
        * cField values will return a pointer to the field type, which is valid on the device and context supplied to
        * the function ( CPU_INDEX ) by default.
        *
-       * Note: This method will perform a check if the deviceLocation is valid and not necessary to be active
+       * Note: This method will perform a check if the deviceLoc is valid and not necessary to be active
        * field Location.
        *
-       * @param deviceLocation -- Index of the device
+       * @param deviceLoc -- Index of the device
        * @return
        */
-      inline const T* cfield_values(const short int deviceLocation = CPU_INDEX) const;
+      inline const T* cfield_values(const short int deviceLoc = CPU_INDEX) const;
 
       const GhostData& get_ghost_data() const{ return ghosts_; }
 
@@ -694,21 +701,21 @@ namespace structured{
     *        unique device added.
     *        Note: This operation is guaranteed to be atomic
     *
-    * @param deviceLocation -- Index to the proper device
+    * @param deviceLoc -- Index to the proper device
     */
-   inline void add_field_loc(short int deviceLocation){
-      sfsharedPtr_->add_field_loc( deviceLocation );
+   inline void add_field_loc(short int deviceLoc){
+      sfsharedPtr_->add_field_loc( deviceLoc );
    };
 
   /**
-   * @brief synchronizes all the invalid field location (deviceLocation)
+   * @brief synchronizes all the invalid field location (deviceLoc)
    *        with the valid field location. Allocates memory and performs
    *        data-transfer whenever needed.
    *
-   * @param deviceLocation -- Index to the proper device
+   * @param deviceLoc -- Index to the proper device
    */
-   inline void sync_location(short int deviceLocation){
-     sfsharedPtr_->sync_location( deviceLocation );
+   inline void sync_location(short int deviceLoc){
+     sfsharedPtr_->sync_location( deviceLoc );
    }
 
    /**
@@ -726,28 +733,28 @@ namespace structured{
    * @brief sets a field location as active. This method will update active device location so that
    *        writes can be performed.
    *
-   * @param deviceLocation -- Device type where this field should be made as active
+   * @param deviceLoc -- Device type where this field should be made as active
    */
-   inline void set_field_loc_active(const short int deviceLocation){
-     sfsharedPtr_->set_field_loc_active( deviceLocation );
+   inline void set_field_loc_active(const short int deviceLoc){
+     sfsharedPtr_->set_field_loc_active( deviceLoc );
    }
 
   /**
    * @brief queries for the availability of the field location which is mostly being used by Nebo
    *
-   * @param deviceLocation -- Device type under query
+   * @param deviceLoc -- Device type under query
    */
-   inline bool find_field_loc( const short int deviceLocation ) const{
-     return sfsharedPtr_->find_field_loc( deviceLocation );
+   inline bool find_field_loc( const short int deviceLoc ) const{
+     return sfsharedPtr_->find_field_loc( deviceLoc );
    };
 
   /**
    * @brief checks if the field location is valid.
    *
-   * @param deviceLocation -- Device type under query
+   * @param deviceLoc -- Device type under query
    */
-   bool is_valid( const short int deviceLocation ) const{
-     return sfsharedPtr_->is_valid( deviceLocation );
+   bool is_valid( const short int deviceLoc ) const{
+     return sfsharedPtr_->is_valid( deviceLoc );
    }
 
   /**
@@ -808,27 +815,27 @@ namespace structured{
     * Field values will return a pointer to the field type, which is valid on the device and context supplied to
     * the function ( CPU_INDEX ) by default.
     *
-    * Note: This method will invalidate all the other device locations apart from the deviceLocation.
+    * Note: This method will invalidate all the other device locations apart from the deviceLoc.
     *
-    * @param deviceLocation -- Index of the device
+    * @param deviceLoc -- Index of the device
     * @return
     */
-   inline T* field_values(const short int deviceLocation = CPU_INDEX){
-     return sfsharedPtr_->field_values( deviceLocation );
+   inline T* field_values(const short int deviceLoc = CPU_INDEX){
+     return sfsharedPtr_->field_values( deviceLoc );
    }
 
    /**
     * Field values will return a pointer to the field type, which is valid on the device and context supplied to
     * the function ( CPU_INDEX ) by default.
     *
-    * Note: This method will perform a check if the deviceLocation is valid and not necessary to be active
+    * Note: This method will perform a check if the deviceLoc is valid and not necessary to be active
     * field Location.
     *
-    * @param deviceLocation -- Index of the device
+    * @param deviceLoc -- Index of the device
     * @return
     */
-   inline const T* field_values(const short int deviceLocation = CPU_INDEX) const{
-     return sfsharedPtr_->cfield_values( deviceLocation );
+   inline const T* field_values(const short int deviceLoc = CPU_INDEX) const{
+     return sfsharedPtr_->cfield_values( deviceLoc );
    }
 
    /**
@@ -1174,18 +1181,18 @@ reset_values( const T* values )
 
 template<typename Location, typename T>
 T* SpatialField<Location,T>::SpatialFieldLoc::
-field_values( const short int deviceLocation )
+field_values( const short int deviceLoc )
 {
 # ifdef DEBUG_SF_ALL
   std::cout << "Call to non-const SpatialField::field_values() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl;
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
   // NOTE : check if the field being accessed is "ACTIVE"
-  typename MultiFieldMap::iterator mapIter = multiFieldMap_.find( deviceLocation );
+  typename MultiFieldMap::iterator mapIter = multiFieldMap_.find( deviceLoc );
 
   if( mapIter == multiFieldMap_.end() ){
-    if( !IS_VALID_INDEX( deviceLocation ) ){
+    if( !IS_VALID_INDEX( deviceLoc ) ){
       std::ostringstream msg;
       msg << "Request for field pointer on a device Location for which it has not been allocated\n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -1201,7 +1208,7 @@ field_values( const short int deviceLocation )
   }
   else{
     // Check if we are accessing an "active" field Location.
-    if( deviceLocation != activeDeviceIndex_ ){
+    if( deviceLoc != activeDeviceIndex_ ){
       std::ostringstream msg;
       msg << "The current field location is not set as active while accessing non-const version of field_values(). \n"
           << "Use set_field_loc_active() to set the device location.\n"
@@ -1229,17 +1236,17 @@ field_values( const short int deviceLocation )
 
 template<typename Location, typename T>
 const T* SpatialField<Location,T>::SpatialFieldLoc::
-cfield_values( const short int deviceLocation ) const
+cfield_values( const short int deviceLoc ) const
 {
 # ifdef DEBUG_SF_ALL
   std::cout << "Call to const SpatialField::field_values() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl;
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
   // Note : Make sure the field that is being accessed is not "Valid"
-  typename MultiFieldMap::const_iterator mapIter = multiFieldMap_.find( deviceLocation );
+  typename MultiFieldMap::const_iterator mapIter = multiFieldMap_.find( deviceLoc );
 
   if( mapIter == multiFieldMap_.end()){
-    if( !IS_VALID_INDEX( deviceLocation ) ){
+    if( !IS_VALID_INDEX( deviceLoc ) ){
       std::ostringstream msg;
       msg << "Request for field pointer on a device Location for which it has not been allocated\n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -1273,14 +1280,14 @@ cfield_values( const short int deviceLocation ) const
 
 template<typename Location, typename T>
 void SpatialField<Location,T>::SpatialFieldLoc::
-    add_field_loc( const short int deviceLocation )
+    add_field_loc( const short int deviceLoc )
 {
 #ifdef DEBUG_SF_ALL
   std::cout << "Call to SpatialField::add_field_loc() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl;
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
-  typename MultiFieldMap::iterator mapiter = multiFieldMap_.find( deviceLocation );
+  typename MultiFieldMap::iterator mapiter = multiFieldMap_.find( deviceLoc );
 # ifdef ENABLE_THREADS
   //Make sure adding consumers is per-field atomic
   ExecMutex lock;
@@ -1289,13 +1296,13 @@ void SpatialField<Location,T>::SpatialFieldLoc::
   if( mapiter != multiFieldMap_.end() ){
     if( mapiter->second.isValid ) return;
     else{
-      sync_location( deviceLocation );
+      sync_location( deviceLoc );
       return;
     }
   }
   else{
-    multiFieldMap_[deviceLocation] = FieldInfo( Pool<T>::self().get(deviceLocation, (allocatedBytes_/sizeof(T))), false );
-    sync_location(deviceLocation);
+    multiFieldMap_[deviceLoc] = FieldInfo( Pool<T>::self().get(deviceLoc, (allocatedBytes_/sizeof(T))), false );
+    sync_location(deviceLoc);
   }
 }
 
@@ -1304,19 +1311,19 @@ void SpatialField<Location,T>::SpatialFieldLoc::
 // Currently the sync_location() is called from add_field_loc() only
 template<typename Location, typename T>
 void SpatialField<Location, T>::SpatialFieldLoc::
-     sync_location( const short int deviceLocation )
+     sync_location( const short int deviceLoc )
 {
 # ifdef DEBUG_SF_ALL
   std::cout << "Call to SpatialField::sync_location() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl;
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
-  // validate the deviceLocation from a valid field location
+  // validate the deviceLoc from a valid field location
   if( !has_multiple_fields() ){
-    if( !multiFieldMap_[deviceLocation].isValid ){
+    if( !multiFieldMap_[deviceLoc].isValid ){
       std::ostringstream msg;
       msg << "sync_location() called on the field"
-          << DeviceTypeTools::get_memory_type_description(deviceLocation)
+          << DeviceTypeTools::get_memory_type_description(deviceLoc)
           << " that didn't have any copies and it is invalid. \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
@@ -1347,7 +1354,7 @@ void SpatialField<Location, T>::SpatialFieldLoc::
       throw(std::runtime_error(msg.str()));
     }
     // Dest Location doesn't have it's entry in FieldInfo.
-    typename std::map<short int, FieldInfo>::iterator destIter = multiFieldMap_.find(deviceLocation);
+    typename std::map<short int, FieldInfo>::iterator destIter = multiFieldMap_.find(deviceLoc);
     if( destIter == multiFieldMap_.end() ){
       std::ostringstream msg;
       msg << "Error : Destination memory doesn't exist. Please check if add_field_loc() is called. \n"
@@ -1359,28 +1366,28 @@ void SpatialField<Location, T>::SpatialFieldLoc::
     ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
 
     // CPU->GPU
-    if( validIndex == CPU_INDEX && IS_GPU_INDEX(deviceLocation) ){
+    if( validIndex == CPU_INDEX && IS_GPU_INDEX(deviceLoc) ){
 # ifdef DEBUG_SF_ALL
       std::cout << "data transfer from CPU to GPU (0/1)" << std::endl;
 # endif
-      CDI.memcpy_to( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, deviceLocation, cudaStream_);
-      multiFieldMap_[deviceLocation].isValid = true;
+      CDI.memcpy_to( (void*)multiFieldMap_[deviceLoc].field, validfieldValues_, allocatedBytes_, deviceLoc, cudaStream_);
+      multiFieldMap_[deviceLoc].isValid = true;
       return;
     }
 
     //GPU->CPU
-    else if( IS_GPU_INDEX(validIndex) && deviceLocation == CPU_INDEX ){
+    else if( IS_GPU_INDEX(validIndex) && deviceLoc == CPU_INDEX ){
 # ifdef DEBUG_SF_ALL
       std::cout << "data transfer from GPU (0/1) to CPU" << std::endl;
 # endif
-      CDI.memcpy_from( (void*)multiFieldMap_[deviceLocation].field, validfieldValues_, allocatedBytes_, validIndex, cudaStream_);
-      multiFieldMap_[deviceLocation].isValid = true;
+      CDI.memcpy_from( (void*)multiFieldMap_[deviceLoc].field, validfieldValues_, allocatedBytes_, validIndex, cudaStream_);
+      multiFieldMap_[deviceLoc].isValid = true;
       return;
     }
     else{
       std::ostringstream msg;
       msg << "Error : sync_location() called on the field"
-          << DeviceTypeTools::get_memory_type_description(deviceLocation)
+          << DeviceTypeTools::get_memory_type_description(deviceLoc)
           << "for a GPU-GPU peer copy that is not yet supported. \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
@@ -1418,15 +1425,15 @@ void SpatialField<Location,T>::SpatialFieldLoc::
 
 template<typename Location, typename T>
 void SpatialField<Location,T>::SpatialFieldLoc::
-set_field_loc_active( const short int deviceLocation )
+set_field_loc_active( const short int deviceLoc )
 {
 # ifdef DEBUG_SF_ALL
   std::cout << "Call to SpatialField::set_field_loc_active() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl;
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
 # ifndef NDEBUG
-  if( multiFieldMap_.find( deviceLocation ) == multiFieldMap_.end() ){
+  if( multiFieldMap_.find( deviceLoc ) == multiFieldMap_.end() ){
     std::ostringstream msg;
     msg << "Error : Requesting to set a field location as active that doesn't exist\n"
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -1434,26 +1441,26 @@ set_field_loc_active( const short int deviceLocation )
   }
 
   // check if the field location that is active is indeed "VALID"
-  if( !multiFieldMap_[deviceLocation].isValid ){
+  if( !multiFieldMap_[deviceLoc].isValid ){
     std::ostringstream msg;
-    msg << "Error : FieldLocation " << DeviceTypeTools::get_memory_type_description(deviceLocation)
+    msg << "Error : FieldLocation " << DeviceTypeTools::get_memory_type_description(deviceLoc)
         << " trying to set active, is not valid.\n"
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 # endif
-  activeDeviceIndex_ = deviceLocation;
+  activeDeviceIndex_ = deviceLoc;
 }
 
 //------------------------------------------------------------------
 
 template<typename Location, typename T>
 bool SpatialField<Location,T>::SpatialFieldLoc::
-find_field_loc( const short int deviceLocation ) const
+find_field_loc( const short int deviceLoc ) const
 {
 # ifdef DEBUG_SF_ALL
   std::cout << "Call to SpatialField::find_field_loc() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl;
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
   // this logic is only used for the testing purpose only. Should be ripped out.
@@ -1461,21 +1468,21 @@ find_field_loc( const short int deviceLocation ) const
   if( multiFieldMap_.size() == 0 ){
     std::ostringstream msg;
     msg << "Error : Couldn't find an entry of the field in the map,"
-        << DeviceTypeTools::get_memory_type_description(deviceLocation) << " field address, " << this << std::endl
-        << ". This is a serious problem places to look for is the SpatialField constructor and add_fields_loc() method. \n"
+        << DeviceTypeTools::get_memory_type_description(deviceLoc) << " field address, " << this << std::endl
+        << ". This is a serious problem places to look for is the SpatialField constructor and add_field_loc() method. \n"
         << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
     throw(std::runtime_error(msg.str()));
   }
 # endif
 
-  typename MultiFieldMap::const_iterator mapIter = multiFieldMap_.find(deviceLocation);
+  typename MultiFieldMap::const_iterator mapIter = multiFieldMap_.find(deviceLoc);
   // Check if it is the only copy.
   if( multiFieldMap_.size() == 1 ){
-    if( deviceLocation != activeDeviceIndex_ ){
+    if( deviceLoc != activeDeviceIndex_ ){
       std::ostringstream msg;
       msg << "Error : Only one copy of a field exists, the active field location,\n"
           << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " is different \n"
-          << "to that of the requested field, " << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl
+          << "to that of the requested field, " << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }else{
@@ -1486,7 +1493,7 @@ find_field_loc( const short int deviceLocation ) const
       }else{
         std::ostringstream msg;
         msg << "Error : Requested field memory location,"
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << " is not valid. \n"
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not valid. \n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
@@ -1495,7 +1502,7 @@ find_field_loc( const short int deviceLocation ) const
   else{
     if( mapIter == multiFieldMap_.end() ){
       std::ostringstream msg;
-      msg << "Error : Requested field location," << DeviceTypeTools::get_memory_type_description(deviceLocation) << " doesn't exist.\n"
+      msg << "Error : Requested field location," << DeviceTypeTools::get_memory_type_description(deviceLoc) << " doesn't exist.\n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }else{
@@ -1504,7 +1511,7 @@ find_field_loc( const short int deviceLocation ) const
       }else{
         std::ostringstream msg;
         msg << "Error : Requested field memory location,"
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << " is not valid. \n"
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not valid. \n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
@@ -1517,14 +1524,14 @@ find_field_loc( const short int deviceLocation ) const
 
 template<typename Location, typename T>
 bool SpatialField<Location,T>::SpatialFieldLoc::
-is_valid( const short int deviceLocation ) const
+is_valid( const short int deviceLoc ) const
 {
 # ifdef DEBUG_SF_ALL
   std::cout << "Call to SpatialField::is_valid() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLocation) << std::endl;
+            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
-  cmapIter MapIter = multiFieldMap_.find( deviceLocation );
+  cmapIter MapIter = multiFieldMap_.find( deviceLoc );
   if( MapIter == multiFieldMap_.end() ) return false;
 
   // check if it is valid
@@ -1545,6 +1552,22 @@ bool SpatialField<Location,T>::SpatialFieldLoc::
 
   if( multiFieldMap_.size() > 1 ) return true;
   else                            return false;
+}
+
+//------------------------------------------------------------------
+
+template<typename Location, typename T>
+bool SpatialField<Location,T>::SpatialFieldLoc::
+has_field_location(short int deviceLoc ) const
+{
+# ifdef DEBUG_SF_ALL
+  std::cout << "Call to SpatialField::has_multiple_fields() for field Location : "
+            << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << std::endl;
+# endif
+
+  cmapIter const_mapIter = multiFieldMap_.find(deviceLoc);
+  if( const_mapIter == multiFieldMap_.end() ) return false;
+  else                                        return true;
 }
 
 //------------------------------------------------------------------
@@ -1794,7 +1817,6 @@ SpatialField<Location,T>::SpatialFieldLoc::operator[](const size_t i)
 
   if( activeDeviceIndex_ == CPU_INDEX ){
     return mapIter->second.field[i];
-    //return fieldValues_[i];
   }
   else{
     std::ostringstream msg;
