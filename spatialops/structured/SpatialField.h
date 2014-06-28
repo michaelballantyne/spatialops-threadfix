@@ -423,13 +423,6 @@ namespace structured{
       void set_field_loc_active(short int deviceLoc);
 
       /**
-       * @brief queries for the availability of the field location which is mostly being used by Nebo
-       *
-       * @param deviceLoc -- Device type under query
-       */
-      bool find_field_loc( const short int deviceLoc ) const;
-
-      /**
        * @brief checks if the field has valid field values on deviceLoc
        *
        * @param deviceLoc -- Device type under query
@@ -733,15 +726,6 @@ namespace structured{
    inline void set_field_loc_active(const short int deviceLoc){
      sfsharedPtr_->set_field_loc_active( deviceLoc );
    }
-
-  /**
-   * @brief queries for the availability of the field location which is mostly being used by Nebo
-   *
-   * @param deviceLoc -- Device type under query
-   */
-   inline bool find_field_loc( const short int deviceLoc ) const{
-     return sfsharedPtr_->find_field_loc( deviceLoc );
-   };
 
   /**
    * @brief checks if the field has valid field values
@@ -1189,14 +1173,16 @@ field_values( const short int deviceLoc )
   if( mapIter == multiFieldMap_.end() ){
     if( !IS_VALID_INDEX( deviceLoc ) ){
       std::ostringstream msg;
-      msg << "Request for field pointer on a device Location for which it has not been allocated\n"
+      msg << "Request for field pointer on an unknown or unsupported device Location, "
+          << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl
+          << "Please check the arguments passed into the function."
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     else{
       std::ostringstream msg;
-      msg << "Request for field pointer on an unknown or unsupported device Location. \n"
-          << "Please check the arguments passed into the function."
+      msg << "Request for field pointer on a device Location for which it has not been allocated\n"
+          << DeviceTypeTools::get_memory_type_description(deviceLoc)
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
@@ -1243,14 +1229,16 @@ cfield_values( const short int deviceLoc ) const
   if( mapIter == multiFieldMap_.end()){
     if( !IS_VALID_INDEX( deviceLoc ) ){
       std::ostringstream msg;
-      msg << "Request for field pointer on a device Location for which it has not been allocated\n"
+      msg << "Request for field pointer on an unknown or unsupported device Location, "
+          << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl
+          << "Please check the arguments passed into the function."
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
     else{
       std::ostringstream msg;
-      msg << "Request for field pointer on an unknown or unsupported device Location. \n"
-          << "Please check the arguments passed into the function."
+      msg << "Request for field pointer on a device Location for which it has not been allocated\n"
+          << DeviceTypeTools::get_memory_type_description(deviceLoc)
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
@@ -1451,74 +1439,6 @@ set_field_loc_active( const short int deviceLoc )
 
 template<typename Location, typename T>
 bool SpatialField<Location,T>::SpatialFieldLoc::
-find_field_loc( const short int deviceLoc ) const
-{
-# ifdef DEBUG_SF_ALL
-  std::cout << "Call to SpatialField::find_field_loc() for field Location : "
-            << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
-# endif
-
-  // this logic is only used for the testing purpose only. Should be ripped out.
-# ifndef NDEBUG
-  if( multiFieldMap_.size() == 0 ){
-    std::ostringstream msg;
-    msg << "Error : Couldn't find an entry of the field in the map,"
-        << DeviceTypeTools::get_memory_type_description(deviceLoc) << " field address, " << this << std::endl
-        << ". This is a serious problem places to look for is the SpatialField constructor and add_field_loc() method. \n"
-        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-# endif
-
-  typename MultiFieldMap::const_iterator mapIter = multiFieldMap_.find(deviceLoc);
-  // Check if it is the only copy.
-  if( multiFieldMap_.size() == 1 ){
-    if( deviceLoc != activeDeviceIndex_ ){
-      std::ostringstream msg;
-      msg << "Error : Only one copy of a field exists, the active field location,\n"
-          << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " is different \n"
-          << "to that of the requested field, " << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl
-          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }else{
-      // we mostly use this method in the Nebo RHS (read). Hence, check to ensure
-      // reading a NULL memory is not done.
-      if( mapIter->second.isValid ){
-        return mapIter->second.field != NULL;
-      }else{
-        std::ostringstream msg;
-        msg << "Error : Requested field memory location,"
-            << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not valid. \n"
-            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-        throw(std::runtime_error(msg.str()));
-      }
-    }
-  }
-  else{
-    if( mapIter == multiFieldMap_.end() ){
-      std::ostringstream msg;
-      msg << "Error : Requested field location," << DeviceTypeTools::get_memory_type_description(deviceLoc) << " doesn't exist.\n"
-          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }else{
-      if( mapIter->second.isValid ){
-        return mapIter->second.field != NULL;
-      }else{
-        std::ostringstream msg;
-        msg << "Error : Requested field memory location,"
-            << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not valid. \n"
-            << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-        throw(std::runtime_error(msg.str()));
-      }
-    }
-  }
-
-}
-
-//------------------------------------------------------------------
-
-template<typename Location, typename T>
-bool SpatialField<Location,T>::SpatialFieldLoc::
 is_valid_field( const short int deviceLoc ) const
 {
 # ifdef DEBUG_SF_ALL
@@ -1530,8 +1450,8 @@ is_valid_field( const short int deviceLoc ) const
   if( MapIter == multiFieldMap_.end() ) return false;
 
   // check if it field at deviceLoc has valid field values
-  if( !MapIter->second.isValid ) return false;
-  else                           return true;
+  if( !MapIter->second.isValid || MapIter->second.field == NULL ) return false;
+  else                                                            return true;
 }
 
 //------------------------------------------------------------------
