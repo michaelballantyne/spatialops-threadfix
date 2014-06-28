@@ -230,12 +230,6 @@ install( FILES
 # SpatialOps installation.  This can be used by other CMake build
 # systems that use the SpatialOps library.
 
-# get the location for the installed library
-get_target_property( SOLocation spatialops LOCATION )
-
-# get the full name for the installed library
-get_filename_component( SOInstallLib ${SOLocation} NAME )
-
 set( SpatialOps_INCLUDE ${CMAKE_INSTALL_PREFIX}/include )
 
 # at this point, all of the required variables are defined to generate
