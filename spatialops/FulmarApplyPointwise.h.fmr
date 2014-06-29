@@ -1,0 +1,242 @@
+#lang fulmar
+
+(require "FulmarAbbreviations.fmr")
+(require "NeboCore.fmr")
+(require "NeboRhsCore.fmr")
+
+(define (symbol-or-string->string in)
+  (if (symbol? in)
+    (symbol->string in)
+    in))
+
+(define (numbered-name name number)
+  (string-append
+    (symbol-or-string->string name)
+    (number->string number)))
+
+
+; Extracted num-lst, as I use it elsewhere.
+; Now handles concatenating numbers, wrapping in literal.
+(define (num-lst name number)
+  (if (<= number 1)
+    (list (symbol-or-string->string name))
+    (map
+      (lambda (i) (literal (numbered-name name i)))
+      (range 1 (+ 1 number)))))
+
+
+(define (apply-pointwise-struct number)
+  (define name
+    (numbered-name 'ApplyPointwise number))
+
+  (define eval-return-type vt-chunk)
+
+  ; Extracted num-lst, as I use it elsewhere.
+  (define IN-op-lst
+    (num-lst 'op number)) ; changed
+  (define op-lst
+    (num-lst 'operand number)) ; changed
+  (define Op-lst
+    (num-lst 'Operand number)) ; changed
+  (define op_-lst
+    (map (lambda (op) (literal op '_)) op-lst))
+
+  (define (mapper proc . lsts)
+    (apply map proc lsts))
+  (define (op_-mfc fcn . args)
+    (map (lambda (op_) (val-member-call op_ fcn args))
+         op_-lst))
+  (define (IN-typedef type)
+    (lambda (Op) (typename (scope Op type))))
+  (define (ghosts call)
+    (letrec ([mins (lambda (calls)
+                     (cond [(equal? 1 (length calls)) (first calls)]
+                           [else (val-call 'min
+                                           (first calls)
+                                           (mins (rest calls)))]))])
+      (mins (mapper (lambda (op) (val-member-call op call))
+                    op_-lst))))
+  (define gen-data-mems
+    (mapper (lambda (Op op_) (stmt-dcl-variable (const Op) op_))
+            Op-lst
+            op_-lst))
+  (define (gen-typedef type)
+    (lambda (Op) (typename (scope Op type))))
+  (define gen-constructor
+    (bm-constructor (mapper (lambda (Op op) (function-pmtr (ref (const Op)) op))
+                            Op-lst
+                            op-lst)
+                    (mapper (lambda (op_ op) (val-construct op_ op))
+                            op_-lst
+                            op-lst)
+                    null))
+  (define next
+    (between/attach ";" space (op_-mfc 'next)))
+  (define (exec-check n-logical fcn . args)
+    (paren (n-logical (op_-mfc fcn args))))
+  (define (exec-or-check fcn)
+    (exec-check val-or fcn))
+  (define (exec-and-check fcn . args)
+    (exec-check val-and fcn args))
+  (define exec-data-mems
+    (mapper (lambda (Op op_) (stmt-dcl-variable Op op_))
+            Op-lst
+            op_-lst))
+  (define (assign-extent remaining)
+    (define assignment (val-assign 'extent (val-member-call (car remaining) 'extent 'dir)))
+    (if (= 1 (length remaining))
+        assignment
+        (stmt-if-else (val-member-call (car remaining) 'has_extent)
+                      assignment
+                      (assign-extent (cdr remaining)))))
+  (define (check-extent remaining)
+    (define assert (stmt-if (val-member-call (car remaining) 'has_extent)
+                            (val-call 'assert (val-equal 'extent (val-member-call (car remaining) 'extent 'dir)))))
+    (if (= 1 (length remaining))
+        assert
+        (list assert
+              (check-extent (cdr remaining)))))
+  (define (return-extent remaining)
+    (define returned (val-member-call (car remaining) 'extent 'dir))
+    (if (= 1 (length remaining))
+        returned
+        (ter-cond (val-member-call (car remaining) 'has_extent)
+                  returned
+                  (paren (return-extent (cdr remaining))))))
+
+  (define (internal-use args) ; added
+    (val-call 'functor_
+              (map (lambda (operand)
+                     (val-member-call operand 'eval args))
+                   op_-lst)))
+
+  (build-struct name
+                no-FT
+                'Functor ; changed
+                Op-lst
+                (bs-Initial-rhs null
+                                '(Functor Functor Functor Functor) ; changed
+                                gen-constructor
+                                (ghosts 'possible_ghosts)
+                                (ghosts 'minimum_ghosts)
+                                (exec-or-check 'has_extent)
+                                (if (= 1 number)
+                                    null
+                                    (stmt-if (exec-or-check 'has_extent)
+                                             (function-pmtr 'int 'extent)
+                                             (assign-extent op_-lst)
+                                             (check-extent op_-lst)))
+                                (return-extent op_-lst)
+                                (op_-mfc 'init)
+                                (op_-mfc 'resize)
+                                (exec-and-check 'cpu_ready)
+                                'false
+                                (op_-mfc 'gpu_init DI-chunk)
+                                (between/attach ";" space (op_-mfc 'gpu_prep DI-chunk))
+                                null
+                                gen-data-mems)
+                (bs-Resize-rhs null
+                               'Functor ; changed
+                               gen-constructor
+                               (op_-mfc 'init)
+                               null
+                               gen-data-mems)
+                (bs-SeqWalk-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                              vt-chunk)
+                                gen-constructor
+                                eval-return-type
+                                (internal-use index-arg) ; changed
+                                null
+                                (cons (stmt-dcl-variable 'Functor 'functor_) exec-data-mems)) ;changed
+                (bs-gpu-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                          vt-chunk)
+                            gen-constructor
+                            eval-return-type
+                            (internal-use index-arg); changed
+                            null
+                            (cons (stmt-dcl-variable 'Functor 'functor_) exec-data-mems))))
+
+; typename MetaFn<MetaArgs, ...>::Result
+(define (meta-eval meta-fn . meta-args)
+  (scope
+    (typename
+      (type-template
+        meta-fn
+        meta-args))
+    'Result))
+
+; Generate interface function for apply-pointwise.
+(define (apply-pointwise-interface number)
+  (define op-lst
+    (num-lst 'operand number))
+  (define Op-lst
+    (num-lst 'Operand number))
+  (define params
+    (map function-pmtr Op-lst op-lst))
+
+  (define field-type
+    (meta-eval
+      (numbered-name 'FindFieldType number)
+      Op-lst))
+
+  (define (return-type arg)
+    (type-template NE-chunk arg field-type))
+
+  (define result-type-type
+    (type-template (numbered-name 'ApplyPointwise number)
+                   'Initial
+                   'Functor
+                   (map (lambda (item) (meta-eval 'FinalType item)) Op-lst)))
+
+  (define normalize-calls
+    (map (lambda (item) (val-call 'normalize item)) op-lst))
+
+
+  (def-template (cons (typename 'Functor) (map typename Op-lst))
+                (def-returning-function
+                  (dcl-function 'apply_pointwise
+                                (return-type result-type-type)
+                                params)
+                  (list (typedef result-type-type 'ReturnType)
+                        (typedef (return-type 'ReturnType)
+                                 'ReturnTerm))
+                  (val-call 'ReturnTerm (val-call 'ReturnType
+                                                  normalize-calls)))))
+
+; Recursively generate tree of 2-argument RefineFieldType meta-calls for FindFieldTypeX
+(define (find-field-type-expr operands)
+  (cond [(= 1 (length operands))
+          (first operands)]
+         [else (meta-eval 'RefineFieldType
+                     (first operands)
+                     (find-field-type-expr (rest operands)))]))
+
+; Generate FindFieldTypeX
+(define (find-field-type number)
+  (define Op-lst
+    (num-lst 'Operand number))
+
+  (stmt-def-template-struct
+    (numbered-name 'FindFieldType number)
+    (map typename Op-lst)
+    '()
+    (stmt-typedef (find-field-type-expr
+                   (map (lambda (item) (meta-eval 'FindFieldType item)) Op-lst))
+                  'Result))
+  )
+
+; Generate everything needed for number-argument apply pointwise
+(define (apply-pointwise number)
+  (top-list
+   (apply-pointwise-struct number)
+   (find-field-type number)
+   (apply-pointwise-interface number)))
+
+
+(pp-header-file
+ 'FULMAR_APPLY_POINTWISE_H
+ (SpatialOps-namespace
+   (top-list
+     (map apply-pointwise
+          ; Build versions for 1 to 10 arguments
+          (range 1 11)))))

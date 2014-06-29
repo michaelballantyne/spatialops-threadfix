@@ -35,6 +35,8 @@
 #include <spatialops/NeboStencilBuilder.h>
 #include <spatialops/NeboAssignment.h>
 #include <spatialops/NeboReductions.h>
+#include <spatialops/NeboApplyPointwise.h>
+#include <spatialops/FulmarApplyPointwise.h>
 
 
 /* NEBO_ERROR_TRAP can be used to find where Nebo errors originate.
