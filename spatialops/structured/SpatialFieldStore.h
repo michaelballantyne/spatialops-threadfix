@@ -246,22 +246,11 @@ public:
        short int deviceIndex = -9999 )
   {
     using namespace structured;
-
     if( deviceIndex == -9999 ) deviceIndex = f.device_index();
-
-    const MemoryWindow& ws = f.window_with_ghost();
-
-    const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( f.boundary_info().has_bc() );
-
-    const IntVec inc = bc.has_bc() * Subtract< typename FieldT::Location::BCExtra, typename ProtoT::Location::BCExtra >::result::int_vec();
-    const MemoryWindow w( ws.glob_dim() + inc,
-                          ws.offset(),
-                          ws.extent()   + inc );
-
-    return get_from_window<FieldT>(create_new_memory_window<FieldT, ProtoT>(f),
-                                   create_new_boundary_cell_info<FieldT, ProtoT>(f),
-                                   f.get_ghost_data(),
-                                   deviceIndex);
+    return get_from_window<FieldT>( create_new_memory_window<FieldT,ProtoT>(f),
+                                    create_new_boundary_cell_info<FieldT,ProtoT>(f),
+                                    f.get_ghost_data(),
+                                    deviceIndex );
   }
 
 
