@@ -552,7 +552,7 @@ namespace structured{
         throw(std::runtime_error(msg.str()));
       }
       return NULL;   // should never get here.  This line is just to eliminate compiler warnings.
-    };
+    }
   };
 
 } // namespace structured

@@ -162,7 +162,7 @@ namespace SpatialOps {
     };
 
     inline std::ostream& operator<<( std::ostream& out, const BoundaryCellInfo& bc ){
-      out << "BC flags: " << bc.has_bc() << "  #extra: " << bc.num_extra();
+      out << "BC flags: " << bc.has_bc() << "  #extra: " << bc.num_extra() << " has_extra: " << bc.has_extra();
       return out;
     }
 
