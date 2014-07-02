@@ -1881,13 +1881,9 @@ SpatialField<Location,T>::operator=(const SpatialField& other)
   template<typename FieldType, typename PrototypeType>
   inline MemoryWindow create_new_memory_window( const PrototypeType& prototype )
   {
-    const BoundaryCellInfo& prototypeBC = prototype.boundary_info();
     const BoundaryCellInfo newBC = create_new_boundary_cell_info<FieldType,PrototypeType>(prototype);
-
     const MemoryWindow& prototypeWindow = prototype.window_with_ghost();
-
     const IntVec inc = newBC.has_bc() * Subtract< typename FieldType::Location::BCExtra, typename PrototypeType::Location::BCExtra >::result::int_vec();
-
     return MemoryWindow( prototypeWindow.glob_dim() + inc,
                          prototypeWindow.offset(),
                          prototypeWindow.extent() + inc );
