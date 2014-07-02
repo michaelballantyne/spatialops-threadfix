@@ -340,7 +340,8 @@ namespace structured{
     //compound assignment
     inline Self & operator+=(int change) {
       //small change (only changes xIndex_)
-      if( (change > 0 && //positive change
+      if( (change == 0) || //no change
+          (change > 0 && //positive change
            change < xExtent_ - xIndex_) ||
           (change < 0 && //negative change
            -change < xIndex_) ){
@@ -503,7 +504,8 @@ namespace structured{
     //compound assignment
     inline Self & operator+=(int change) {
       //small change (only changes xIndex_)
-      if( (change > 0 && //positive change
+      if( (change == 0) || //no change
+          (change > 0 && //positive change
            change < xExtent_ - xIndex_) ||
           (change < 0 && //negative change
               - change < xIndex_) ){

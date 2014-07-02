@@ -28,7 +28,6 @@ using namespace std;
 namespace SpatialOps{
   namespace structured{
 
-    inline bool check_positive( const IntVec& v ){ return (v[0]> 0) & (v[1]> 0) & (v[2]> 0); }
     inline bool check_ge_zero ( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
 
     //---------------------------------------------------------------
@@ -99,10 +98,10 @@ namespace SpatialOps{
     bool
     MemoryWindow::sanity_check() const
     {
-      return check_positive( nptsGlob_ ) &&
-             check_ge_zero ( offset_   ) &&
-             check_ge_zero ( extent_   ) &&
-             check_ge_zero ( nptsGlob_ - extent_ );
+      return check_ge_zero( nptsGlob_ ) &&
+             check_ge_zero( offset_   ) &&
+             check_ge_zero( extent_   ) &&
+             check_ge_zero( nptsGlob_ - extent_ );
     }
 
   } // namespace structured
