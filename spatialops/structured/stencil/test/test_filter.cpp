@@ -51,9 +51,9 @@ bool run_test( const IntVec& dim )
       filter.apply_to_field( f, fbar );
   }
 
-  SVolField::const_interior_iterator i1=f.interior_begin();
-  SVolField::const_interior_iterator i1e=f.interior_end();
-  SVolField::const_interior_iterator i2=fbar.interior_begin();
+  SVolField::const_iterator i1=f.interior_begin();
+  SVolField::const_iterator i1e=f.interior_end();
+  SVolField::const_iterator i2=fbar.interior_begin();
   for( ; i1!=i1e; ++i1, ++i2 ){
     const double err = std::abs( *i1-*i2 ) / *i1;
     status( err<1e-15 );

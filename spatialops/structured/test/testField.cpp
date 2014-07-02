@@ -164,12 +164,12 @@ bool test_interior( const IntVec npts,
 
   TestHelper status(verbose);
 
-  typename FieldT::interior_iterator if2=f2.interior_begin();
-  const typename FieldT::interior_iterator if2e=f2.interior_end();
-  typename FieldT::const_interior_iterator if1=f1.interior_begin();
-  const typename FieldT::interior_iterator if1e=f1.interior_end();
-  typename FieldT::const_interior_iterator if3=f3.interior_begin();
-  const typename FieldT::const_interior_iterator if3e=f3.interior_end();
+  typename FieldT::iterator if2=f2.interior_begin();
+  const typename FieldT::iterator if2e=f2.interior_end();
+  typename FieldT::const_iterator if1=f1.interior_begin();
+  const typename FieldT::iterator if1e=f1.interior_end();
+  typename FieldT::const_iterator if3=f3.interior_begin();
+  const typename FieldT::const_iterator if3e=f3.interior_end();
   for( int k=lo[2]; k<hi[2]; ++k ){
     for( int j=lo[1]; j<hi[1]; ++j ){
       for( int i=lo[0]; i<hi[0]; ++i ){

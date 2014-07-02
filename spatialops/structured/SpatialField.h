@@ -101,7 +101,7 @@ namespace structured{
    *   - \c Location - the location type traits
    *   - \c value_type  - the type of underlying data being stored in this SpatialField
    *   - \c iterator, \c const_iterator - iterators to the elements in this field
-   *   - \c interior_iterator, \c const_interior_iterator - iterators to the interior elements in this field (excludes ghost cells).
+   *   - \c iterator, \c const_iterator - iterators to the interior elements in this field (excludes ghost cells).
    */
 
   template< typename FieldLocation,
@@ -199,9 +199,7 @@ namespace structured{
       typedef T value_type;
       typedef MemoryWindow memory_window;
       typedef FieldIterator<field_type> iterator;
-      typedef FieldIterator<field_type> interior_iterator;
       typedef ConstFieldIterator<field_type> const_iterator;
-      typedef ConstFieldIterator<field_type> const_interior_iterator;
 
       SpatialFieldLoc( const MemoryWindow& window,
                        const BoundaryCellInfo& bc,
@@ -318,7 +316,7 @@ namespace structured{
         }
       }
 
-      inline const_interior_iterator interior_begin() const
+      inline const_iterator interior_begin() const
       {
         cmapIter const_mapIter = multiFieldMap_.find(CPU_INDEX);
 #       ifndef NDEBUG
@@ -340,15 +338,15 @@ namespace structured{
           std::ostringstream msg;
           msg << "Field type ( "
               << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_) << " ) ,"
-              << " is not valid. const_interior_iterator are not allowed on to a invalid field.\n"
+              << " is not valid. const_iterator are not allowed on to a invalid field.\n"
               << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
 #       endif
-        return const_interior_iterator( const_mapIter->second.field, interiorFieldWindow_ );
+        return const_iterator( const_mapIter->second.field, interiorFieldWindow_ );
       }
 
-      inline interior_iterator interior_begin()
+      inline iterator interior_begin()
       {
         mapIter mapIter = multiFieldMap_.find( CPU_INDEX );
 #       ifndef NDEBUG
@@ -375,11 +373,11 @@ namespace structured{
           throw(std::runtime_error(msg.str()));
         }
 #       endif
-        return interior_iterator( mapIter->second.field, interiorFieldWindow_);
+        return iterator( mapIter->second.field, interiorFieldWindow_);
       }
 
-      inline const_interior_iterator interior_end() const;
-      inline interior_iterator interior_end();
+      inline const_iterator interior_end() const;
+      inline iterator interior_end();
 
 
   #   ifdef ENABLE_CUDA
@@ -527,9 +525,7 @@ namespace structured{
    typedef T value_type;
    typedef MemoryWindow memory_window;
    typedef FieldIterator<field_type> iterator;
-   typedef FieldIterator<field_type> interior_iterator;
    typedef ConstFieldIterator<field_type> const_iterator;
-   typedef ConstFieldIterator<field_type> const_interior_iterator;
 
    /**
     *  \brief Construct a SpatialField
@@ -662,18 +658,18 @@ namespace structured{
      return sfsharedPtr_->end(fieldWindow_);
    }
 
-   inline const_interior_iterator interior_begin() const {
+   inline const_iterator interior_begin() const {
      return sfsharedPtr_->interior_begin();
    }
 
-   inline interior_iterator interior_begin() {
+   inline iterator interior_begin() {
      return sfsharedPtr_->interior_begin();
    }
 
-   inline const_interior_iterator interior_end() const{
+   inline const_iterator interior_end() const{
      return sfsharedPtr_->interior_end();
    }
-   inline interior_iterator interior_end(){
+   inline iterator interior_end(){
      return sfsharedPtr_->interior_end();
    }
 
@@ -1472,7 +1468,7 @@ bool SpatialField<Location,T>::SpatialFieldLoc::
 //------------------------------------------------------------------
 
 template<typename Location, typename T>
-typename SpatialField<Location,T>::const_interior_iterator
+typename SpatialField<Location,T>::const_iterator
 SpatialField<Location,T>::SpatialFieldLoc::interior_end() const
 {
   cmapIter const_mapIter = multiFieldMap_.find(CPU_INDEX);
@@ -1494,7 +1490,7 @@ SpatialField<Location,T>::SpatialFieldLoc::interior_end() const
 # endif
   if( const_mapIter->second.isValid ) {
     const size_t extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
-    const_interior_iterator i(const_mapIter->second.field, interiorFieldWindow_);
+    const_iterator i(const_mapIter->second.field, interiorFieldWindow_);
     return i + extent;
   } else {
     std::ostringstream msg;
@@ -1508,7 +1504,7 @@ SpatialField<Location,T>::SpatialFieldLoc::interior_end() const
 //------------------------------------------------------------------
 
 template<typename Location, typename T>
-typename SpatialField<Location,T>::interior_iterator
+typename SpatialField<Location,T>::iterator
 SpatialField<Location,T>::SpatialFieldLoc::interior_end()
 {
   mapIter mapIter = multiFieldMap_.find( CPU_INDEX );
@@ -1530,7 +1526,7 @@ SpatialField<Location,T>::SpatialFieldLoc::interior_end()
 # endif
   if( activeDeviceIndex_ == CPU_INDEX ){
     const size_t extent = interiorFieldWindow_.extent(0) * interiorFieldWindow_.extent(1) * interiorFieldWindow_.extent(2);
-    interior_iterator i(mapIter->second.field, interiorFieldWindow_);
+    iterator i(mapIter->second.field, interiorFieldWindow_);
     return i + extent;
   }
   else{

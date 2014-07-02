@@ -27,7 +27,7 @@ int main()
 
   TestHelper status(true);
 
-  FieldT::interior_iterator i2=f.interior_begin();
+  FieldT::iterator i2=f.interior_begin();
   for( FieldT::iterator i=f.begin(); i!=f.end(); ++i, ++i2 ){
     status( *i==*i2, "value" );
     status( &*i == &*i2, "address" );

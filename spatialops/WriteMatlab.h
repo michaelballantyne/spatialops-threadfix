@@ -54,7 +54,7 @@ namespace SpatialOps{
       fout << " ];" << std::endl;
     }
     else{
-      typename FieldT::const_interior_iterator
+      typename FieldT::const_iterator
         i    = field.interior_begin(),
         iend = field.interior_end();
       fout << "x = [ " << *i;
