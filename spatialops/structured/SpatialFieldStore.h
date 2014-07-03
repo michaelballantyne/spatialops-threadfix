@@ -104,9 +104,9 @@ public:
    *  		or allocate a double on an external device while pretending
    *  		it is a full spatial field.
    *
-   *  @param pointer to wrap
-   *  @param do we build it
-   *  @param device index for memory lookup
+   *  @param field          pointer to wrap
+   *  @param builtFromStore do we build it
+   *  @param deviceIndex    device index for memory lookup
    */
   SpatFldPtr(FieldT* const field, const bool builtFromStore, const short int deviceIndex);
 
@@ -218,7 +218,7 @@ public:
    *  @param w  A memory window describing the desired field dimensions
    *  @param bc the information on boundaries
    *  @param ghost ghost information
-   *  @param deviceIndex for CPU, multiple GPUs, which one to locate the field on
+   *  @param deviceIndex use CPU_INDEX for CPU or specify which GPU to locate the field on
    *
    *  Note that you should not dereference the SpatFldPtr object to
    *  store a SpatialField reference.  Doing so can cause memory
@@ -226,7 +226,7 @@ public:
    */
   template<typename FieldT>
   inline static SpatFldPtr<FieldT>
-  get_from_window( const structured::MemoryWindow& window,
+  get_from_window( const structured::MemoryWindow& w,
                    const structured::BoundaryCellInfo& bc,
                    const structured::GhostData& ghost,
                    const short int deviceIndex = CPU_INDEX );
@@ -235,6 +235,8 @@ public:
    *  @brief Obtain a temporary field.
    *
    *  @param f  A field to model this one after.
+   *  @param deviceIndex The device location to obtain this field on.  Defaults
+   *    to the location where the prototype field is located.  For CPU, use CPU_INDEX.
    *
    *  Note that you should not dereference the SpatFldPtr object to
    *  store a SpatialField reference.  Doing so can cause memory
@@ -253,12 +255,11 @@ public:
                                     deviceIndex );
   }
 
-
-
   /**
    *  @brief Restores a field to the store for future use.
    *
-   *  @param Field to be restored to the store
+   *  @param deviceIndex the device location to restore the field to
+   *  @param f the field to be restored to the store
    *
    *  Note that this method is should only be called by SpatFldPtr
    *  objects.  Calling it anywhere else can result in memory corruption.

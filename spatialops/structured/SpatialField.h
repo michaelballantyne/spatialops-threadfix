@@ -542,7 +542,6 @@ namespace structured{
     *         suggests that InternalStorage is best, since it
     *         protects against memory corruption and inadvertent
     *         deletion of the field's underlying memory.
-    *  \param consumerMemoryType describes where this field lives (e.g., CPU, GPU)
     *  \param devIdx the identifier for the GPU/accelerator if the field lives
     *         there. This allows for the case where multiple accelerators are
     *         on a given node.

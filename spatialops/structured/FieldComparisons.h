@@ -29,7 +29,10 @@
 #define FIELDCOMPARISONS_ABS_ERROR_CONST .000001
 
 /**
+ * @file FieldComparisons.h
+ * @ingroup fields
  * @brief Comparison operators
+ *
  * WARNING: Slow in general and comparison with external fields will incur copy penalties.
  */
 namespace SpatialOps{
@@ -39,9 +42,10 @@ template<typename FieldT>
 class FieldComparisonHelper;
 
 /**
+ * @fn template<typename FieldT> bool field_not_equal(const FieldT&, const FieldT&, double)
  * @brief Returns if f1 is element-wise not equal to f2 within a certain relative
  * tolerance.
- *
+ * @ingroup fields
  * This function simply calls field_equal and negates it.
  * \c return !field_equal(f1, f2, error, error_abs);
  * error_abs is defined as default to be the L2 norm of \c f1 multiplied by \c error
@@ -84,6 +88,8 @@ bool field_not_equal(const FieldT& f1, const FieldT& f2, double error, const dou
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_equal(const FieldT&, const FieldT&, double)
+ *
  * @brief Returns if f1 is element-wise equal to f2 within a certain relative
  * tolerance.
  *
@@ -108,7 +114,8 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error=0.0)
 }
 
 /**
- * @brief Returns if f1 is element-wise equal to f2 within a certain relative
+ * @fn template<typename FieldT> bool field_equal(const FieldT&, const FieldT&, double, const double)
+ * @brief Determines if f1 is element-wise equal to f2 within a certain relative
  * tolerance.
  *
  * This function returns the result of |f1 - f2|/(error_abs + |f1|) > error element wise.
@@ -358,6 +365,8 @@ bool field_equal(const double d, const FieldT& f1, double error=0.0)
 }
 
 /**
+ * @fn template<typename FieldT> bool field_equal(const double, const FieldT&, double, const double )
+ * @ingroup fields
  * @brief Returns if f1 is element-wise equal to the scalar value d
  * within a certain relative tolerance.
  *
@@ -398,6 +407,7 @@ bool field_equal(const double d, const FieldT& f1, double error, const double er
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_not_equal_abs(const double, const FieldT&, const double )
  * @brief Returns if f1 is element-wise not equal to Scalar value d within a
  * certain absolute tolerance.
  *
@@ -411,12 +421,14 @@ bool field_equal(const double d, const FieldT& f1, double error, const double er
  * @param error -- Allowable absolute value of error.
  */
 template<typename FieldT>
-bool field_not_equal_abs(const double d, const FieldT& f1, double error=0.0) {
+bool field_not_equal_abs(const double d, const FieldT& f1, const double error=0.0) {
   return !field_equal_abs(d, f1, error);
 }
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_equal_abs(const double, const FieldT&, double)
+ *
  * @brief Returns if f1 is element-wise equal to Scalar value d within a
  * certain absolute tolerance.
  *
@@ -452,6 +464,8 @@ bool field_equal_abs(const double d, const FieldT& f1, double error=0.0)
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_not_equal_ulp(const double, const FieldT&, const unsigned int)
+ *
  * @brief Returns if f1 is element-wise not equal to Scalar value d within a
  * certain number of ulps.
  *
@@ -471,6 +485,8 @@ bool field_not_equal_ulp(const double d, const FieldT& f1, const unsigned int ul
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_equal_ulp(const double, const FieldT&, const unsigned int)
+ *
  * @brief Returns if f1 is element-wise equal to Scalar value d within a
  * certain number of ulps.
  *

@@ -30,7 +30,8 @@ namespace SpatialOps{
   //==================================================================
 
   /**
-   * @defgroup DirectionDefinitions
+   * @defgroup DirectionDefinitions Direction Definitions
+   * @brief Specification of the directions in cartesian coordinates
    * @{
    */
 
@@ -64,7 +65,7 @@ namespace SpatialOps{
 
 
   /**
-   *  @defgroup Operator Types
+   *  @addtogroup optypes
    *  @{
    */
 

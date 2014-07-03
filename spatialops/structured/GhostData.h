@@ -28,9 +28,6 @@
  *
  *  \date   August, 2012
  *  \author Christopher Earl
- *
- *  \addtogroup structured
- *  @{
  */
 
 #include <spatialops/SpatialOpsConfigure.h>
@@ -52,6 +49,7 @@ namespace structured{
 
   /**
    * \class GhostData
+   * \ingroup fields
    * \date July, 2013
    * \author James C. Sutherland
    * \brief Holds information about the number of ghost cells on each side of the domain
@@ -270,9 +268,5 @@ namespace structured{
 
   } // namespace structured
 } // namespace SpatialOps
-
-/**
- * @}
- */
 
 #endif /* SpatialOps_GhostData_h */

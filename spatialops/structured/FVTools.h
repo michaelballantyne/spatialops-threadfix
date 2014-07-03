@@ -38,12 +38,11 @@ namespace SpatialOps{
 namespace structured{
 
   /**
-   *  \file FVTools.h
-   *
-   *  \addtogroup structured
-   *  @{
    *  \addtogroup fields
    *  @{
+   *
+   *  \file FVTools.h
+   *
    *
    *  \brief Provides function templates useful for field and operator
    *         creation for structured meshes.  Specialize these
@@ -86,7 +85,7 @@ namespace structured{
    *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const GhostData&, const BoundaryCellInfo& )
    *  \brief Obtain the memory window for a field on a patch that is a single, contiguous memory block
    *
-   *  \param dimNoGhost number of points in each direction excluding
+   *  \param localDim number of points in each direction excluding
    *    ghost cells
    *
    *  \param ghost the GhostData information
@@ -95,7 +94,7 @@ namespace structured{
    *   boundary is present.  Note that a MemoryWindow obtained here is paired for
    *   use specifically with fields that share common BoundaryCellInfo.
    *
-   *  \return the total number of points in the field, including ghost cells.
+   *  \return a MemoryWindow consistent with the given information
    */
   MemoryWindow
   inline get_window_with_ghost( const IntVec& localDim,
@@ -110,7 +109,6 @@ namespace structured{
   //------------------------------------------------------------------
 
   /**
-   *  @}
    *  @}
    */
 
