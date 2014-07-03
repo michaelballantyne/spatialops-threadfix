@@ -230,7 +230,7 @@ namespace structured{
 
   /**
    *  \class BitField
-   *  \ingroup structured
+   *  \ingroup fields
    *
    *  \brief Implements a mask as a bitfield.
    *
@@ -342,7 +342,7 @@ namespace structured{
      *  \brief Construct a BitField
      *  \param points - the points in the mask
      *  \param window - the window to build
-     *  \param interiorWindow - the interior window
+     *  \param ghosts - the ghost information
      */
     BitField(const std::vector<IntVec> & points,
              const MemoryWindow & window,

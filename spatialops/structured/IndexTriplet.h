@@ -28,9 +28,6 @@
  *
  *  \date   Sep 29, 2011
  *  \author James C. Sutherland
- *
- *  \addtogroup structured
- *  @{
  */
 
 #include <spatialops/SpatialOpsConfigure.h>

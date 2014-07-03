@@ -31,9 +31,7 @@
 /**
  *  \file FVStaggeredLocationTypes.h
  *
- *  \addtogroup structured
- *  @{
- *  \addtogroup fields
+ *  \addtogroup fieldtypes
  *  @{
  *
  */
@@ -132,7 +130,6 @@ namespace structured{
 }// namespace SpatialOps
 
 /**
- *  @}
  *  @}
  */
 

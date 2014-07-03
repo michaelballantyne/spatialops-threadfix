@@ -1,19 +1,13 @@
 /**
  *  @mainpage
  *
- * \par brief description
- *  The SpatialOps library provides support for field-field and
- *  field-vector operations.
+ *  The SpatialOps library provides support for operations on fields primarily
+    on structured meshes.
  *
+ * # Getting started
+ *  The best way to become acquainted with SpatialOps is to start with the \ref tutorials.
  *
  *  \par Structured Meshes
- *
- *  The primary focus up to this point has been on structured meshes.
- *  Relevant tools are grouped into the \ref structured group.  The
- *  key classes, however, are:
- *   - \ref SpatialField
- *   - \ref SpatialOperator
- *   - \ref MemoryWindow
  *
  * \par license
  *
@@ -38,7 +32,21 @@
  * IN THE SOFTWARE.
  *
  *
- *  @defgroup structured
- *  @defgroup ExpressionTemplates Expression Templates
- *  @defgroup ExpressionTemplatesDetail Expression Templates - Details
+ *  @defgroup optypes Operator Types
+ *  @brief Information about operator types that are predefined in SpatialOps.
+ *
+ *  @defgroup fields        Field Tools
+ *  @brief    Information about fields and how to manipulate and create them.
+ *
+ *  @defgroup fieldtypes    Field Types
+ *  @brief    Information about field types that are predefined in SpatialOps.
+ *
+ *
+ *
+ *
+ * \page tutorials Tutorials
+ * There are several tutorials here to get new users going with SpatialOps and
+ * to introduce basic functionality.
+ *  - \subpage tut1
+ *
  */

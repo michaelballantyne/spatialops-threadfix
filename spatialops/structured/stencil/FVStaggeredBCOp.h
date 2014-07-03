@@ -92,7 +92,7 @@ namespace structured{
     typedef BCEval BCEvalT;  ///< Expose the BCEval type.
 
     /**
-     *  \param destIndex The i,j,k location at which we want to specify
+     *  \param destIndex The (i,j,k) location at which we want to specify
      *         the boundary condition.  This is indexed 0-based on
      *         the interior (neglecting ghost cells), and refers to
      *         the index in the "destination" field of the operator.

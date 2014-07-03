@@ -27,12 +27,20 @@
 #include <fstream>
 #include <iomanip>
 
+/**
+ *  \file WriteMatlab.h
+ */
+
 namespace SpatialOps{
 
   /**
-   *  \file WriteMatlab
-   *  \function write_matlab
+   *  \ingroup fields
+   *  \fn void write_matlab( const FieldT&, const std::string, const bool)
    *  \brief writes a field to a matlab file
+   *  \tparam FieldT the type of SpatialField
+   *  \param field the field to write
+   *  \param prefix the name of the field
+   *  \param includeGhost [false] true to include ghost cells in the file
    */
   template<typename FieldT>
   void write_matlab( const FieldT& field,

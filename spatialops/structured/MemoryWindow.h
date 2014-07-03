@@ -41,9 +41,6 @@
 
 /**
  * \file MemoryWindow.h
- * \addtogroup structured
- * @{
- *
  */
 
 namespace SpatialOps{
@@ -54,7 +51,7 @@ namespace structured{
    *  \author James C. Sutherland
    *  \date September 2010
    *
-   *  \ingroup structured
+   *  \ingroup fields
    *  \brief Provides tools to index into a sub-block of memory.
    *
    *  Given a block of memory, [Nx,Ny,Nz], assume that we want to deal
@@ -77,9 +74,6 @@ namespace structured{
      *  \param npts the total (global) number of points in each direction
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
-     *  \param bcx true if a physical boundary is present in the (+x) direction
-     *  \param bcy true if a physical boundary is present in the (+y) direction
-     *  \param bcz true if a physical boundary is present in the (+z) direction
      */
     MemoryWindow( const int npts[3],
                   const int offset[3],
@@ -87,7 +81,6 @@ namespace structured{
 
     /**
      *  \brief construct a MemoryWindow object
-     *
      *  \param npts the total (global) number of points in each direction
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
@@ -98,18 +91,13 @@ namespace structured{
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"
-     *
      *  \param npts the total (global) number of points in each direction
      */
     MemoryWindow( const int npts[3] );
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"
-     *
      *  \param npts the total (global) number of points in each direction
-     *  \param bcx (optional - default false) true if a physical boundary is present in the (+x) direction
-     *  \param bcy (optional - default false) true if a physical boundary is present in the (+y) direction
-     *  \param bcz (optional - default false) true if a physical boundary is present in the (+z) direction
      */
     MemoryWindow( const IntVec& npts );
 
@@ -215,6 +203,11 @@ namespace structured{
   template<typename FieldType>
   class ConstFieldIterator;  // forward
 
+  /**
+   * \class FieldIterator
+   * \brief provides iterator support for SpatialField.  Only works for CPU.
+   * \ingroup fields
+   */
   template<typename FieldType>
   class FieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
     friend class ConstFieldIterator<FieldType>;
@@ -391,6 +384,11 @@ namespace structured{
     int xExtent_, yExtent_, zExtent_, xyExtent_;
   };
 
+  /**
+   * \class ConstFieldIterator
+   * \brief provides iterator support for SpatialField.  Only works for CPU.
+   * \ingroup fields
+   */
   template<typename FieldType>
   class ConstFieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
     typedef ConstFieldIterator<FieldType> Self;
@@ -560,8 +558,5 @@ namespace structured{
 } // namespace structured
 } // namespace SpatialOps
 
-/**
- * @}
- */
 
 #endif // SpatialOps_MemoryWindow_h

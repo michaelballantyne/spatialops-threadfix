@@ -31,18 +31,16 @@
 
 /**
  *  \file FVStaggeredFieldTypes.h
- *
- *  \addtogroup structured
- *  @{
- *  \addtogroup fields
- *  @{
- *
  */
 
 namespace SpatialOps{
 namespace structured{
 
   /**
+ *
+ *  \addtogroup fieldtypes
+ *  @{
+ *
    *  \typedef typedef SpatialField< SVol > SVolField;
    *  \brief defines a volume field on the scalar volume.
    *
@@ -222,13 +220,12 @@ namespace structured{
   template<> struct VolType<ZSurfYField>{ typedef SpatialOps::structured::ZVolField VolField; };
   template<> struct VolType<ZSurfZField>{ typedef SpatialOps::structured::ZVolField VolField; };
 
+/**
+ *  @} // fieldtypes group
+ */
 
 }// namespace structured
 }// namespace SpatialOps
 
-/**
- *  @}
- *  @}
- */
 
 #endif
