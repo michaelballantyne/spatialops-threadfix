@@ -351,10 +351,10 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
       if (builtFromStore_) {
 	SpatialFieldStore::restore_field(deviceIndex_, *f_);
       }
-      delete f_;
-      delete count_;
-      count_ = NULL;
-      f_ = NULL;
+
+      delete f_;     f_ = NULL;
+      delete count_; count_ = NULL;
+
     }
   }
   // reassign
@@ -384,10 +384,9 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
 	SpatialFieldStore::restore_field(deviceIndex_, *f_);
       }
 
-      delete f_;
-      delete count_;
-      count_ = NULL;
-      f_ = NULL;
+      delete f_;     f_ = NULL;
+      delete count_; count_ = NULL;
+
     }
   }
   // reassign
@@ -395,7 +394,15 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
   count_ = new int;
   *count_ = 1;
   builtFromStore_ = false;
-  deviceIndex_ = f->device_index();
+  if( deviceIndex_ != f->device_index() ){
+    std::ostringstream msg;
+    msg << "SpatFldPtr deviceIndex "
+        << DeviceTypeTools::get_memory_type_description(deviceIndex_)
+        << " is different to that of assigning Spatial Field deviceIndex, \n"
+        << DeviceTypeTools::get_memory_type_description(f->Device_index())
+        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+    throw(std::runtime_error(msg.str()));
+  }
 
   return *this;
 }
@@ -494,7 +501,7 @@ void SpatialFieldStore::restore_field( const short int deviceIndex, FieldT& fiel
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
   typedef typename FieldT::value_type ValT;
-  ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.device_index()));
+  ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(deviceIndex));
 # ifndef NDEBUG
   if( !IS_VALID_INDEX(deviceIndex) ){
     std::ostringstream msg;
