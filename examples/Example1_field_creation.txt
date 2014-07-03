@@ -8,9 +8,9 @@
  *
  *  -# A \link SpatialOps::structured::SpatialField SpatialField \endlink is
  * comprised of a few things:
- *   - A \link SpatialField::structured::MemoryWindow MemoryWindow \endlink to
+ *   - A \link SpatialOps::structured::MemoryWindow MemoryWindow \endlink to
  *     describe the logical layout of the field in memory
- *   - A \link SpatialField::structured::BoundaryCellInfo BoundaryCellInfo \endlink
+ *   - A \link SpatialOps::structured::BoundaryCellInfo BoundaryCellInfo \endlink
  *     object to describe the behavior of a field at a boundary
  *   - The raw block of memory for the field
  *   - The location of the field (CPU, GPU, etc.)
@@ -21,7 +21,7 @@
  *  
  *  -# For face fields on structured meshes, the (+) face on the (+) side of the
  *     domain has an extra storage location.  The
- *     \link SpatialField::structured::BoundaryCellInfo BoundaryCellInfo \endlink
+ *     \link SpatialOps::structured::BoundaryCellInfo BoundaryCellInfo \endlink
  *     object encodes this information.
  */
  

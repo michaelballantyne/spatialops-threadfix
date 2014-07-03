@@ -636,18 +636,23 @@ namespace SpatialOps {
 
       /**
        * \brief Apply boundary condition with gamma as an expression
-       * \param mask the mask of points where boundary condition applies
+       * \param points the mask of points where boundary condition applies
+       * \param shift
+       * \param shiftGamma
+       * \param shiftPhi
        * \param phi the field to modify
        * \param gamma the Nebo expression to read
+       * \param coef
        */
       template<typename ExprType, typename ShiftGamma, typename ShiftPhi>
-      inline void cpu_apply(const Points & points,
-                            const IntVec & shift,
-                            const ShiftGamma & shiftGamma,
-                            const ShiftPhi & shiftPhi,
-                            PhiFieldType & phi,
-                            const NeboExpression<ExprType, GammaFieldType> & gamma,
-                            const double coef) const {
+      inline void cpu_apply( const Points & points,
+                             const IntVec & shift,
+                             const ShiftGamma & shiftGamma,
+                             const ShiftPhi & shiftPhi,
+                             PhiFieldType & phi,
+                             const NeboExpression<ExprType, GammaFieldType> & gamma,
+                             const double coef ) const
+      {
         typedef NeboField<Initial, PhiFieldType> LhsTypeInit;
         typedef typename LhsTypeInit::SeqWalkType LhsType;
         LhsTypeInit lhsInit(phi);
@@ -681,12 +686,14 @@ namespace SpatialOps {
        * \param mask the mask of points where boundary condition applies
        * \param phi the field to modify
        * \param gamma the Nebo expression to read
+       * \param minus
        */
       template<typename ExprType>
       inline void operator()(structured::SpatialMask<GammaFieldType> mask,
                              PhiFieldType & phi,
                              const NeboExpression<ExprType, GammaFieldType> & gamma,
-                             bool minus) const {
+                             bool minus ) const
+      {
         if(phi.device_index() == CPU_INDEX) {
           if(minus)
             cpu_apply<ExprType, MinusGammaType, MinusPhiType>(mask.points(),
@@ -704,7 +711,8 @@ namespace SpatialOps {
                                                             phi,
                                                             gamma,
                                                             highCoef_);
-        } else {
+        }
+        else {
           if(minus)
             phi <<= cond(shift_.minus(mask), (minusGamma_(gamma) - minusPhi_(phi)) / lowCoef_)
                         (phi);
@@ -719,11 +727,13 @@ namespace SpatialOps {
        * \param mask the mask of points where boundary condition applies
        * \param phi the field to modify
        * \param gamma the field to read
+       * \param minus
        */
       inline void operator()(structured::SpatialMask<GammaFieldType> mask,
                              PhiFieldType & phi,
                              const GammaFieldType & gamma,
-                             bool minus) const {
+                             bool minus) const
+      {
         typedef NeboConstField<Initial, GammaFieldType> GammaField;
         typedef NeboExpression<GammaField, GammaFieldType> GammaExpr;
         (*this)(mask, phi, GammaExpr(GammaField(gamma)), minus);
@@ -734,11 +744,13 @@ namespace SpatialOps {
        * \param mask the mask of points where boundary condition applies
        * \param phi the field to modify
        * \param gamma the scalar to read
+       * \param minus
        */
       inline void operator()(structured::SpatialMask<GammaFieldType> mask,
                              PhiFieldType & phi,
                              const double gamma,
-                             bool minus) const {
+                             bool minus) const
+      {
         typedef NeboScalar<Initial, double> GammaScalar;
         typedef NeboExpression<GammaScalar, GammaFieldType> GammaExpr;
         (*this)(mask, phi, GammaExpr(GammaScalar(gamma)), minus);

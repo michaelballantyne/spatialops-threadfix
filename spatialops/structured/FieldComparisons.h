@@ -114,7 +114,7 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error=0.0)
 }
 
 /**
- * @fn template<typename FieldT> bool field_equal(const FieldT&, const FieldT&, double, const double
+ * @fn template<typename FieldT> bool field_equal(const FieldT&, const FieldT&, double, const double)
  * @brief Determines if f1 is element-wise equal to f2 within a certain relative
  * tolerance.
  *

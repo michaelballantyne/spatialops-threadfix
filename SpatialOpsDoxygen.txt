@@ -5,9 +5,7 @@
     on structured meshes.
  *
  * # Getting started
- *  The best way to become acquainted with SpatialOps is to start with the \ref tutorials.
- *
- *  \par Structured Meshes
+ *  The best way to become acquainted with SpatialOps is to start with the <a href="examples.html">Examples</a>.
  *
  * \par license
  *
@@ -43,10 +41,5 @@
  *
  *
  *
- *
- * \page tutorials Tutorials
- * There are several tutorials here to get new users going with SpatialOps and
- * to introduce basic functionality.
- *  - \subpage tut1
  *
  */
