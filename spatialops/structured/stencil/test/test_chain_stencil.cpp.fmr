@@ -499,7 +499,6 @@
 (pp-includes 'spatialops/SpatialOpsTools.h
              'spatialops/structured/FVStaggeredFieldTypes.h
              'spatialops/OperatorDatabase.h
-             'spatialops/structured/FVTools.h
              'spatialops/structured/stencil/FVStaggeredOperatorTypes.h
              'spatialops/structured/stencil/StencilBuilder.h
              'test/TestHelper.h
