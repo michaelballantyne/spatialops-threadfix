@@ -13,7 +13,6 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialMask.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FieldComparisons.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/stencil/FVStaggeredBCOp.h>

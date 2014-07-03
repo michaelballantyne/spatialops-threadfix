@@ -28,7 +28,6 @@
  */
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 
 using namespace SpatialOps;
 using namespace structured;

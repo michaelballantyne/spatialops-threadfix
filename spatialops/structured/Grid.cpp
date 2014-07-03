@@ -22,7 +22,6 @@
 
 #include "Grid.h"
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
 namespace structured{

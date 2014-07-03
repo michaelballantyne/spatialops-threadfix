@@ -25,8 +25,6 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/structured/FVTools.h>
-
 namespace SpatialOps{
 namespace structured{
 

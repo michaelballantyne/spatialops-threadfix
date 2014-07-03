@@ -5,7 +5,6 @@ using std::endl;
 //--- SpatialOps includes ---//
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/Nebo.h>
 #include <spatialops/structured/Grid.h>

@@ -25,7 +25,6 @@
 #include <spatialops/SpatialOpsTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 #include <test/TestHelper.h>

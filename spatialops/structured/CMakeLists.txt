@@ -27,7 +27,6 @@ install( FILES
   FVStaggeredBCTools.h
   FVStaggeredLocationTypes.h
   FVStaggeredFieldTypes.h
-  FVTools.h
   Grid.h
   GhostData.h
   IndexTriplet.h

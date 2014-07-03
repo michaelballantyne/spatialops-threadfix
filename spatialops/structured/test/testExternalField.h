@@ -26,7 +26,6 @@
 #define DEBUG_SPATIAL_FIELD
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/MemoryWindow.h>

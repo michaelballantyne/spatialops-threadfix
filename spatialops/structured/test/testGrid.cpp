@@ -1,5 +1,4 @@
 #include <spatialops/structured/Grid.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <test/TestHelper.h>
 

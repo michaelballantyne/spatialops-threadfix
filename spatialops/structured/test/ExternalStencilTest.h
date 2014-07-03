@@ -24,7 +24,6 @@
 #define EXTERNALSTENCILTEST_H_
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/IndexTriplet.h>

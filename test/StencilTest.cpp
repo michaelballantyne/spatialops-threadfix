@@ -2,7 +2,6 @@
 
 //--- SpatialOps includes ---//
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/IntVec.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>

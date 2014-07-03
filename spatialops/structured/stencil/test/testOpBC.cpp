@@ -12,7 +12,6 @@ using std::endl;
 
 #include <spatialops/Nebo.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/stencil/FVStaggeredBCOp.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>

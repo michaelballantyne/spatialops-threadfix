@@ -2,7 +2,6 @@
 
 //--- SpatialOps includes ---//
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/Nebo.h>
 

@@ -1,7 +1,5 @@
 #include <spatialops/SpatialOpsTools.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/GhostData.h>
 
 #include <test/TestHelper.h>
 

@@ -4,10 +4,7 @@
 using std::cout;
 using std::endl;
 
-
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
-#include <spatialops/structured/MemoryWindow.h>
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/particles/ParticleOperators.h>
