@@ -31,7 +31,7 @@
 #include <spatialops/structured/stencil/FVStaggeredBCOp.h>
 #include <spatialops/structured/FVStaggeredBCTools.h>
 
-#include <spatialops/structured/FVStaggeredOperatorTypes.h>
+#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 
 #include <spatialops/structured/SpatialFieldStore.h>
 
