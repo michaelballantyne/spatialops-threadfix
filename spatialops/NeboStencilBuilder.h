@@ -615,7 +615,6 @@ namespace SpatialOps {
       typedef NeboEdgelessStencilBuilder<NeboNil, NonLowSrcPoints,                        PhiFieldType,   PhiFieldType> MinusPhiType;
       typedef NeboEdgelessStencilBuilder<NeboNil, NonHighSrcPoints,                       PhiFieldType,   PhiFieldType> PlusPhiType;
 
-      typedef IntVec IntVec;
       typedef std::vector<IntVec> Points;
       typedef Points::const_iterator PointIterator;
 
