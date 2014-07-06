@@ -234,8 +234,7 @@ namespace SpatialOps{
    *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const GhostData&, const BoundaryCellInfo& )
    *  \brief Obtain the memory window for a field on a patch that is a single, contiguous memory block
    *
-   *  \param dimNoGhost number of points in each direction excluding
-   *    ghost cells
+   *  \param localDim number of points in each direction excluding ghost cells
    *  \param ghost the GhostData information
    *  \param bc BoundaryCellInfo describing the behavior of a field when a (+) side
    *   boundary is present.  Note that a MemoryWindow obtained here is paired for
