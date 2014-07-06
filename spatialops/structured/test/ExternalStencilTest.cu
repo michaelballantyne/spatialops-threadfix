@@ -30,7 +30,6 @@
 #include "ExternalStencilTest.h"
 
 using namespace SpatialOps;
-using namespace structured;
 using namespace Point;
 using namespace ema::cuda;
 
