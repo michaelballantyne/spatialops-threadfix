@@ -40,7 +40,6 @@
 #include <spatialops/structured/MemoryPool.h>
 
 namespace SpatialOps{
-namespace structured{
 
   class ConstMaskIterator : public std::iterator<std::random_access_iterator_tag, bool> {
     typedef ConstMaskIterator MyType;
@@ -555,7 +554,6 @@ namespace structured{
     }
   };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_BitField_h

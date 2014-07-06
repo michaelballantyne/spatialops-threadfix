@@ -11,7 +11,6 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-using namespace structured;
 
 #include <stdexcept>
 using std::cout;

@@ -29,7 +29,6 @@
 #include <spatialops/Nebo.h>
 
 namespace SpatialOps{
-namespace structured{
 
   namespace bmpl = boost::mpl;
 
@@ -187,7 +186,7 @@ namespace structured{
 
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
-  BoundaryConditionOp( const SpatialOps::structured::MemoryWindow& window,
+  BoundaryConditionOp( const SpatialOps::MemoryWindow& window,
                        const std::vector<IntVec>& destIJKPoints,
                        const BCSide side,
                        const BCEval bceval,
@@ -245,7 +244,6 @@ namespace structured{
 
   //------------------------------------------------------------------
 
-} // namespace
 } // namespace SpatialOps
 
 #endif // SpatialOps_FVStaggeredStencilBCOp_h

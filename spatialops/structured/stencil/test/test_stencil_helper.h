@@ -199,12 +199,11 @@ bool check_convergence( const std::vector<double>& spacings,
 //===================================================================
 
 template< typename OpT, typename DirT >
-double apply_stencil( const SpatialOps::structured::IntVec& npts,
+double apply_stencil( const SpatialOps::IntVec& npts,
                       const double length,
                       const bool bcPlus[3] )
 {
   using namespace SpatialOps;
-  using namespace structured;
   typedef typename OpT::type           OpType;
   typedef typename OpT::SrcFieldType   SrcT;
   typedef typename OpT::DestFieldType  DestT;
@@ -255,13 +254,13 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
 
 template< typename OpT, typename SrcT, typename DestT, typename DirT >
 bool
-run_convergence( SpatialOps::structured::IntVec npts,
+run_convergence( SpatialOps::IntVec npts,
                  const bool bcPlus[3],
                  const double length,
                  const double expectedOrder )
 {
   using namespace SpatialOps;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
 
   const size_t nrefine = 5;
 
@@ -283,13 +282,13 @@ run_convergence( SpatialOps::structured::IntVec npts,
 
 template< typename OpT, typename SrcT, typename DestT, typename Dir1T, typename Dir2T >
 bool
-run_convergence( SpatialOps::structured::IntVec npts,
+run_convergence( SpatialOps::IntVec npts,
                  const bool bcPlus[3],
                  const double length,
                  const double expectedOrder )
 {
   using namespace SpatialOps;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
 
   const size_t nrefine = 5;
 

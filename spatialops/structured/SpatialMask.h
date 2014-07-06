@@ -36,11 +36,9 @@
 #include <spatialops/structured/BitField.h>
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    *  \class SpatialMask
-   *  \ingroup structured
    *
    *  \brief Abstracts a mask.
    *
@@ -281,7 +279,6 @@ namespace structured{
     };
   };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialMask_h

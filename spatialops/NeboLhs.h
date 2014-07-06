@@ -66,19 +66,19 @@
 
           template<typename RhsType>
            inline void assign(bool const useGhost, RhsType rhs) {
-              structured::GhostData const ghosts = calculate_actual_ghost(useGhost,
+              GhostData const ghosts = calculate_actual_ghost(useGhost,
                                                                           field_.get_ghost_data(),
                                                                           field_.boundary_info(),
                                                                           rhs.ghosts_with_bc());
 
               /* field_.reset_valid_ghosts(ghosts) */;
 
-              structured::IntVec const extents = field_.window_with_ghost().extent()
+              IntVec const extents = field_.window_with_ghost().extent()
               - field_.get_valid_ghost_data().get_minus() - field_.get_valid_ghost_data().get_plus();
 
-              structured::IntVec const hasBC = field_.boundary_info().has_bc();
+              IntVec const hasBC = field_.boundary_info().has_bc();
 
-              const structured::GhostData limits = structured::GhostData(-
+              const GhostData limits = GhostData(-
                                                                          ghosts.get_minus(0),
                                                                          extents[
                                                                          0] +
@@ -157,7 +157,7 @@
            }
 
           template<typename RhsType>
-           inline void masked_assign(structured::SpatialMask<FieldType> const &
+           inline void masked_assign(SpatialMask<FieldType> const &
                                      mask,
                                      RhsType rhs) {
               #ifdef NEBO_REPORT_BACKEND
@@ -167,18 +167,18 @@
 
               SeqWalkType lhs = init();
 
-              typename RhsType::SeqWalkType expr = rhs.init(structured::IntVec(0,
+              typename RhsType::SeqWalkType expr = rhs.init(IntVec(0,
                                                                                0,
                                                                                0),
-                                                            structured::
+                                                            
                                                             GhostData(0),
-                                                            structured::IntVec(0,
+                                                            IntVec(0,
                                                                                0,
                                                                                0));
 
-              std::vector<structured::IntVec>::const_iterator ip = mask.points().begin();
+              std::vector<IntVec>::const_iterator ip = mask.points().begin();
 
-              std::vector<structured::IntVec>::const_iterator const ep = mask.points().end();
+              std::vector<IntVec>::const_iterator const ep = mask.points().end();
 
               for(; ip != ep; ip++) {
                  int const x = (*ip)[0];
@@ -207,21 +207,21 @@
                        if(rhs.cpu_ready()) {
                           SeqWalkType lhs = init();
 
-                          typename RhsType::SeqWalkType expr = rhs.init(structured::
+                          typename RhsType::SeqWalkType expr = rhs.init(
                                                                         IntVec(0,
                                                                                0,
                                                                                0),
-                                                                        structured::
+                                                                        
                                                                         GhostData(0),
-                                                                        structured::
+                                                                        
                                                                         IntVec(0,
                                                                                0,
                                                                                0));
 
-                          std::vector<structured::IntVec>::const_iterator ip =
+                          std::vector<IntVec>::const_iterator ip =
                           mask.points().begin();
 
-                          std::vector<structured::IntVec>::const_iterator const
+                          std::vector<IntVec>::const_iterator const
                           ep = mask.points().end();
 
                           for(; ip != ep; ip++) {
@@ -259,16 +259,16 @@
                  {
                     SeqWalkType lhs = init();
 
-                    typename RhsType::SeqWalkType expr = rhs.init(structured::
+                    typename RhsType::SeqWalkType expr = rhs.init(
                                                                   IntVec(0, 0, 0),
-                                                                  structured::
+                                                                  
                                                                   GhostData(0),
-                                                                  structured::
+                                                                  
                                                                   IntVec(0, 0, 0));
 
-                    std::vector<structured::IntVec>::const_iterator ip = mask.points().begin();
+                    std::vector<IntVec>::const_iterator ip = mask.points().begin();
 
-                    std::vector<structured::IntVec>::const_iterator const ep =
+                    std::vector<IntVec>::const_iterator const ep =
                     mask.points().end();
 
                     for(; ip != ep; ip++) {
@@ -295,10 +295,10 @@
          private:
           template<typename RhsType>
            inline void cpu_assign(RhsType rhs,
-                                  structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC,
-                                  structured::GhostData const limits) {
+                                  IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC,
+                                  GhostData const limits) {
               #ifdef ENABLE_THREADS
                  if(is_thread_parallel()) {
                     thread_parallel_assign<RhsType>(rhs,
@@ -322,10 +322,10 @@
 
           template<typename RhsType>
            inline void sequential_assign(RhsType rhs,
-                                         structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
-                                         structured::GhostData const limits) {
+                                         IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         GhostData const limits) {
               #ifdef NEBO_REPORT_BACKEND
                  std::cout << "Starting Nebo sequential" << std::endl
               #endif
@@ -342,13 +342,13 @@
           #ifdef ENABLE_THREADS
              template<typename RhsType>
               inline void thread_parallel_assign(RhsType rhs,
-                                                 structured::IntVec const &
+                                                 IntVec const &
                                                  extents,
-                                                 structured::GhostData const &
+                                                 GhostData const &
                                                  ghosts,
-                                                 structured::IntVec const &
+                                                 IntVec const &
                                                  hasBC,
-                                                 structured::GhostData const
+                                                 GhostData const
                                                  limits) {
                  #ifdef NEBO_REPORT_BACKEND
                     std::cout << "Starting Nebo thread parallel" << std::endl
@@ -365,9 +365,9 @@
 
                  RhsResizeType new_rhs = rhs.resize();
 
-                 structured::GhostData localLimits;
+                 GhostData localLimits;
 
-                 const structured::IntVec split = nebo_find_partition(structured::
+                 const IntVec split = nebo_find_partition(
                                                                       IntVec(limits.get_plus(0)
                                                                              -
                                                                              limits.get_minus(0),
@@ -381,7 +381,7 @@
 
                  const int max = nebo_partition_count(split);
 
-                 structured::IntVec location = structured::IntVec(0, 0, 0);
+                 IntVec location = IntVec(0, 0, 0);
 
                  for(int count = 0; count < max; count++) {
                     nebo_set_up_extents(location, split, localLimits, limits);
@@ -414,10 +414,10 @@
           #ifdef __CUDACC__
              template<typename RhsType>
               inline void gpu_assign(RhsType rhs,
-                                     structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC,
-                                     structured::GhostData const limits) {
+                                     IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC,
+                                     GhostData const limits) {
                  #ifdef NEBO_REPORT_BACKEND
                     std::cout << "Starting Nebo CUDA" << std::endl
                  #endif
@@ -509,11 +509,11 @@
              #ifdef NEBO_GPU_TEST
                 template<typename RhsType>
                  inline void gpu_test_assign(RhsType rhs,
-                                             structured::IntVec const & extents,
-                                             structured::GhostData const &
+                                             IntVec const & extents,
+                                             GhostData const &
                                              ghosts,
-                                             structured::IntVec const & hasBC,
-                                             structured::GhostData const limits) {
+                                             IntVec const & hasBC,
+                                             GhostData const limits) {
                     #ifdef NEBO_REPORT_BACKEND
                        std::cout << "Starting Nebo CUDA with Nebo copying" <<
                        std::endl
@@ -527,7 +527,7 @@
                                            field_.boundary_info(),
                                            field_.get_valid_ghost_data(),
                                            NULL,
-                                           structured::InternalStorage,
+                                           InternalStorage,
                                            GPU_INDEX);
 
                        NeboField<Initial, FieldType> gpu_lhs(gpu_field);
@@ -587,10 +587,10 @@
              #ifdef ENABLE_THREADS
                 template<typename RhsType>
                  inline void assign(RhsType const & rhs,
-                                    structured::IntVec const & extents,
-                                    structured::GhostData const & ghosts,
-                                    structured::IntVec const & hasBC,
-                                    structured::GhostData const limits,
+                                    IntVec const & extents,
+                                    GhostData const & ghosts,
+                                    IntVec const & hasBC,
+                                    GhostData const limits,
                                     Semaphore * semaphore) {
                     init().assign(rhs.init(extents, ghosts, hasBC), limits);
 
@@ -626,7 +626,7 @@
           {}
 
           template<typename RhsType>
-           inline void assign(RhsType rhs, structured::GhostData const limits) {
+           inline void assign(RhsType rhs, GhostData const limits) {
               for(int z = limits.get_minus(2); z < limits.get_plus(2); z++) {
                  for(int y = limits.get_minus(1); y < limits.get_plus(1); y++) {
                     for(int x = limits.get_minus(0); x < limits.get_plus(0); x++)

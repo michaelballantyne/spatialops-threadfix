@@ -45,7 +45,6 @@
 #define GHOST_MAX 9001
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    * \class GhostData
@@ -265,8 +264,6 @@ namespace structured{
     return out;
   }
 
-
-  } // namespace structured
 } // namespace SpatialOps
 
 #endif /* SpatialOps_GhostData_h */

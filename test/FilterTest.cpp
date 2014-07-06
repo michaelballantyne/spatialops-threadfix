@@ -17,7 +17,6 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-using namespace structured;
 
 int print_length = 10;
 
@@ -37,7 +36,7 @@ template<typename Field>
 void print_all(Field const & given) {
   typename Field::const_iterator ig = given.begin();
 
-  structured::MemoryWindow window = given.window_with_ghost();
+  MemoryWindow window = given.window_with_ghost();
   for(int kk = 0; kk < window.glob_dim(2); kk++) {
       for(int jj = 0; jj < window.glob_dim(1); jj++) {
           for(int ii = 0; ii < window.glob_dim(0); ii++, ++ig) {

@@ -36,8 +36,6 @@
 #include <boost/type_traits.hpp>
 
 namespace SpatialOps{
-namespace structured{
-
 
 template< typename T >
 Pool<T>::Pool() : deviceIndex_(0)
@@ -227,5 +225,4 @@ template class Pool<double>;
 template class Pool<float>;
 template class Pool<unsigned int>;
 
-}
-}
+} // namespace SpatialOps

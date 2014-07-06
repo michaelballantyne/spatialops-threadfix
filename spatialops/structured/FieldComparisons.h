@@ -36,7 +36,6 @@
  * WARNING: Slow in general and comparison with external fields will incur copy penalties.
  */
 namespace SpatialOps{
-namespace structured{
 
 template<typename FieldT>
 class FieldComparisonHelper;
@@ -604,7 +603,6 @@ class FieldComparisonHelper
     friend bool field_equal_ulp<FieldT>(const double d, const FieldT& f1, const unsigned int ulps);
 };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif //SpatialOps_FieldComparisons_h

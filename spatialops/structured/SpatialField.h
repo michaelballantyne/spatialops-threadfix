@@ -66,7 +66,6 @@
 #endif
 
 namespace SpatialOps{
-namespace structured{
 
   //Forward Declaration
   template <typename T> class Pool;
@@ -79,7 +78,6 @@ namespace structured{
 
   /**
    *  \class SpatialField
-   *  \ingroup structured
    *  \ingroup fields
    *  \author James C. Sutherland
    *
@@ -1888,7 +1886,6 @@ SpatialField<Location,T>::operator=(const SpatialField& other)
                          prototypeWindow.extent() + inc );
   }
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialField_h

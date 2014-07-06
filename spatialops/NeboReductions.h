@@ -60,12 +60,12 @@
 
           ExprType const initial = fexpr.expr();
 
-          structured::GhostData const ghosts = (useGhost ? initial.ghosts_without_bc()
-                                                : structured::GhostData(0));
+          GhostData const ghosts = (useGhost ? initial.ghosts_without_bc()
+                                                : GhostData(0));
 
-          structured::IntVec const extents = initial.extents();
+          IntVec const extents = initial.extents();
 
-          structured::IntVec const hasBC = initial.has_bc();
+          IntVec const hasBC = initial.has_bc();
 
           const int xLow = - ghosts.get_minus(0);
 

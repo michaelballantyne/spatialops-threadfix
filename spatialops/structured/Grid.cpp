@@ -24,7 +24,6 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 
 namespace SpatialOps{
-namespace structured{
 
   template< typename DirT, typename FieldT >
   double shift(){
@@ -113,5 +112,4 @@ namespace structured{
   //
   //==================================================================
 
-} // namespace structured
 } // namespace SpatialOps

@@ -77,11 +77,11 @@
           : test_(t), expr_(e)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return min(test_.ghosts_with_bc(), expr_.ghosts_with_bc());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return min(test_.ghosts_without_bc(), expr_.ghosts_without_bc());
           }
 
@@ -89,7 +89,7 @@
              return test_.has_extents() || expr_.has_extents();
           }
 
-          inline structured::IntVec extents(void) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
                 if(test_.has_extents() && expr_.has_extents()) {
                    assert(test_.extents() == expr_.extents());
@@ -100,13 +100,13 @@
              return (test_.has_extents() ? test_.extents() : expr_.extents());
           }
 
-          inline structured::IntVec has_bc(void) const {
+          inline IntVec has_bc(void) const {
              return test_.has_bc() || expr_.has_bc();
           }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(test_.init(extents, ghosts, hasBC),
                                 expr_.init(extents, ghosts, hasBC));
           }
@@ -127,9 +127,9 @@
                 return test_.gpu_ready(deviceIndex) && expr_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(test_.gpu_init(extents,
                                                   ghosts,
@@ -172,9 +172,9 @@
              : test_(test), expr_(expr)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(test_.init(extents, ghosts, hasBC),
                                    expr_.init(extents, ghosts, hasBC));
              }
@@ -275,11 +275,11 @@
           : clause_(c), otherwise_(e)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return min(clause_.ghosts_with_bc(), otherwise_.ghosts_with_bc());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return min(clause_.ghosts_without_bc(), otherwise_.ghosts_without_bc());
           }
 
@@ -287,7 +287,7 @@
              return clause_.has_extents() || otherwise_.has_extents();
           }
 
-          inline structured::IntVec extents(void) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
                 if(clause_.has_extents() && otherwise_.has_extents()) {
                    assert(clause_.extents() == otherwise_.extents());
@@ -298,13 +298,13 @@
              return (clause_.has_extents() ? clause_.extents() : otherwise_.extents());
           }
 
-          inline structured::IntVec has_bc(void) const {
+          inline IntVec has_bc(void) const {
              return clause_.has_bc() || otherwise_.has_bc();
           }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(clause_.init(extents, ghosts, hasBC),
                                 otherwise_.init(extents, ghosts, hasBC));
           }
@@ -325,9 +325,9 @@
                 return clause_.gpu_ready(deviceIndex) && otherwise_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(clause_.gpu_init(extents,
                                                     ghosts,
@@ -374,9 +374,9 @@
              : clause_(clause), otherwise_(otherwise)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(clause_.init(extents, ghosts, hasBC),
                                    otherwise_.init(extents, ghosts, hasBC));
              }
@@ -829,7 +829,7 @@
                                                             value_type>,
                                                  FieldType>,
                                       Clauses,
-                                      FieldType> > operator ()(structured::
+                                      FieldType> > operator ()(
                                                                SpatialMask<FieldType>
                                                                const & mask,
                                                                double const d) {
@@ -853,7 +853,7 @@
                                                                 FieldType>,
                                                  FieldType>,
                                       Clauses,
-                                      FieldType> > operator ()(structured::
+                                      FieldType> > operator ()(
                                                                SpatialMask<FieldType>
                                                                const & mask,
                                                                FieldType const &
@@ -878,7 +878,7 @@
                                                   Expr,
                                                   FieldType>,
                                        Clauses,
-                                       FieldType> > operator ()(structured::
+                                       FieldType> > operator ()(
                                                                 SpatialMask<FieldType>
                                                                 const & mask,
                                                                 NeboExpression<Expr,
@@ -1284,7 +1284,7 @@
                                                                FieldType::
                                                                field_type,
                                                                FieldType>::
-                                       Result> > operator ()(structured::
+                                       Result> > operator ()(
                                                              SpatialMask<FieldType>
                                                              const & mask,
                                                              double const d) {
@@ -1339,7 +1339,7 @@
                                                                FieldType::
                                                                field_type,
                                                                FieldType>::
-                                       Result> > operator ()(structured::
+                                       Result> > operator ()(
                                                              SpatialMask<FieldType>
                                                              const & mask,
                                                              FieldType const & f) {
@@ -1388,7 +1388,7 @@
                                                                FieldType::
                                                                field_type,
                                                                FieldType>::
-                                       Result> > operator ()(structured::
+                                       Result> > operator ()(
                                                              SpatialMask<FieldType>
                                                              const & mask,
                                                              NeboExpression<Expr,
@@ -1628,7 +1628,7 @@
                                    typename NeboFieldCheck<typename FieldType::
                                                            field_type,
                                                            FieldType>::Result> >
-       cond(structured::SpatialMask<FieldType> const & mask, double const d) {
+       cond(SpatialMask<FieldType> const & mask, double const d) {
           NeboMask<Initial, FieldType> typedef Mask;
 
           NeboScalar<Initial, typename FieldType::value_type> typedef Scalar;
@@ -1667,7 +1667,7 @@
                                    typename NeboFieldCheck<typename FieldType::
                                                            field_type,
                                                            FieldType>::Result> >
-       cond(structured::SpatialMask<FieldType> const & mask, FieldType const & f) {
+       cond(SpatialMask<FieldType> const & mask, FieldType const & f) {
           NeboMask<Initial, FieldType> typedef Mask;
 
           NeboConstField<Initial, FieldType> typedef Field;
@@ -1700,7 +1700,7 @@
                                    typename NeboFieldCheck<typename FieldType::
                                                            field_type,
                                                            FieldType>::Result> >
-       cond(structured::SpatialMask<FieldType> const & mask,
+       cond(SpatialMask<FieldType> const & mask,
             NeboExpression<Expr, FieldType> const & e) {
           NeboMask<Initial, FieldType> typedef Mask;
 

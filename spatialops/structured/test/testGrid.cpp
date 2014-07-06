@@ -5,7 +5,6 @@
 #include <cmath>
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 

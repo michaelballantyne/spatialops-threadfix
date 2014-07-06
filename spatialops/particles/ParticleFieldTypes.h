@@ -48,8 +48,8 @@ namespace Particle{
    */
   struct ParticleFieldTraits{
     typedef NODIR FaceDir;
-    typedef structured::IndexTriplet<0,0,0>  Offset;
-    typedef structured::IndexTriplet<0,0,0>  BCExtra;
+    typedef IndexTriplet<0,0,0>  Offset;
+    typedef IndexTriplet<0,0,0>  BCExtra;
   };
 
   /**
@@ -60,7 +60,7 @@ namespace Particle{
    * Note that ParticleField objects should not have any structure associated
    * with them.  They are simply treated as an array of values.
    */
-  typedef structured::SpatialField< ParticleFieldTraits > ParticleField;
+  typedef SpatialField< ParticleFieldTraits > ParticleField;
 
 
 } // namespace Particle

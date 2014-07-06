@@ -30,7 +30,6 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 
 using namespace SpatialOps;
-using namespace structured;
 
 // If we are compiling with GPU CUDA support, create fields on the device.
 // Otherwise, create them on the host.
@@ -48,7 +47,7 @@ int main()
   // Determine if we have physical boundaries present on each (+) face.
   const bool bcx=true, bcy=true, bcz=true;
 
-  typedef SpatialOps::structured::SVolField FieldT;
+  typedef SpatialOps::SVolField FieldT;
 
   const GhostData nghost(1);
   const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );

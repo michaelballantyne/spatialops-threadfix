@@ -7,7 +7,6 @@
 #include <vector>
 
 using namespace SpatialOps;
-using namespace structured;
 
 template<typename DirT>
 bool run_test( const IntVec& dim )

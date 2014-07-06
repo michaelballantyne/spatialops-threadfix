@@ -38,15 +38,11 @@
 #include <spatialops/Nebo.h>
 
 namespace SpatialOps{
-namespace structured{
 
 /**
  *  \file FVStaggered.h
- *
- *
  */
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_structured_stencil_FVStaggered_h

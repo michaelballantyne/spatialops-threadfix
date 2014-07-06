@@ -12,22 +12,22 @@ using std::endl;
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 
-typedef SpatialOps::structured::SVolField   CellField;
-typedef SpatialOps::structured::SSurfXField XSideField;
-typedef SpatialOps::structured::SSurfYField YSideField;
-typedef SpatialOps::structured::SSurfZField ZSideField;
+typedef SpatialOps::SVolField   CellField;
+typedef SpatialOps::SSurfXField XSideField;
+typedef SpatialOps::SSurfYField YSideField;
+typedef SpatialOps::SSurfZField ZSideField;
 
-typedef SpatialOps::structured::BasicOpTypes<CellField>::GradX      GradX;
-typedef SpatialOps::structured::BasicOpTypes<CellField>::InterpC2FX InterpX;
-typedef SpatialOps::structured::BasicOpTypes<CellField>::DivX       DivX;
+typedef SpatialOps::BasicOpTypes<CellField>::GradX      GradX;
+typedef SpatialOps::BasicOpTypes<CellField>::InterpC2FX InterpX;
+typedef SpatialOps::BasicOpTypes<CellField>::DivX       DivX;
 
-typedef SpatialOps::structured::BasicOpTypes<CellField>::GradY      GradY;
-typedef SpatialOps::structured::BasicOpTypes<CellField>::InterpC2FY InterpY;
-typedef SpatialOps::structured::BasicOpTypes<CellField>::DivY       DivY;
+typedef SpatialOps::BasicOpTypes<CellField>::GradY      GradY;
+typedef SpatialOps::BasicOpTypes<CellField>::InterpC2FY InterpY;
+typedef SpatialOps::BasicOpTypes<CellField>::DivY       DivY;
 
-typedef SpatialOps::structured::BasicOpTypes<CellField>::GradZ      GradZ;
-typedef SpatialOps::structured::BasicOpTypes<CellField>::InterpC2FZ InterpZ;
-typedef SpatialOps::structured::BasicOpTypes<CellField>::DivZ       DivZ;
+typedef SpatialOps::BasicOpTypes<CellField>::GradZ      GradZ;
+typedef SpatialOps::BasicOpTypes<CellField>::InterpC2FZ InterpZ;
+typedef SpatialOps::BasicOpTypes<CellField>::DivZ       DivZ;
 
 
 //--- local includes ---//
@@ -38,7 +38,7 @@ typedef SpatialOps::structured::BasicOpTypes<CellField>::DivZ       DivZ;
 #include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace po = boost::program_options;
-namespace SS = SpatialOps::structured;
+using namespace SpatialOps;
 
 int main( int iarg, char* carg[] )
 {
@@ -73,9 +73,9 @@ int main( int iarg, char* carg[] )
 
   cout << " [nx,ny,nz] = [" << npts[0] << "," << npts[1] << "," << npts[2] << "]" << endl
        << " ntime = " << ntime << endl
-#     ifdef ENABLE_THREADS
+#      ifdef ENABLE_THREADS
        << " NTHREADS = " << NTHREADS << endl
-#     endif
+#      endif
        << endl;
 
   // set mesh spacing (uniform, structured mesh)
@@ -90,7 +90,7 @@ int main( int iarg, char* carg[] )
 
   // build the spatial operators
   SpatialOps::OperatorDatabase sodb;
-  SpatialOps::structured::build_stencils( npts[0],   npts[1],   npts[2],
+  SpatialOps::build_stencils( npts[0],   npts[1],   npts[2],
                                           length[0], length[1], length[2],
                                           sodb );
 
@@ -108,11 +108,11 @@ int main( int iarg, char* carg[] )
   const InterpZ* const interpz = sodb.retrieve_operator<InterpZ>();
 
   // build fields
-  const SS::GhostData ghost(1);
+  const GhostData ghost(1);
 
-  const SS::BoundaryCellInfo cellBC = SS::BoundaryCellInfo::build< CellField>(true,true,true);
+  const BoundaryCellInfo cellBC = BoundaryCellInfo::build< CellField>(true,true,true);
 
-  const SS::MemoryWindow vwindow( SS::get_window_with_ghost(npts,ghost,cellBC) );
+  const MemoryWindow vwindow( get_window_with_ghost(npts,ghost,cellBC) );
 
   CellField temperature( vwindow, cellBC, ghost, NULL );
   CellField thermCond  ( vwindow, cellBC, ghost, NULL );
@@ -122,17 +122,17 @@ int main( int iarg, char* carg[] )
   CellField zcoord     ( vwindow, cellBC, ghost, NULL );
   CellField rhs        ( vwindow, cellBC, ghost, NULL );
 
-  SS::Grid grid( npts, length );
+  Grid grid( npts, length );
   grid.set_coord<SpatialOps::XDIR>( xcoord );
   grid.set_coord<SpatialOps::YDIR>( ycoord );
   grid.set_coord<SpatialOps::ZDIR>( zcoord );
 
-  const SS::BoundaryCellInfo xBC = SS::BoundaryCellInfo::build<XSideField>(true,true,true);
-  const SS::BoundaryCellInfo yBC = SS::BoundaryCellInfo::build<YSideField>(true,true,true);
-  const SS::BoundaryCellInfo zBC = SS::BoundaryCellInfo::build<ZSideField>(true,true,true);
-  const SS::MemoryWindow xwindow( SS::get_window_with_ghost(npts,ghost,xBC) );
-  const SS::MemoryWindow ywindow( SS::get_window_with_ghost(npts,ghost,yBC) );
-  const SS::MemoryWindow zwindow( SS::get_window_with_ghost(npts,ghost,zBC) );
+  const BoundaryCellInfo xBC = BoundaryCellInfo::build<XSideField>(true,true,true);
+  const BoundaryCellInfo yBC = BoundaryCellInfo::build<YSideField>(true,true,true);
+  const BoundaryCellInfo zBC = BoundaryCellInfo::build<ZSideField>(true,true,true);
+  const MemoryWindow xwindow( get_window_with_ghost(npts,ghost,xBC) );
+  const MemoryWindow ywindow( get_window_with_ghost(npts,ghost,yBC) );
+  const MemoryWindow zwindow( get_window_with_ghost(npts,ghost,zBC) );
 
   XSideField xflux( xwindow, xBC, ghost, NULL );
   YSideField yflux( ywindow, yBC, ghost, NULL );

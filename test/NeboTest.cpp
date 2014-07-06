@@ -12,10 +12,8 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
-
 
 typedef double (*EXPR)(int ii, int jj, int kk); ///< Explicit type for a function which can be evaluated at each point in field
 

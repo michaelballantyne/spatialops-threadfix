@@ -29,7 +29,6 @@
 #include <spatialops/structured/MemoryTypes.h>
 
 namespace SpatialOps {
-namespace structured {
 
 template<typename T>
 class Pool{
@@ -61,7 +60,6 @@ class Pool{
 
 template<typename T> bool Pool<T>::destroyed_ = false;
 
-} //namespace structured
 } //namespace SpatialOps
 
 #endif

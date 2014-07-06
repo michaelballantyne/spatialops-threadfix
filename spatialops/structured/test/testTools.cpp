@@ -6,13 +6,10 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+using namespace SpatialOps;
 
 int main()
 {
-
-  using namespace SpatialOps;
-  using namespace structured;
-
   TestHelper status(true);
 
   status( Abs<-2>::result == 2, "Abs(-2)" );

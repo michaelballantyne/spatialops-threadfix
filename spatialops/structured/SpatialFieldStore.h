@@ -226,9 +226,9 @@ public:
    */
   template<typename FieldT>
   inline static SpatFldPtr<FieldT>
-  get_from_window( const structured::MemoryWindow& w,
-                   const structured::BoundaryCellInfo& bc,
-                   const structured::GhostData& ghost,
+  get_from_window( const MemoryWindow& w,
+                   const BoundaryCellInfo& bc,
+                   const GhostData& ghost,
                    const short int deviceIndex = CPU_INDEX );
 
   /**
@@ -247,7 +247,6 @@ public:
   get( const ProtoT& f,
        short int deviceIndex = -9999 )
   {
-    using namespace structured;
     if( deviceIndex == -9999 ) deviceIndex = f.device_index();
     return get_from_window<FieldT>( create_new_memory_window<FieldT,ProtoT>(f),
                                     create_new_boundary_cell_info<FieldT,ProtoT>(f),
@@ -447,17 +446,17 @@ template<typename FieldT>
 inline
 SpatFldPtr<FieldT>
 SpatialFieldStore::
-get_from_window( const structured::MemoryWindow& window,
-                 const structured::BoundaryCellInfo& bc,
-                 const structured::GhostData& ghost,
+get_from_window( const MemoryWindow& window,
+                 const BoundaryCellInfo& bc,
+                 const GhostData& ghost,
                  const short int deviceIndex )
 {
   typedef typename FieldT::value_type ValT;
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
-    const structured::MemoryWindow mw( window.extent(),
-                                       structured::IntVec(0,0,0),
+    const MemoryWindow mw( window.extent(),
+                                       IntVec(0,0,0),
                                        window.extent() );
     const size_t npts = mw.glob_npts();
 
@@ -468,16 +467,16 @@ get_from_window( const structured::MemoryWindow& window,
 
     // Allocate from a store
     if( deviceIndex == CPU_INDEX ) {
-      ValT* fnew = structured::Pool<ValT>::self().get(deviceIndex,npts);
+      ValT* fnew = Pool<ValT>::self().get(deviceIndex,npts);
       return SpatFldPtr<FieldT>( new FieldT( mw,bc,ghost,fnew,
-                                             structured::ExternalStorage),
+                                             ExternalStorage),
                                  true );
     }
 # ifdef ENABLE_CUDA
     else if( IS_GPU_INDEX(deviceIndex) ){
-      ValT* fnew = structured::Pool<ValT>::self().get(deviceIndex, npts);
+      ValT* fnew = Pool<ValT>::self().get(deviceIndex, npts);
       return SpatFldPtr<FieldT>( new FieldT( mw, bc, ghost, fnew,
-                                             structured::ExternalStorage,
+                                             ExternalStorage,
                                              deviceIndex ),
                                  true );
     }
@@ -512,7 +511,7 @@ void SpatialFieldStore::restore_field( const short int deviceIndex, FieldT& fiel
     throw( std::runtime_error(msg.str()));
   }
 # endif
-  structured::Pool<ValT>::self().put( deviceIndex, values );
+  Pool<ValT>::self().put( deviceIndex, values );
 }
 
 } // namespace SpatialOps
