@@ -46,13 +46,6 @@ int main()
   // Define the size of the field (nx,ny,nz)
   const IntVec fieldDim( 10, 9, 8 );
 
-  // Determine if we have physical boundaries present on each (+) face.
-  const bool bcx=true, bcy=true, bcz=true;
-
-  const GhostData nghost(1);
-  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
-  const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
-
   //----------------------------------------------------------------------------
   // Build a grid. This is a convenient way to set coordinate values that will
   // be used below.
@@ -62,6 +55,12 @@ int main()
   //----------------------------------------------------------------------------
   // Create fields
   typedef SpatialOps::SVolField FieldT;
+
+  const bool bcx=true, bcy=true, bcz=true;
+  const GhostData nghost(1);
+  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
+  const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
+
   FieldT x( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
   FieldT y( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
   FieldT z( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
@@ -81,18 +80,17 @@ int main()
   f <<= sin(x) + cos(y) + tanh(z);
 
   // Field reduction operations
-  const double fmax = max( f );                   // maximum of a field
-  const double max2 = max( sin(x)*cos(x) + 2.0 ); // maximum of an expression
-  const double fnorm = field_norm( f );           // L2 norm of f
+  const double fmax = field_max( f );                   // maximum of a field
+  const double max2 = field_max( sin(x)*cos(x) + 2.0 ); // maximum of an expression
+  const double fnorm = field_norm( f );                 // L2 norm of f
 
-  // another example of a field operation
-  g <<= max(f) + min(f) + exp(-x-y-z);            // combine several field operations
+  g <<= field_max(f) + field_min(f) + exp(-x-y-z);      // combine several field operations
 
   // conditional (if/then/else...)
-  g <<= cond( f >  0, x+z )  // if     ( f[i] >  0 ) g[i] = x[i]+z[i];
-            ( f < -2, y   )  // else if( f[i] < -2 ) g[i] = y[i];
-            ( f < -1, 3.4 )  // else if( f[i] < -2 ) g[i] = 3.45
-            ( f );           // else                 g[i] = f[i];
+  g <<= cond( f >  0, x+z )          // if     ( f[i] >  0 ) g[i] = x[i]+z[i];
+            ( f < -2, y   )          // else if( f[i] < -2 ) g[i] = y[i];
+            ( f < -1, 3.4 )          // else if( f[i] < -1 ) g[i] = 3.45
+            ( f );                   // else                 g[i] = f[i];
 
   return 0;
 }
