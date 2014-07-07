@@ -79,12 +79,14 @@ int main()
   // work on GPU, serial CPU and multicore CPU.
   f <<= sin(x) + cos(y) + tanh(z);
 
-  // Field reduction operations
+# ifndef ENABLE_CUDA
+  // Field reduction operations - currently only supported on CPU
   const double fmax = field_max( f );                   // maximum of a field
   const double max2 = field_max( sin(x)*cos(x) + 2.0 ); // maximum of an expression
   const double fnorm = field_norm( f );                 // L2 norm of f
 
   g <<= field_max(f) + field_min(f) + exp(-x-y-z);      // combine several field operations
+# endif
 
   // conditional (if/then/else...)
   g <<= cond( f >  0, x+z )          // if     ( f[i] >  0 ) g[i] = x[i]+z[i];
