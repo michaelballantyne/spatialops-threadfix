@@ -511,7 +511,6 @@
 (pp-alt-include 'ReferenceStencil.h)
 
 (stmt 'using 'namespace 'SpatialOps)
-(stmt 'using 'namespace 'structured)
 (stmt 'using (scope 'std 'cout))
 (stmt 'using (scope 'std 'endl))
 (stmt 'using (scope 'std 'string))

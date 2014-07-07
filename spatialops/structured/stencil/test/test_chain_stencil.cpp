@@ -35,7 +35,6 @@
 #include <stdexcept>
 #include "ReferenceStencil.h"
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 using std::string;
