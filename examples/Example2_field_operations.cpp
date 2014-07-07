@@ -1,6 +1,6 @@
 /**
- *  \file   Example1_field_creation.cpp
- *  \date   Jul 2, 2014
+ *  \file   Example2_field_operations.cpp
+ *  \date   Jul 6, 2014
  *  \author "James C. Sutherland"
  *
  *
@@ -25,11 +25,13 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  * IN THE SOFTWARE.
+ *
  */
 
-#include <spatialops/structured/FVStaggered.h>  // everything required to build fields on structured meshes
-
+#include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/Grid.h> // convenient way to define coordinates
 using namespace SpatialOps;
+
 
 // If we are compiling with GPU CUDA support, create fields on the device.
 // Otherwise, create them on the host.
@@ -47,42 +49,50 @@ int main()
   // Determine if we have physical boundaries present on each (+) face.
   const bool bcx=true, bcy=true, bcz=true;
 
-
-  //----------------------------------------------------------------------------
-  // Create a field with the specified size and have memory managed internally
-  // (hence the NULL argument and the InternalStorage flag)
-  // Also create this field in the appropriate location (GPU/CPU) depending on
-  // how this was configured.
-  typedef SVolField FieldT;  // SVolField = Scalar Volume Field (non-staggered, cell-centered field)
   const GhostData nghost(1);
   const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
   const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
 
+  //----------------------------------------------------------------------------
+  // Build a grid. This is a convenient way to set coordinate values that will
+  // be used below.
+  std::vector<double> domainLength(3,1.0);  // a cube of unit length
+  const Grid grid( fieldDim, domainLength );
+
+  //----------------------------------------------------------------------------
+  // Create fields
+  typedef SpatialOps::SVolField FieldT;
+  FieldT x( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT y( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT z( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+
   FieldT f( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT g( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
 
-
-  //----------------------------------------------------------------------------
-  // Create some fields from the "SpatialFieldStore" using the previously
-  // created field as a prototype.  SpatFldPtr has regular pointer semantics
-  // but is a reference-counted pointer.
-
-  SpatFldPtr<FieldT> f2 = SpatialFieldStore::get<FieldT>(f); // field with same layout as "f"
-
+  grid.set_coord<XDIR>(x);
+  grid.set_coord<YDIR>(y);
+  grid.set_coord<ZDIR>(z);
 
   //----------------------------------------------------------------------------
-  // f and f2 are volume fields on the scalar (non-staggered) mesh.  Now let's
-  // create a few surface fields.  We will use type inference to get the face
-  // field associated with the cell field type that we are using
+  // Perform operations on fields
 
-  typedef FaceTypes<FieldT>::XFace XFaceT;  // X-face field on the scalar mesh
-  typedef FaceTypes<FieldT>::YFace YFaceT;  // Y-face field on the scalar mesh
-  typedef FaceTypes<FieldT>::ZFace ZFaceT;  // Z-face field on the scalar mesh
+  // Assign field values.  Note that this is a vectorized statement that will
+  // work on GPU, serial CPU and multicore CPU.
+  f <<= sin(x) + cos(y) + tanh(z);
 
-  SpatFldPtr<XFaceT> fx = SpatialFieldStore::get<XFaceT>(f); // field on x-face of the same grid as "f"
-  SpatFldPtr<YFaceT> fy = SpatialFieldStore::get<YFaceT>(f); // field on y-face of the same grid as "f"
-  SpatFldPtr<ZFaceT> fz = SpatialFieldStore::get<ZFaceT>(f); // field on z-face of the same grid as "f"
+  // Field reduction operations
+  const double fmax = max( f );                   // maximum of a field
+  const double max2 = max( sin(x)*cos(x) + 2.0 ); // maximum of an expression
+  const double fnorm = field_norm( f );           // L2 norm of f
+
+  // another example of a field operation
+  g <<= max(f) + min(f) + exp(-x-y-z);            // combine several field operations
+
+  // conditional (if/then/else...)
+  g <<= cond( f >  0, x+z )  // if     ( f[i] >  0 ) g[i] = x[i]+z[i];
+            ( f < -2, y   )  // else if( f[i] < -2 ) g[i] = y[i];
+            ( f < -1, 3.4 )  // else if( f[i] < -2 ) g[i] = 3.45
+            ( f );           // else                 g[i] = f[i];
 
   return 0;
 }
-
-

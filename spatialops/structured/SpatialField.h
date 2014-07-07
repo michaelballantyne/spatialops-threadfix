@@ -65,15 +65,24 @@
 #include <cuda_runtime.h>
 #endif
 
+/**
+ * \file SpatialField.h
+ */
+
 namespace SpatialOps{
 
   //Forward Declaration
   template <typename T> class Pool;
 
+  /**
+   * \enum StorageMode
+   * \ingroup fields
+   * \brief Specifies how memory should be treated in a SpatialField.
+   */
   enum StorageMode
   {
-    InternalStorage,
-    ExternalStorage
+    InternalStorage, ///< memory will be managed internally by SpatialOps
+    ExternalStorage  ///< memory will be managed externally
   };
 
   /**
@@ -138,12 +147,12 @@ namespace SpatialOps{
       typedef typename MultiFieldMap::const_iterator cmapIter;
       typedef typename MultiFieldMap::iterator mapIter;
 
-      MemoryWindow fieldWindow_;	        ///< Full representation of the window to the field ( includes ghost cells )
+      MemoryWindow fieldWindow_;	  ///< Full representation of the window to the field ( includes ghost cells )
       MemoryWindow interiorFieldWindow_;  ///< Window representation sans ghost cells.
 
       const BoundaryCellInfo bcInfo_;     ///< information about this field's behavior on a boundary
-      const GhostData ghosts_;          ///< The total number of ghost cells on each face of this field.
-      GhostData validGhosts_;           ///< The number of valid ghost cells on each face of this field.
+      const GhostData ghosts_;            ///< The total number of ghost cells on each face of this field.
+      GhostData validGhosts_;             ///< The number of valid ghost cells on each face of this field.
 
       T* fieldValues_;                    ///< Values associated with this field in the context of LOCAL_RAM
       T* fieldValuesExtDevice_;           ///< External field pointer ( This pointer will only be valid on the device it was created )
@@ -539,7 +548,10 @@ namespace SpatialOps{
     *         is best, since it will avoid excessive copies.  Safety
     *         suggests that InternalStorage is best, since it
     *         protects against memory corruption and inadvertent
-    *         deletion of the field's underlying memory.
+    *         deletion of the field's underlying memory.  For InternalStorage,
+    *         a NULL pointer may be supplied for fieldValues.  If a non-null
+    *         pointer is supplied, its contents will be copied into the memory
+    *         allocated locally for this field.
     *  \param devIdx the identifier for the GPU/accelerator if the field lives
     *         there. This allows for the case where multiple accelerators are
     *         on a given node.
