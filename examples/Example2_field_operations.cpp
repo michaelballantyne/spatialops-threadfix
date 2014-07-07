@@ -32,15 +32,6 @@
 #include <spatialops/structured/Grid.h> // convenient way to define coordinates
 using namespace SpatialOps;
 
-
-// If we are compiling with GPU CUDA support, create fields on the device.
-// Otherwise, create them on the host.
-#ifdef ENABLE_CUDA
-# define LOCATION GPU_INDEX
-#else
-# define LOCATION CPU_INDEX
-#endif
-
 int main()
 {
   // Define the size of the field (nx,ny,nz)
@@ -61,12 +52,12 @@ int main()
   const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
   const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
 
-  FieldT x( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
-  FieldT y( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
-  FieldT z( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT x( window, bcInfo, nghost, NULL, InternalStorage );
+  FieldT y( window, bcInfo, nghost, NULL, InternalStorage );
+  FieldT z( window, bcInfo, nghost, NULL, InternalStorage );
 
-  FieldT f( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
-  FieldT g( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT f( window, bcInfo, nghost, NULL, InternalStorage );
+  FieldT g( window, bcInfo, nghost, NULL, InternalStorage );
 
   grid.set_coord<XDIR>(x);
   grid.set_coord<YDIR>(y);
@@ -79,14 +70,12 @@ int main()
   // work on GPU, serial CPU and multicore CPU.
   f <<= sin(x) + cos(y) + tanh(z);
 
-# ifndef ENABLE_CUDA
   // Field reduction operations - currently only supported on CPU
   const double fmax = field_max( f );                   // maximum of a field
   const double max2 = field_max( sin(x)*cos(x) + 2.0 ); // maximum of an expression
   const double fnorm = field_norm( f );                 // L2 norm of f
 
   g <<= field_max(f) + field_min(f) + exp(-x-y-z);      // combine several field operations
-# endif
 
   // conditional (if/then/else...)
   g <<= cond( f >  0, x+z )          // if     ( f[i] >  0 ) g[i] = x[i]+z[i];
