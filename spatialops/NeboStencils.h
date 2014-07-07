@@ -224,9 +224,7 @@
                         Collection::possible_ghosts());
           }
 
-          static inline GhostData possible_ghosts(
-                                                              GhostData const &
-                                                              ghosts) {
+          static inline GhostData possible_ghosts(GhostData const & ghosts) {
              return ghosts + possible_ghosts();
           }
 
@@ -235,10 +233,8 @@
                         Collection::possible_ghosts());
           }
 
-          static inline GhostData possible_additive_ghosts(
-                                                                       GhostData
-                                                                       const &
-                                                                       ghosts) {
+          static inline GhostData possible_additive_ghosts(GhostData const &
+                                                           ghosts) {
              return ghosts + possible_additive_ghosts();
           }
       };
@@ -267,9 +263,7 @@
              return additive_reductive_point_to_ghost(Point::int_vec());
           }
 
-          static inline GhostData possible_ghosts(
-                                                              GhostData const &
-                                                              ghosts) {
+          static inline GhostData possible_ghosts(GhostData const & ghosts) {
              return ghosts + possible_ghosts();
           }
 
@@ -277,10 +271,8 @@
              return additive_point_to_ghost(Point::int_vec());
           }
 
-          static inline GhostData possible_additive_ghosts(
-                                                                       GhostData
-                                                                       const &
-                                                                       ghosts) {
+          static inline GhostData possible_additive_ghosts(GhostData const &
+                                                           ghosts) {
              return ghosts + possible_additive_ghosts();
           }
       };
@@ -326,9 +318,7 @@
 
           inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
           inline IntVec has_bc(void) const { return arg_.has_bc(); }
 
@@ -578,9 +568,7 @@
 
           inline bool has_extents(void) const { return arg_.has_extent(); }
 
-          inline IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
           inline IntVec has_bc(void) const { return arg_.has_bc(); }
 
@@ -874,9 +862,7 @@
 
           inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
           inline IntVec has_bc(void) const { return arg_.has_bc(); }
 
@@ -1060,9 +1046,7 @@
       /* __CUDACC__ */;
 
       template<typename Point>
-       static inline GhostData point_possible_ghosts(
-                                                                 GhostData const
-                                                                 & ghosts) {
+       static inline GhostData point_possible_ghosts(GhostData const & ghosts) {
           return ghosts + additive_reductive_point_to_ghost(Point::int_vec());
        };
 
@@ -1112,9 +1096,7 @@
 
           inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
           inline IntVec has_bc(void) const { return arg_.has_bc(); }
 

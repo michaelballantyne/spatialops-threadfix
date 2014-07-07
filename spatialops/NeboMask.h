@@ -96,8 +96,7 @@
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<SpatialMask<FieldType> *>(&mask_)->
-                   add_consumer(deviceIndex);
+                   const_cast<SpatialMask<FieldType> *>(&mask_)->add_consumer(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -156,8 +155,7 @@
 
              typename field_type::value_type typedef value_type;
 
-             NeboMask(int const deviceIndex,
-                      SpatialMask<FieldType> const & m)
+             NeboMask(int const deviceIndex, SpatialMask<FieldType> const & m)
              : bitField_(m.mask_values(deviceIndex)),
                xOffset_(m.window_with_ghost().offset(0) + m.get_ghost_data().get_minus(0)),
                yOffset_(m.window_with_ghost().offset(1) + m.get_ghost_data().get_minus(1)),

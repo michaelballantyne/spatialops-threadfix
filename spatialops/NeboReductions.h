@@ -60,8 +60,8 @@
 
           ExprType const initial = fexpr.expr();
 
-          GhostData const ghosts = (useGhost ? initial.ghosts_without_bc()
-                                                : GhostData(0));
+          GhostData const ghosts = (useGhost ? initial.ghosts_without_bc() :
+                                    GhostData(0));
 
           IntVec const extents = initial.extents();
 

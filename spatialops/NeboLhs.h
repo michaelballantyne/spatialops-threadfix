@@ -67,32 +67,23 @@
           template<typename RhsType>
            inline void assign(bool const useGhost, RhsType rhs) {
               GhostData const ghosts = calculate_actual_ghost(useGhost,
-                                                                          field_.get_ghost_data(),
-                                                                          field_.boundary_info(),
-                                                                          rhs.ghosts_with_bc());
+                                                              field_.get_ghost_data(),
+                                                              field_.boundary_info(),
+                                                              rhs.ghosts_with_bc());
 
               /* field_.reset_valid_ghosts(ghosts) */;
 
-              IntVec const extents = field_.window_with_ghost().extent()
-              - field_.get_valid_ghost_data().get_minus() - field_.get_valid_ghost_data().get_plus();
+              IntVec const extents = field_.window_with_ghost().extent() -
+              field_.get_valid_ghost_data().get_minus() - field_.get_valid_ghost_data().get_plus();
 
               IntVec const hasBC = field_.boundary_info().has_bc();
 
-              const GhostData limits = GhostData(-
-                                                                         ghosts.get_minus(0),
-                                                                         extents[
-                                                                         0] +
-                                                                         ghosts.get_plus(0),
-                                                                         -
-                                                                         ghosts.get_minus(1),
-                                                                         extents[
-                                                                         1] +
-                                                                         ghosts.get_plus(1),
-                                                                         -
-                                                                         ghosts.get_minus(2),
-                                                                         extents[
-                                                                         2] +
-                                                                         ghosts.get_plus(2));
+              const GhostData limits = GhostData(- ghosts.get_minus(0),
+                                                 extents[0] + ghosts.get_plus(0),
+                                                 - ghosts.get_minus(1),
+                                                 extents[1] + ghosts.get_plus(1),
+                                                 - ghosts.get_minus(2),
+                                                 extents[2] + ghosts.get_plus(2));
 
               #ifdef __CUDACC__
                  #ifdef NEBO_GPU_TEST
@@ -157,8 +148,7 @@
            }
 
           template<typename RhsType>
-           inline void masked_assign(SpatialMask<FieldType> const &
-                                     mask,
+           inline void masked_assign(SpatialMask<FieldType> const & mask,
                                      RhsType rhs) {
               #ifdef NEBO_REPORT_BACKEND
                  std::cout << "Starting Nebo masked assignment" << std::endl
@@ -167,14 +157,9 @@
 
               SeqWalkType lhs = init();
 
-              typename RhsType::SeqWalkType expr = rhs.init(IntVec(0,
-                                                                               0,
-                                                                               0),
-                                                            
+              typename RhsType::SeqWalkType expr = rhs.init(IntVec(0, 0, 0),
                                                             GhostData(0),
-                                                            IntVec(0,
-                                                                               0,
-                                                                               0));
+                                                            IntVec(0, 0, 0));
 
               std::vector<IntVec>::const_iterator ip = mask.points().begin();
 
@@ -207,22 +192,17 @@
                        if(rhs.cpu_ready()) {
                           SeqWalkType lhs = init();
 
-                          typename RhsType::SeqWalkType expr = rhs.init(
-                                                                        IntVec(0,
+                          typename RhsType::SeqWalkType expr = rhs.init(IntVec(0,
                                                                                0,
                                                                                0),
-                                                                        
                                                                         GhostData(0),
-                                                                        
                                                                         IntVec(0,
                                                                                0,
                                                                                0));
 
-                          std::vector<IntVec>::const_iterator ip =
-                          mask.points().begin();
+                          std::vector<IntVec>::const_iterator ip = mask.points().begin();
 
-                          std::vector<IntVec>::const_iterator const
-                          ep = mask.points().end();
+                          std::vector<IntVec>::const_iterator const ep = mask.points().end();
 
                           for(; ip != ep; ip++) {
                              int const x = (*ip)[0];
@@ -259,17 +239,13 @@
                  {
                     SeqWalkType lhs = init();
 
-                    typename RhsType::SeqWalkType expr = rhs.init(
-                                                                  IntVec(0, 0, 0),
-                                                                  
+                    typename RhsType::SeqWalkType expr = rhs.init(IntVec(0, 0, 0),
                                                                   GhostData(0),
-                                                                  
                                                                   IntVec(0, 0, 0));
 
                     std::vector<IntVec>::const_iterator ip = mask.points().begin();
 
-                    std::vector<IntVec>::const_iterator const ep =
-                    mask.points().end();
+                    std::vector<IntVec>::const_iterator const ep = mask.points().end();
 
                     for(; ip != ep; ip++) {
                        int const x = (*ip)[0];
@@ -342,14 +318,10 @@
           #ifdef ENABLE_THREADS
              template<typename RhsType>
               inline void thread_parallel_assign(RhsType rhs,
-                                                 IntVec const &
-                                                 extents,
-                                                 GhostData const &
-                                                 ghosts,
-                                                 IntVec const &
-                                                 hasBC,
-                                                 GhostData const
-                                                 limits) {
+                                                 IntVec const & extents,
+                                                 GhostData const & ghosts,
+                                                 IntVec const & hasBC,
+                                                 GhostData const limits) {
                  #ifdef NEBO_REPORT_BACKEND
                     std::cout << "Starting Nebo thread parallel" << std::endl
                  #endif
@@ -367,17 +339,13 @@
 
                  GhostData localLimits;
 
-                 const IntVec split = nebo_find_partition(
-                                                                      IntVec(limits.get_plus(0)
-                                                                             -
-                                                                             limits.get_minus(0),
-                                                                             limits.get_plus(1)
-                                                                             -
-                                                                             limits.get_minus(1),
-                                                                             limits.get_plus(2)
-                                                                             -
-                                                                             limits.get_minus(2)),
-                                                                      thread_count);
+                 const IntVec split = nebo_find_partition(IntVec(limits.get_plus(0)
+                                                                 - limits.get_minus(0),
+                                                                 limits.get_plus(1)
+                                                                 - limits.get_minus(1),
+                                                                 limits.get_plus(2)
+                                                                 - limits.get_minus(2)),
+                                                          thread_count);
 
                  const int max = nebo_partition_count(split);
 
@@ -510,8 +478,7 @@
                 template<typename RhsType>
                  inline void gpu_test_assign(RhsType rhs,
                                              IntVec const & extents,
-                                             GhostData const &
-                                             ghosts,
+                                             GhostData const & ghosts,
                                              IntVec const & hasBC,
                                              GhostData const limits) {
                     #ifdef NEBO_REPORT_BACKEND

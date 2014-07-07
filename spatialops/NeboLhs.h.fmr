@@ -425,7 +425,7 @@
                                                                                    (val-member-call 'field_ 'boundary_info)
                                                                                    (val-member-call 'field_ 'get_valid_ghost_data)
                                                                                    'NULL
-                                                                                   ('InternalStorage)
+                                                                                   'InternalStorage
                                                                                    'GPU_INDEX))
                                                           (function-pmtr (type-template NF-chunk 'Initial FT-chunk)
                                                                          (val-call 'gpu_lhs 'gpu_field))

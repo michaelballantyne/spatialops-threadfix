@@ -231,7 +231,7 @@
   (list 'mask
         #true
         null
-        (function-pmtr (ref (const (type-template ('SpatialMask)
+        (function-pmtr (ref (const (type-template 'SpatialMask
                                                   FT-chunk)))
                        'mask)
         (lambda (FT-use) (type-template 'NeboMask 'Initial FT-use))

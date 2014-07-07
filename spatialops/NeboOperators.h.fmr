@@ -332,7 +332,7 @@
                                                                                     FT-chunk)
                                                                      'Result)))
                   type
-                  (function-pmtr (ref (const (type-template ('SpatialMask)
+                  (function-pmtr (ref (const (type-template 'SpatialMask
                                                             FT-chunk)))
                                  arg)
                   (val-call type arg))))))

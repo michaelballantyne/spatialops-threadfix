@@ -35,6 +35,7 @@
 #include <stdexcept>
 #include "ReferenceStencil.h"
 using namespace SpatialOps;
+using namespace structured;
 using std::cout;
 using std::endl;
 using std::string;
@@ -47,12 +48,15 @@ template<typename FirstOpType,
  inline bool test_stencil_chain(OperatorDatabase & opdb, IntVec npts, bool bc[]) {
     /* basic definitions: */
     const GhostData ghosts = GhostData(1);
-    const BoundaryCellInfo srcbc = BoundaryCellInfo::
-    build<SrcType>(bc[0], bc[1], bc[2]);
-    const BoundaryCellInfo itmbc = BoundaryCellInfo::
-    build<ItmdType>(bc[0], bc[1], bc[2]);
-    const BoundaryCellInfo destbc = BoundaryCellInfo::
-    build<DestType>(bc[0], bc[1], bc[2]);
+    const BoundaryCellInfo srcbc = BoundaryCellInfo::build<SrcType>(bc[0],
+                                                                    bc[1],
+                                                                    bc[2]);
+    const BoundaryCellInfo itmbc = BoundaryCellInfo::build<ItmdType>(bc[0],
+                                                                     bc[1],
+                                                                     bc[2]);
+    const BoundaryCellInfo destbc = BoundaryCellInfo::build<DestType>(bc[0],
+                                                                      bc[1],
+                                                                      bc[2]);
     const MemoryWindow mwSrc = get_window_with_ghost(npts, ghosts, srcbc);
     const MemoryWindow mwItmd = get_window_with_ghost(npts, ghosts, itmbc);
     const MemoryWindow mwDest = get_window_with_ghost(npts, ghosts, destbc);

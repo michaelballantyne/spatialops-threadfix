@@ -59,13 +59,9 @@
 
           inline bool has_extents(void) const { return false; }
 
-          inline IntVec extents(void) const {
-             return IntVec(0, 0, 0);
-          }
+          inline IntVec extents(void) const { return IntVec(0, 0, 0); }
 
-          inline IntVec has_bc(void) const {
-             return IntVec(0, 0, 0);
-          }
+          inline IntVec has_bc(void) const { return IntVec(0, 0, 0); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -336,13 +332,11 @@
       template<typename T>
        struct NeboConstSingleValueField<Initial, T> {
          public:
-          SpatialOps::SpatialField<SpatialOps::
-                                               SingleValue,
-                                               T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          field_type;
 
-          SpatialOps::SpatialField<SpatialOps::
-                                               SingleValue,
-                                               T> typedef SingleValueFieldType;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          SingleValueFieldType;
 
           NeboConstSingleValueField<SeqWalk, T> typedef SeqWalkType;
 
@@ -370,13 +364,9 @@
 
           inline bool has_extents(void) const { return false; }
 
-          inline IntVec extents(void) const {
-             return IntVec(0, 0, 0);
-          }
+          inline IntVec extents(void) const { return IntVec(0, 0, 0); }
 
-          inline IntVec has_bc(void) const {
-             return IntVec(0, 0, 0);
-          }
+          inline IntVec has_bc(void) const { return IntVec(0, 0, 0); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -423,9 +413,8 @@
          template<typename T>
           struct NeboConstSingleValueField<Resize, T> {
             public:
-             SpatialOps::SpatialField<SpatialOps::
-                                                  SingleValue,
-                                                  T> typedef field_type;
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+             field_type;
 
              NeboConstSingleValueField<SeqWalk, T> typedef SeqWalkType;
 
@@ -447,9 +436,8 @@
       template<typename T>
        struct NeboConstSingleValueField<SeqWalk, T> {
          public:
-          SpatialOps::SpatialField<SpatialOps::
-                                               SingleValue,
-                                               T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          field_type;
 
           typename field_type::value_type typedef value_type;
 
@@ -468,15 +456,12 @@
          template<typename T>
           struct NeboConstSingleValueField<GPUWalk, T> {
             public:
-             SpatialOps::SpatialField<SpatialOps::
-                                                  SingleValue,
-                                                  T> typedef field_type;
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+             field_type;
 
              typename field_type::value_type typedef value_type;
 
-             SpatialOps::SpatialField<SpatialOps::
-                                                  SingleValue,
-                                                  T> typedef
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
              SingleValueFieldType;
 
              NeboConstSingleValueField(int const deviceIndex,

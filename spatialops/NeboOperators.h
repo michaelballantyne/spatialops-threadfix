@@ -265,16 +265,13 @@
                                                                         T> >,
                                         T> operator +(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           SumOp<Initial,
                 NeboScalar<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -292,9 +289,8 @@
                                               SubExpr2>,
                                         T> operator +(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -395,13 +391,11 @@
                                                              typename FieldType::
                                                              value_type> >,
                              FieldType> operator +(FieldType const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           SumOp<Initial,
                 NeboConstField<Initial, FieldType>,
@@ -511,13 +505,11 @@
                              FieldType> operator +(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           SumOp<Initial,
                 SubExpr1,
@@ -554,17 +546,14 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               NeboScalar<Initial, T> >,
-                                        T> operator +(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           SumOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
@@ -588,13 +577,11 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result> >,
-                             FieldType> operator +(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           SumOp<Initial,
@@ -618,13 +605,11 @@
                                                              typename FieldType::
                                                              value_type>,
                                    SubExpr2>,
-                             FieldType> operator +(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -650,18 +635,14 @@
                                                                         T>,
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
-                                        T> operator +(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           SumOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -678,12 +659,10 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               SubExpr2>,
-                                        T> operator +(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -706,9 +685,8 @@
                                                       const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           SumOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -765,12 +743,10 @@
                                         T> operator +(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           SumOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -1031,16 +1007,13 @@
                                                                          T> >,
                                         T> operator -(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DiffOp<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -1058,9 +1031,8 @@
                                                SubExpr2>,
                                         T> operator -(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -1161,13 +1133,11 @@
                                                               typename FieldType::
                                                               value_type> >,
                              FieldType> operator -(FieldType const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DiffOp<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -1277,13 +1247,11 @@
                              FieldType> operator -(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DiffOp<Initial,
                  SubExpr1,
@@ -1320,17 +1288,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> operator -(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DiffOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
@@ -1354,13 +1319,11 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                             FieldType> operator -(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           DiffOp<Initial,
@@ -1384,13 +1347,11 @@
                                                               typename FieldType::
                                                               value_type>,
                                     SubExpr2>,
-                             FieldType> operator -(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -1416,18 +1377,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator -(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DiffOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -1444,12 +1401,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> operator -(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -1472,9 +1427,8 @@
                                                       const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DiffOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -1531,12 +1485,10 @@
                                         T> operator -(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DiffOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -1797,16 +1749,13 @@
                                                                          T> >,
                                         T> operator *(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           ProdOp<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -1824,9 +1773,8 @@
                                                SubExpr2>,
                                         T> operator *(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -1927,13 +1875,11 @@
                                                               typename FieldType::
                                                               value_type> >,
                              FieldType> operator *(FieldType const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           ProdOp<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -2043,13 +1989,11 @@
                              FieldType> operator *(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           ProdOp<Initial,
                  SubExpr1,
@@ -2086,17 +2030,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> operator *(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           ProdOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
@@ -2120,13 +2061,11 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                             FieldType> operator *(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           ProdOp<Initial,
@@ -2150,13 +2089,11 @@
                                                               typename FieldType::
                                                               value_type>,
                                     SubExpr2>,
-                             FieldType> operator *(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -2182,18 +2119,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator *(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           ProdOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -2210,12 +2143,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> operator *(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -2238,9 +2169,8 @@
                                                       const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           ProdOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -2297,12 +2227,10 @@
                                         T> operator *(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           ProdOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -2563,16 +2491,13 @@
                                                                         T> >,
                                         T> operator /(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DivOp<Initial,
                 NeboScalar<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -2590,9 +2515,8 @@
                                               SubExpr2>,
                                         T> operator /(typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -2693,13 +2617,11 @@
                                                              typename FieldType::
                                                              value_type> >,
                              FieldType> operator /(FieldType const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DivOp<Initial,
                 NeboConstField<Initial, FieldType>,
@@ -2809,13 +2731,11 @@
                              FieldType> operator /(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DivOp<Initial,
                 SubExpr1,
@@ -2852,17 +2772,14 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               NeboScalar<Initial, T> >,
-                                        T> operator /(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DivOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
@@ -2886,13 +2803,11 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result> >,
-                             FieldType> operator /(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           DivOp<Initial,
@@ -2916,13 +2831,11 @@
                                                              typename FieldType::
                                                              value_type>,
                                    SubExpr2>,
-                             FieldType> operator /(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -2948,18 +2861,14 @@
                                                                         T>,
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
-                                        T> operator /(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DivOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -2976,12 +2885,10 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               SubExpr2>,
-                                        T> operator /(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -3004,9 +2911,8 @@
                                                       const & arg1,
                                                       typename SpatialOps::
                                                       SpatialField<SpatialOps::
-                                                                               
-                                                                               SingleValue,
-                                                                               T>::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DivOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -3063,12 +2969,10 @@
                                         T> operator /(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DivOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -3123,13 +3027,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -3268,11 +3168,10 @@
        inline NeboSingleValueExpression<SinFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> sin(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> sin(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           SinFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3327,13 +3226,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -3472,11 +3367,10 @@
        inline NeboSingleValueExpression<CosFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> cos(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> cos(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           CosFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3531,13 +3425,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -3676,11 +3566,10 @@
        inline NeboSingleValueExpression<TanFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> tan(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> tan(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           TanFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3735,13 +3624,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -3880,11 +3765,10 @@
        inline NeboSingleValueExpression<ExpFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> exp(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> exp(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           ExpFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3940,13 +3824,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -4086,11 +3966,10 @@
        inline NeboSingleValueExpression<TanhFcn<Initial,
                                                 NeboConstSingleValueField<Initial,
                                                                           T> >,
-                                        T> tanh(SpatialOps::
-                                                SpatialField<SpatialOps::
-                                                             
-                                                             SingleValue,
-                                                             T> const & arg) {
+                                        T> tanh(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
           TanhFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -4145,13 +4024,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -4290,11 +4165,10 @@
        inline NeboSingleValueExpression<AbsFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> abs(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> abs(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           AbsFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -4349,13 +4223,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -4495,12 +4365,10 @@
        inline NeboSingleValueExpression<NegFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator -(SpatialOps::
-                                                      SpatialField<SpatialOps::
-                                                                   
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg) {
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg) {
           NegFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -4759,17 +4627,14 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> pow(typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> pow(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           PowFcn<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -4785,12 +4650,10 @@
        inline NeboSingleValueExpression<PowFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> pow(typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
+                                        T> pow(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -4890,11 +4753,10 @@
                                                               value_type> >,
                              FieldType> pow(FieldType const & arg1,
                                             SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           PowFcn<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -5009,11 +4871,10 @@
                              FieldType> pow(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           PowFcn<Initial,
                  SubExpr1,
@@ -5057,17 +4918,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> pow(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                        T> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           PowFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -5091,11 +4949,10 @@
                                                                            FieldType>::
                                                    Result> >,
                              FieldType> pow(SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             FieldType const & arg2) {
           PowFcn<Initial,
@@ -5120,11 +4977,10 @@
                                                               value_type>,
                                     SubExpr2>,
                              FieldType> pow(SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
@@ -5149,16 +5005,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> pow(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           PowFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -5175,11 +5029,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> pow(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
+                                        T> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -5200,12 +5053,10 @@
                                         T> pow(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           PowFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -5268,11 +5119,10 @@
                                         T> pow(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           PowFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -5328,13 +5178,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -5474,11 +5320,10 @@
        inline NeboSingleValueExpression<SqrtFcn<Initial,
                                                 NeboConstSingleValueField<Initial,
                                                                           T> >,
-                                        T> sqrt(SpatialOps::
-                                                SpatialField<SpatialOps::
-                                                             
-                                                             SingleValue,
-                                                             T> const & arg) {
+                                        T> sqrt(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
           SqrtFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -5533,13 +5378,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -5678,11 +5519,10 @@
        inline NeboSingleValueExpression<LogFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> log(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> log(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           LogFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -5738,13 +5578,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -5884,11 +5720,10 @@
        inline NeboSingleValueExpression<Log10Fcn<Initial,
                                                  NeboConstSingleValueField<Initial,
                                                                            T> >,
-                                        T> log10(SpatialOps::
-                                                 SpatialField<SpatialOps::
-                                                              
-                                                              SingleValue,
-                                                              T> const & arg) {
+                                        T> log10(SpatialOps::SpatialField<SpatialOps::
+                                                                          SingleValue,
+                                                                          T>
+                                                 const & arg) {
           Log10Fcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -5944,13 +5779,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -6089,11 +5920,10 @@
        inline NeboSingleValueExpression<ErfFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> erf(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> erf(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           ErfFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -6149,13 +5979,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -6295,11 +6121,10 @@
        inline NeboSingleValueExpression<ErfcFcn<Initial,
                                                 NeboConstSingleValueField<Initial,
                                                                           T> >,
-                                        T> erfc(SpatialOps::
-                                                SpatialField<SpatialOps::
-                                                             
-                                                             SingleValue,
-                                                             T> const & arg) {
+                                        T> erfc(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
           ErfcFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -6355,13 +6180,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -6502,11 +6323,10 @@
        inline NeboSingleValueExpression<InvErfFcn<Initial,
                                                   NeboConstSingleValueField<Initial,
                                                                             T> >,
-                                        T> inv_erf(SpatialOps::
-                                                   SpatialField<SpatialOps::
-                                                                
-                                                                SingleValue,
-                                                                T> const & arg) {
+                                        T> inv_erf(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            T>
+                                                   const & arg) {
           InvErfFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -6565,13 +6385,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -6712,11 +6528,10 @@
        inline NeboSingleValueExpression<InvErfcFcn<Initial,
                                                    NeboConstSingleValueField<Initial,
                                                                              T> >,
-                                        T> inv_erfc(SpatialOps::
-                                                    SpatialField<SpatialOps::
-                                                                 
-                                                                 SingleValue,
-                                                                 T> const & arg) {
+                                        T> inv_erfc(SpatialOps::SpatialField<SpatialOps::
+                                                                             SingleValue,
+                                                                             T>
+                                                    const & arg) {
           InvErfcFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -6980,17 +6795,13 @@
                                                >,
                                                T> operator ==(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7011,9 +6822,7 @@
                                                         SubExpr2>,
                                                T> operator ==(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7132,9 +6941,7 @@
                                     FieldType> operator ==(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7261,9 +7068,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7309,17 +7114,13 @@
                                                                                   T>,
                                                         NeboScalar<Initial, T> >,
                                                T> operator ==(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7349,9 +7150,7 @@
                                                                            FieldType>::
                                                             Result> >,
                                     FieldType> operator ==(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7382,9 +7181,7 @@
                                                                        value_type>,
                                              SubExpr2>,
                                     FieldType> operator ==(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7416,16 +7213,12 @@
                                                                                   T>
                                                >,
                                                T> operator ==(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7446,9 +7239,7 @@
                                                                                   T>,
                                                         SubExpr2>,
                                                T> operator ==(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -7474,9 +7265,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7545,9 +7334,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7822,17 +7609,13 @@
                                                >,
                                                T> operator !=(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7853,9 +7636,7 @@
                                                           SubExpr2>,
                                                T> operator !=(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7975,9 +7756,7 @@
                                     FieldType> operator !=(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -8104,9 +7883,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -8153,17 +7930,13 @@
                                                           NeboScalar<Initial, T>
                                                >,
                                                T> operator !=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -8193,9 +7966,7 @@
                                                                              FieldType>::
                                                               Result> >,
                                     FieldType> operator !=(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -8226,9 +7997,7 @@
                                                                          value_type>,
                                                SubExpr2>,
                                     FieldType> operator !=(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -8260,16 +8029,12 @@
                                                                                     T>
                                                >,
                                                T> operator !=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -8290,9 +8055,7 @@
                                                                                     T>,
                                                           SubExpr2>,
                                                T> operator !=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -8319,9 +8082,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -8390,9 +8151,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -8665,17 +8424,13 @@
                                                                                      T>
                                                >,
                                                T> operator <(typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
                                                              arg1,
                                                              SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -8695,9 +8450,7 @@
                                                            NeboScalar<Initial, T>,
                                                            SubExpr2>,
                                                T> operator <(typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -8813,7 +8566,6 @@
                                     FieldType> operator <(FieldType const & arg1,
                                                           SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -8939,7 +8691,6 @@
                                                           const & arg1,
                                                           SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -8986,16 +8737,12 @@
                                                            NeboScalar<Initial, T>
                                                >,
                                                T> operator <(SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -9026,7 +8773,6 @@
                                                                Result> >,
                                     FieldType> operator <(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -9057,7 +8803,6 @@
                                                 SubExpr2>,
                                     FieldType> operator <(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -9089,16 +8834,12 @@
                                                                                      T>
                                                >,
                                                T> operator <(SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -9119,9 +8860,7 @@
                                                                                      T>,
                                                            SubExpr2>,
                                                T> operator <(SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
@@ -9147,9 +8886,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -9217,9 +8954,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -9502,17 +9237,13 @@
                                                >,
                                                T> operator <=(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -9535,9 +9266,7 @@
                                                                 SubExpr2>,
                                                T> operator <=(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -9659,9 +9388,7 @@
                                     FieldType> operator <=(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9792,9 +9519,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9842,17 +9567,13 @@
                                                                 NeboScalar<Initial,
                                                                            T> >,
                                                T> operator <=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -9882,9 +9603,7 @@
                                                                                    FieldType>::
                                                                     Result> >,
                                     FieldType> operator <=(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9917,9 +9636,7 @@
                                                                                value_type>,
                                                      SubExpr2>,
                                     FieldType> operator <=(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9952,16 +9669,12 @@
                                                                                           T>
                                                >,
                                                T> operator <=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -9983,9 +9696,7 @@
                                                                                           T>,
                                                                 SubExpr2>,
                                                T> operator <=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -10013,9 +9724,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -10086,9 +9795,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -10364,17 +10071,13 @@
                                                                                         T>
                                                >,
                                                T> operator >(typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
                                                              arg1,
                                                              SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -10396,9 +10099,7 @@
                                                                          T>,
                                                               SubExpr2>,
                                                T> operator >(typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -10514,7 +10215,6 @@
                                     FieldType> operator >(FieldType const & arg1,
                                                           SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10641,7 +10341,6 @@
                                                           const & arg1,
                                                           SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10689,16 +10388,12 @@
                                                               NeboScalar<Initial,
                                                                          T> >,
                                                T> operator >(SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -10729,7 +10424,6 @@
                                                                   Result> >,
                                     FieldType> operator >(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10761,7 +10455,6 @@
                                                    SubExpr2>,
                                     FieldType> operator >(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10794,16 +10487,12 @@
                                                                                         T>
                                                >,
                                                T> operator >(SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -10825,9 +10514,7 @@
                                                                                         T>,
                                                               SubExpr2>,
                                                T> operator >(SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
@@ -10854,9 +10541,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -10924,9 +10609,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             
                                                              SpatialField<SpatialOps::
-                                                                          
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -11215,17 +10898,13 @@
                                                >,
                                                T> operator >=(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -11248,9 +10927,7 @@
                                                                    SubExpr2>,
                                                T> operator >=(typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -11373,9 +11050,7 @@
                                     FieldType> operator >=(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11509,9 +11184,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11562,17 +11235,13 @@
                                                                               T>
                                                >,
                                                T> operator >=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -11602,9 +11271,7 @@
                                                                                       FieldType>::
                                                                        Result> >,
                                     FieldType> operator >=(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11637,9 +11304,7 @@
                                                                                   value_type>,
                                                         SubExpr2>,
                                     FieldType> operator >=(SpatialOps::
-                                                           
                                                            SpatialField<SpatialOps::
-                                                                        
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11672,16 +11337,12 @@
                                                                                              T>
                                                >,
                                                T> operator >=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -11703,9 +11364,7 @@
                                                                                              T>,
                                                                    SubExpr2>,
                                                T> operator >=(SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -11734,9 +11393,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -11809,9 +11466,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              
                                                               SpatialField<SpatialOps::
-                                                                           
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -12054,7 +11709,6 @@
                                                                            FieldType>::
                                                    Result> >,
                                     FieldType> operator &&(bool const & arg1,
-                                                           
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           AndOp<Initial,
@@ -12113,7 +11767,6 @@
                                     FieldType> operator &&(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
-                                                           
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           AndOp<Initial, SubBoolExpr1, NeboMask<Initial, FieldType> > typedef
@@ -12134,8 +11787,7 @@
                                                                            FieldType>::
                                                    Result>,
                                           NeboScalar<Initial, bool> >,
-                                    FieldType> operator &&(
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator &&(SpatialMask<FieldType>
                                                            const & arg1,
                                                            bool const & arg2) {
           AndOp<Initial,
@@ -12158,8 +11810,7 @@
                                                                            FieldType>::
                                                    Result>,
                                           SubBoolExpr2>,
-                                    FieldType> operator &&(
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator &&(SpatialMask<FieldType>
                                                            const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
@@ -12187,10 +11838,8 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                                    FieldType> operator &&(
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator &&(SpatialMask<FieldType>
                                                            const & arg1,
-                                                           
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           AndOp<Initial,
@@ -12413,7 +12062,6 @@
                                                                           FieldType>::
                                                   Result> >,
                                     FieldType> operator ||(bool const & arg1,
-                                                           
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           OrOp<Initial, NeboScalar<Initial, bool>, NeboMask<Initial, FieldType> >
@@ -12471,7 +12119,6 @@
                                     FieldType> operator ||(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
-                                                           
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           OrOp<Initial, SubBoolExpr1, NeboMask<Initial, FieldType> > typedef
@@ -12492,8 +12139,7 @@
                                                                           FieldType>::
                                                   Result>,
                                          NeboScalar<Initial, bool> >,
-                                    FieldType> operator ||(
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator ||(SpatialMask<FieldType>
                                                            const & arg1,
                                                            bool const & arg2) {
           OrOp<Initial, NeboMask<Initial, FieldType>, NeboScalar<Initial, bool> >
@@ -12515,8 +12161,7 @@
                                                                           FieldType>::
                                                   Result>,
                                          SubBoolExpr2>,
-                                    FieldType> operator ||(
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator ||(SpatialMask<FieldType>
                                                            const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
@@ -12544,10 +12189,8 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result> >,
-                                    FieldType> operator ||(
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator ||(SpatialMask<FieldType>
                                                            const & arg1,
-                                                           
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           OrOp<Initial,
@@ -12593,13 +12236,9 @@
              return (operand_.has_extents());
           }
 
-          inline IntVec extents(void) const {
-             return operand_.extents();
-          }
+          inline IntVec extents(void) const { return operand_.extents(); }
 
-          inline IntVec has_bc(void) const {
-             return operand_.has_bc();
-          }
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
 
           inline SeqWalkType init(IntVec const & extents,
                                   GhostData const & ghosts,
@@ -12720,8 +12359,7 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                                    FieldType> operator !(
-                                                          SpatialMask<FieldType>
+                                    FieldType> operator !(SpatialMask<FieldType>
                                                           const & arg) {
           NotOp<Initial, NeboMask<Initial, FieldType> > typedef ReturnType;
 
@@ -12968,17 +12606,14 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> max(typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> max(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MaxFcn<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -12994,12 +12629,10 @@
        inline NeboSingleValueExpression<MaxFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> max(typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
+                                        T> max(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -13099,11 +12732,10 @@
                                                               value_type> >,
                              FieldType> max(FieldType const & arg1,
                                             SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MaxFcn<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -13218,11 +12850,10 @@
                              FieldType> max(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MaxFcn<Initial,
                  SubExpr1,
@@ -13266,17 +12897,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> max(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                        T> max(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MaxFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -13300,11 +12928,10 @@
                                                                            FieldType>::
                                                    Result> >,
                              FieldType> max(SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             FieldType const & arg2) {
           MaxFcn<Initial,
@@ -13329,11 +12956,10 @@
                                                               value_type>,
                                     SubExpr2>,
                              FieldType> max(SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
@@ -13358,16 +12984,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> max(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> max(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MaxFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -13384,11 +13008,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> max(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
+                                        T> max(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -13409,12 +13032,10 @@
                                         T> max(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MaxFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -13477,11 +13098,10 @@
                                         T> max(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MaxFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -13741,17 +13361,14 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> min(typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> min(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MinFcn<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -13767,12 +13384,10 @@
        inline NeboSingleValueExpression<MinFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> min(typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
+                                        T> min(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -13872,11 +13487,10 @@
                                                               value_type> >,
                              FieldType> min(FieldType const & arg1,
                                             SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MinFcn<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -13991,11 +13605,10 @@
                              FieldType> min(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
                                             SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MinFcn<Initial,
                  SubExpr1,
@@ -14039,17 +13652,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> min(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                        T> min(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MinFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -14073,11 +13683,10 @@
                                                                            FieldType>::
                                                    Result> >,
                              FieldType> min(SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             FieldType const & arg2) {
           MinFcn<Initial,
@@ -14102,11 +13711,10 @@
                                                               value_type>,
                                     SubExpr2>,
                              FieldType> min(SpatialOps::SpatialField<SpatialOps::
-                                                                                 
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
@@ -14131,16 +13739,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> min(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> min(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MinFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -14157,11 +13763,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> min(SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg1,
+                                        T> min(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -14182,12 +13787,10 @@
                                         T> min(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               typename SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MinFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -14250,11 +13853,10 @@
                                         T> min(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               SpatialOps::
-                                               SpatialField<SpatialOps::
-                                                            
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MinFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 

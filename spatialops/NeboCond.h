@@ -829,8 +829,7 @@
                                                             value_type>,
                                                  FieldType>,
                                       Clauses,
-                                      FieldType> > operator ()(
-                                                               SpatialMask<FieldType>
+                                      FieldType> > operator ()(SpatialMask<FieldType>
                                                                const & mask,
                                                                double const d) {
              NeboMask<Initial, FieldType> typedef Mask;
@@ -853,8 +852,7 @@
                                                                 FieldType>,
                                                  FieldType>,
                                       Clauses,
-                                      FieldType> > operator ()(
-                                                               SpatialMask<FieldType>
+                                      FieldType> > operator ()(SpatialMask<FieldType>
                                                                const & mask,
                                                                FieldType const &
                                                                f) {
@@ -878,8 +876,7 @@
                                                   Expr,
                                                   FieldType>,
                                        Clauses,
-                                       FieldType> > operator ()(
-                                                                SpatialMask<FieldType>
+                                       FieldType> > operator ()(SpatialMask<FieldType>
                                                                 const & mask,
                                                                 NeboExpression<Expr,
                                                                                FieldType>
@@ -1284,8 +1281,7 @@
                                                                FieldType::
                                                                field_type,
                                                                FieldType>::
-                                       Result> > operator ()(
-                                                             SpatialMask<FieldType>
+                                       Result> > operator ()(SpatialMask<FieldType>
                                                              const & mask,
                                                              double const d) {
               NeboMask<Initial, FieldType> typedef Mask;
@@ -1339,8 +1335,7 @@
                                                                FieldType::
                                                                field_type,
                                                                FieldType>::
-                                       Result> > operator ()(
-                                                             SpatialMask<FieldType>
+                                       Result> > operator ()(SpatialMask<FieldType>
                                                              const & mask,
                                                              FieldType const & f) {
               NeboMask<Initial, FieldType> typedef Mask;
@@ -1388,8 +1383,7 @@
                                                                FieldType::
                                                                field_type,
                                                                FieldType>::
-                                       Result> > operator ()(
-                                                             SpatialMask<FieldType>
+                                       Result> > operator ()(SpatialMask<FieldType>
                                                              const & mask,
                                                              NeboExpression<Expr,
                                                                             FieldType>
