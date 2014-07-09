@@ -228,7 +228,7 @@
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<FieldType *>(&field_)->add_field_loc(deviceIndex);
+                   const_cast<FieldType *>(&field_)->add_device(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -399,7 +399,7 @@
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<SingleValueFieldType *>(&field_)->add_field_loc(deviceIndex);
+                   const_cast<SingleValueFieldType *>(&field_)->add_device(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */

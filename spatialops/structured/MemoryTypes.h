@@ -7,6 +7,8 @@
 #define MEMORYTYPES_H_
 #include <string>
 #include <sstream>
+#include <stdexcept>
+
 namespace SpatialOps{
 
 #define CPU_INDEX -1

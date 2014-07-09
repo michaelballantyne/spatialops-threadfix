@@ -309,7 +309,7 @@ namespace SpatialOps{
     /**
      * \brief return the CUDA stream for this field
      */
-    cudaStream_t const & get_stream() const { return info_->set_stream(); }
+    cudaStream_t const & get_stream() const { return info_->get_stream(); }
 #endif
 
     /**
@@ -603,7 +603,7 @@ namespace SpatialOps{
         // GPU -> CPU
         CDI.memcpy_from( field_values(CPU_INDEX),
                          other.field_values(otherIdx),
-                         info_->allocatedBytes_,
+                         info_->allocated_bytes(),
                          otherIdx,
                          get_stream() );
       }
@@ -625,8 +625,8 @@ namespace SpatialOps{
         // CPU -> GPU
         CDI.memcpy_to( field_values(thisIdx),
                        other.field_values(CPU_INDEX),
-                       info_->allocatedBytes_,
-                       thisIdx_,
+                       info_->allocated_bytes(),
+                       thisIdx,
                        get_stream() );
       }
       else if( IS_GPU_INDEX( otherIdx ) ){
@@ -634,11 +634,11 @@ namespace SpatialOps{
         // Check for self assignment
         if( thisIdx != otherIdx ||
             field_values(otherIdx) != other.field_values(otherIdx) ) {
-          CDI.memcpy_peer( field_Values(thisIdx),
+          CDI.memcpy_peer( field_values(thisIdx),
                            thisIdx,
                            other.field_values(otherIdx),
                            otherIdx,
-                           info_->allocatedBytes_ );
+                           info_->allocated_bytes() );
         }
       }
       else {

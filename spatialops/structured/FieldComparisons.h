@@ -571,7 +571,7 @@ class FieldComparisonHelper
       else if( IS_GPU_INDEX(field.active_device_index()) ){
         fcopy = SpatialFieldStore::get<FieldT>(field);
         *fcopy <<= field;
-        fcopy->add_field_loc(CPU_INDEX);
+        fcopy->add_device(CPU_INDEX);
         //
         // jcs hack to get things working.  There are two issues here:
         //

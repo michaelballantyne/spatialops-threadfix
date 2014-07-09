@@ -370,7 +370,7 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
 
     //std::cout << "Extent: " << extent[0] << " " << extent[1] << " " << extent[2] << std::endl;
 
-    if( cudaSuccess != ( err = cudaSetDevice( f->device_index() ) ) ){
+    if( cudaSuccess != ( err = cudaSetDevice( f->active_device_index() ) ) ){
       throw( std::runtime_error( cudaGetErrorString(err) ) );
     }
 

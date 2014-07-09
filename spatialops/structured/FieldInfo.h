@@ -449,7 +449,7 @@ namespace SpatialOps{
     //check that deviceIndex is not already valid for field
     if( deviceIndex != active_device_index() &&
         !deviceMap_[deviceIndex].isValid_ ) {
-      T* validfieldValues_ = deviceMap_[active_device_index()].field;
+      T* validfieldValues_ = deviceMap_[active_device_index()].field_;
 
 #ifdef ENABLE_CUDA
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
@@ -472,12 +472,12 @@ namespace SpatialOps{
 #ifdef DEBUG_SF_ALL
         std::cout << "data transfer from CPU to GPU" << std::endl;
 #endif
-        CDI.memcpy_to((void*)deviceMap_[deviceIndex].field,
-                      deviceMap_[active_device_index()].field,
+        CDI.memcpy_to((void*)deviceMap_[deviceIndex].field_,
+                      deviceMap_[active_device_index()].field_,
                       allocated_bytes(),
                       deviceIndex,
                       get_stream());
-        deviceMap_[deviceIndex].isValid = true;
+        deviceMap_[deviceIndex].isValid_ = true;
       }
 
       else if( IS_GPU_INDEX(active_device_index()) &&
@@ -486,12 +486,12 @@ namespace SpatialOps{
 #ifdef DEBUG_SF_ALL
         std::cout << "data transfer from GPU to CPU" << std::endl;
 #endif
-        CDI.memcpy_from((void*)deviceMap_[deviceIndex].field,
-                        deviceMap_[active_device_index()].field,
+        CDI.memcpy_from((void*)deviceMap_[deviceIndex].field_,
+                        deviceMap_[active_device_index()].field_,
                         allocated_bytes(),
                         active_device_index(),
                         get_stream());
-        deviceMap_[deviceIndex].isValid = true;
+        deviceMap_[deviceIndex].isValid_ = true;
       }
 
       else if( IS_GPU_INDEX(active_device_index()) &&
@@ -500,12 +500,12 @@ namespace SpatialOps{
 #ifdef DEBUG_SF_ALL
         std::cout << "data transfer from GPU to GPU" << std::endl;
 #endif
-        CDI.memcpy_peer((void*)deviceMap_[deviceIndex].field,
+        CDI.memcpy_peer((void*)deviceMap_[deviceIndex].field_,
                         deviceIndex,
-                        deviceMap_[active_device_index()].field,
+                        deviceMap_[active_device_index()].field_,
                         active_device_index(),
                         allocated_bytes());
-        deviceMap_[deviceIndex].isValid = true;
+        deviceMap_[deviceIndex].isValid_ = true;
       }
 #endif // ENABLE_CUDA
 
@@ -577,7 +577,7 @@ namespace SpatialOps{
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
     return  ( iter != deviceMap_.end() &&
-              iter->second.isValid );
+              iter->second.isValid_ );
   }
 
 //------------------------------------------------------------------
