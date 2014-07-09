@@ -514,7 +514,7 @@ namespace structured{
       return consumerBitValues_.size() > 0;
     }
 
-    inline short int device_index() const { return deviceIndex_; };
+    inline short int active_device_index() const { return deviceIndex_; };
 
     inline const unsigned int * mask_values( const short int consumerDeviceIndex = CPU_INDEX ) const
     {

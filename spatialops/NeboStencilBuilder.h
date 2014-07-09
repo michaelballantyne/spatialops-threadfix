@@ -687,7 +687,7 @@ namespace SpatialOps {
                              PhiFieldType & phi,
                              const NeboExpression<ExprType, GammaFieldType> & gamma,
                              bool minus) const {
-        if(phi.device_index() == CPU_INDEX) {
+        if(phi.active_device_index() == CPU_INDEX) {
           if(minus)
             cpu_apply<ExprType, MinusGammaType, MinusPhiType>(mask.points(),
                                                               Shift::MinusPoint::int_vec(),

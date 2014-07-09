@@ -145,7 +145,7 @@
                                         (type-template-function 'masked_assign 'RhsType)
                                         'mask
                                         rhs-expr)])
-              (pp-gpu-or (stmt-if (val-equal (val-member-call 'lhs 'device_index)
+              (pp-gpu-or (stmt-if (val-equal (val-member-call 'lhs 'active_device_index)
                                              'CPU_INDEX)
                                   cpu
                                   (val-nebo-assign 'lhs (val-call (val-call 'cond 'mask (val-call (type-template NE-chunk 'RhsType FT-chunk) 'rhs))

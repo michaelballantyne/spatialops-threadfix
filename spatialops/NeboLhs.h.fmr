@@ -413,12 +413,12 @@
                                         (pp-debug-only (stmt-if (val-not-equal 'cudaSuccess (paren (val-assign 'err (val-call 'cudaStreamSynchronize(val-member-call 'field_ 'get_stream)))))
                                                                 (build-error-with-call "CUDA Kernel - after call" "\"\t - \""
                                                                                        '<< (val-call 'cudaGetErrorString 'err))))))
-                                (val-call 'IS_CPU_INDEX (val-member-call 'field_ 'device_index))
-                                (val-call 'IS_GPU_INDEX (val-member-call 'field_ 'device_index))
-                                (val-member-call 'field_ 'device_index)
+                                (val-call 'IS_CPU_INDEX (val-member-call 'field_ 'active_device_index))
+                                (val-call 'IS_GPU_INDEX (val-member-call 'field_ 'active_device_index))
+                                (val-member-call 'field_ 'active_device_index)
                                 'field_
                                 (list (val-member-call 'rhs 'gpu_prep 0)
-                                      (stmt-if-else (val-equal 'CPU_INDEX (val-member-call 'field_ 'device_index))
+                                      (stmt-if-else (val-equal 'CPU_INDEX (val-member-call 'field_ 'active_device_index))
                                                     (list (function-pmtr FT-chunk
                                                                          (val-call 'gpu_field
                                                                                    (val-member-call 'field_ 'window_with_ghost)
@@ -502,7 +502,7 @@
                 (bs-gpu-lhs  null
                              (bm-constructor
                               (function-pmtr FT-chunk 'f)
-                              (list (val-construct 'base_ (compute-base 'f (val-member-call 'f 'device_index)))
+                              (list (val-construct 'base_ (compute-base 'f (val-member-call 'f 'active_device_index)))
                                     (val-construct 'valid_ 'false)
                                     (val-construct 'xGlob_ (val-member-call (val-member-call 'f 'window_with_ghost)
                                                                             'glob_dim

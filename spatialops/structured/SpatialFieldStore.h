@@ -247,7 +247,7 @@ public:
   {
     using namespace structured;
 
-    if( deviceIndex == -9999 ) deviceIndex = f.device_index();
+    if( deviceIndex == -9999 ) deviceIndex = f.active_device_index();
 
     const MemoryWindow& ws = f.window_with_ghost();
 
@@ -303,7 +303,7 @@ SpatFldPtr<FieldT>::SpatFldPtr( FieldT* const f )
   : f_(f),
     count_(new int),
     builtFromStore_(false),
-    deviceIndex_( ( f != NULL ? f->device_index() : CPU_INDEX ) )
+    deviceIndex_( ( f != NULL ? f->active_device_index() : CPU_INDEX ) )
 {
   *count_ = 1;
 }
@@ -315,7 +315,7 @@ SpatFldPtr<FieldT>::SpatFldPtr(FieldT* const f, const bool builtFromStore)
   : f_(f),
     count_(new int),
     builtFromStore_(builtFromStore),
-    deviceIndex_( ( f != NULL ? f->device_index() : CPU_INDEX ) )
+    deviceIndex_( ( f != NULL ? f->active_device_index() : CPU_INDEX ) )
 {
   *count_ = 1;
 }
@@ -406,7 +406,7 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
   count_ = new int;
   *count_ = 1;
   builtFromStore_ = false;
-  deviceIndex_ = f->device_index();
+  deviceIndex_ = f->active_device_index();
 
   return *this;
 }
@@ -505,7 +505,7 @@ void SpatialFieldStore::restore_field( const short int deviceIndex, FieldT& fiel
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
   typedef typename FieldT::value_type ValT;
-  ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.device_index()));
+  ValT * values = const_cast<ValT *>((const_cast<FieldT const &>(field)).field_values(field.active_device_index()));
 # ifndef NDEBUG
   if( !IS_VALID_INDEX(deviceIndex) ){
     std::ostringstream msg;

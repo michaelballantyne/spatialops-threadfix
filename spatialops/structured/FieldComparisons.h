@@ -548,12 +548,12 @@ class FieldComparisonHelper
                    typename FieldT::const_iterator& iend )
     {
       //we need to transfer the field to local ram to iterate
-      if( IS_CPU_INDEX( field.device_index() ) ){
+      if( IS_CPU_INDEX( field.active_device_index() ) ){
         ibegin = field.begin();
         iend   = field.end();
       }
 #     ifdef ENABLE_CUDA
-      else if( IS_GPU_INDEX(field.device_index()) ){
+      else if( IS_GPU_INDEX(field.active_device_index()) ){
         fcopy = SpatialFieldStore::get<FieldT>(field);
         *fcopy <<= field;
         fcopy->add_field_loc(CPU_INDEX);

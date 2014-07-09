@@ -493,15 +493,15 @@
               }
 
              inline bool cpu_ready(void) const {
-                return IS_CPU_INDEX(field_.device_index());
+                return IS_CPU_INDEX(field_.active_device_index());
              }
 
              inline bool gpu_ready(void) const {
-                return IS_GPU_INDEX(field_.device_index());
+                return IS_GPU_INDEX(field_.active_device_index());
              }
 
              inline int gpu_device_index(void) const {
-                return field_.device_index();
+                return field_.active_device_index();
              }
 
              inline GPUWalkType gpu_init(void) { return GPUWalkType(field_); }
@@ -522,7 +522,7 @@
 
                     rhs.gpu_prep(0);
 
-                    if(CPU_INDEX == field_.device_index()) {
+                    if(CPU_INDEX == field_.active_device_index()) {
                        FieldType gpu_field(field_.window_with_ghost(),
                                            field_.boundary_info(),
                                            field_.get_valid_ghost_data(),
@@ -655,8 +655,8 @@
              typename field_type::value_type typedef value_type;
 
              NeboField(FieldType f)
-             : base_(f.field_values(f.device_index()) + (f.window_with_ghost().offset(0)
-                                                         + f.get_valid_ghost_data().get_minus(0))
+             : base_(f.field_values(f.active_device_index()) + (f.window_with_ghost().offset(0)
+                                                                + f.get_valid_ghost_data().get_minus(0))
                      + (f.window_with_ghost().glob_dim(0) * ((f.window_with_ghost().offset(1)
                                                               + f.get_valid_ghost_data().get_minus(1))
                                                              + (f.window_with_ghost().glob_dim(1)

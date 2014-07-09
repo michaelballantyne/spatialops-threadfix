@@ -251,7 +251,7 @@ namespace structured{
 
     inline const MemoryWindow& window_with_ghost() const { return maskWindow_; };
 
-    inline short int device_index() const { return bitField_.device_index(); };
+    inline short int active_device_index() const { return bitField_.active_device_index(); };
 
     inline const unsigned int * mask_values(const short int consumerDeviceIndex = 0) const
     {

@@ -347,7 +347,7 @@
           NeboScalar<Initial, typename FieldType::value_type> typedef RhsType;
 
           #ifdef __CUDACC__
-             if(lhs.device_index() == CPU_INDEX) {
+             if(lhs.active_device_index() == CPU_INDEX) {
                 NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
                                                                                    RhsType(rhs));
 
@@ -370,7 +370,7 @@
           NeboConstField<Initial, FieldType> typedef RhsType;
 
           #ifdef __CUDACC__
-             if(lhs.device_index() == CPU_INDEX) {
+             if(lhs.active_device_index() == CPU_INDEX) {
                 NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
                                                                                    RhsType(rhs));
 
@@ -392,7 +392,7 @@
                                               NeboExpression<RhsType, FieldType>
                                               const & rhs) {
           #ifdef __CUDACC__
-             if(lhs.device_index() == CPU_INDEX) {
+             if(lhs.active_device_index() == CPU_INDEX) {
                 NeboField<Initial, FieldType>(lhs).template masked_assign<RhsType>(mask,
                                                                                    rhs.expr());
 

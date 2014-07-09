@@ -27,6 +27,7 @@
 #include <vector>
 #include <iterator>
 # include <sstream>
+# include <iostream>
 
 #include <spatialops/SpatialOpsConfigure.h>
 
@@ -192,6 +193,68 @@ namespace structured{
       return (nptsGlob_ != w.nptsGlob_) ||
              (extent_   != w.extent_  ) ||
              (offset_   != w.offset_  );
+    }
+
+    /**
+     * \brief return the current memory window with oldGhosts removed and newGhosts added
+     *
+     * \param oldGhosts number of ghost cells to remove from window
+     * \param newGhosts number of ghost cells to add to window
+     */
+    MemoryWindow reset_ghosts( GhostData const & oldGhosts,
+                               GhostData const & newGhosts ) const {
+      IntVec oldTotal = oldGhosts.get_minus() + oldGhosts.get_plus();
+      IntVec newTotal = newGhosts.get_minus() + newGhosts.get_plus();
+
+      return MemoryWindow( glob_dim(),
+                           offset() + oldGhosts.get_minus() - newGhosts.get_minus(),
+                           extent() - oldTotal + newTotal );
+    }
+
+    /**
+     * \brief return the current memory window with given ghosts removed
+     *
+     * \param ghosts number of ghost cells to remove from window
+     */
+    MemoryWindow remove_ghosts( GhostData const & ghosts ) const {
+      return (*this).reset_ghosts( ghosts, GhostData(0,0,0,0,0,0) );
+    }
+
+    /**
+     * \brief return if the current window fits in given window
+     *
+     * \param outer window into which current window fits
+     *
+     * If current and outer are equal, returns true.
+     *
+     * If global dimensions are different, returns false.
+     */
+    bool fits_in( MemoryWindow const & outer ) const {
+      return ( glob_dim() == outer.glob_dim() &&
+               offset()   >= outer.offset()   &&
+               extent()   <= outer.extent()   );
+    }
+
+    /**
+     * \brief return if current window fits between the
+     *  two given windows
+     *
+     * \param inner window to fit in checked
+     * \param outer window into which checked fits
+     *
+     * If current, inner, and outer are equal, returns true.
+     *
+     * If global dimensions are different, returns false.
+     *
+     * Debug mode asserts that inner fits in outer.
+     */
+    bool fits_between( MemoryWindow const & inner,
+                       MemoryWindow const & outer ) const {
+#ifndef NDEBUG
+      assert( fit_in(inner, outer) );
+#endif
+      return ( inner.fits_in(*this)   &&
+               (*this).fits_in(outer) );
     }
 
     /**
@@ -405,7 +468,7 @@ namespace structured{
       xyExtent_(0)
   {}
 
-    ConstFieldIterator(AtomicType * field_values,
+    ConstFieldIterator(const AtomicType * const field_values,
                        const MemoryWindow & w)
     : current_(field_values +
                w.offset(0) * 1 +
@@ -548,7 +611,7 @@ namespace structured{
     inline bool operator>=(Self const & other) const { return current_ >= other.current_; }
 
   private:
-    AtomicType * current_;
+    const AtomicType * current_;
     int count_;
     int xIndex_, yIndex_, zIndex_;
     int yStep_, zStep_;

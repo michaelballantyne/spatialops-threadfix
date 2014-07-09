@@ -40,7 +40,7 @@ void fill_field_range(FieldT * f1, double start, double range)
 {
   FieldT * f;
   bool created_field = false;
-  if(f1->device_index() == GPU_INDEX) {
+  if(f1->active_device_index() == GPU_INDEX) {
     created_field = true;
     f = new FieldT(f1->window_with_ghost(), f1->boundary_info(), f1->get_valid_ghost_data(), NULL, InternalStorage);
   }
@@ -79,7 +79,7 @@ void sprinkle_in_field( FieldT * f1, const typename FieldT::value_type* const va
 
   FieldT * f;
   bool createdField = false;
-  if(f1->device_index() == GPU_INDEX) {
+  if(f1->active_device_index() == GPU_INDEX) {
     createdField = true;
     f = new FieldT(f1->window_with_ghost(), f1->boundary_info(), f1->get_valid_ghost_data(), NULL, InternalStorage);
     *f = *f1;
@@ -116,10 +116,10 @@ bool manual_error_compare(FieldT& f1,
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
-  if(f1.device_index() == GPU_INDEX) {
+  if(f1.active_device_index() == GPU_INDEX) {
     f1.add_field_loc(CPU_INDEX);
   }
-  if(f2.device_index() == GPU_INDEX) {
+  if(f2.active_device_index() == GPU_INDEX) {
     f2.add_field_loc(CPU_INDEX);
   }
 #endif
@@ -553,7 +553,7 @@ bool manual_error_compare(double d,
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
-  if(IS_GPU_INDEX(f1.device_index())) {
+  if(IS_GPU_INDEX(f1.active_device_index())) {
     f1.add_field_loc(CPU_INDEX);
   }
 #endif
