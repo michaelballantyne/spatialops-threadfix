@@ -39,6 +39,7 @@ install( FILES
   MemoryTypes.h
   MemoryWindow.h
   FieldComparisons.h
+  FieldInfo.h
   SpatialField.h
   SpatialMask.h
   BitField.h
