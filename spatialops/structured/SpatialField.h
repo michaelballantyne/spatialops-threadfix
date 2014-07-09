@@ -59,8 +59,11 @@
 #include <cuda_runtime.h>
 #endif
 
+/**
+ * \file SpatialField.h
+ */
+
 namespace SpatialOps{
-namespace structured{
 
   /**
    *  \class SingleValueCheck
@@ -115,7 +118,6 @@ namespace structured{
 
   /**
    *  \class SpatialField
-   *  \ingroup structured
    *  \ingroup fields
    *
    *  \brief Abstracts a field.
@@ -137,18 +139,18 @@ namespace structured{
    *   - \c Location - the location type traits
    *   - \c value_type  - the type of underlying data being stored in this SpatialField
    *   - \c iterator, \c const_iterator - iterators to the elements in this field
-   *   - \c interior_iterator, \c const_interior_iterator - iterators to the interior elements in this field (excludes ghost cells).
+   *   - \c iterator, \c const_iterator - iterators to the interior elements in this field (excludes ghost cells).
    */
   template< typename FieldLocation, typename T=double >
   class SpatialField {
-    private:
+  private:
     bool matchGlobalWindow_;                ///< True if using FieldInfo's window, boundary cell info and ghost info. When true, updates to ghost cells happen globally.
     MemoryWindow localWindow_;              ///< Window for this copy of the field, other copies can have different windows
     BoundaryCellInfo bcInfo_;               ///< Information about boundary conditions for current window
     GhostData localValidGhosts_;            ///< Information about ghosts for current window
     boost::shared_ptr<FieldInfo<T> > info_; ///< A shared pointer for FieldInfo for this field (all copies share the same FieldInfo)
 
-    public:
+  public:
     typedef SpatialField<FieldLocation,T> field_type;
     typedef FieldLocation Location;
     typedef T value_type;
@@ -676,8 +678,8 @@ namespace structured{
    *  \return the new boundary cell info
    */
   template<typename FieldType, typename PrototypeType>
-  inline BoundaryCellInfo create_new_boundary_cell_info(const PrototypeType & prototype) {
-    return BoundaryCellInfo::build<FieldType>(prototype.boundary_info().has_bc());
+  inline BoundaryCellInfo create_new_boundary_cell_info( const PrototypeType& prototype ){
+    return BoundaryCellInfo::build<FieldType>( prototype.boundary_info().has_bc() );
   }
 
 //------------------------------------------------------------------
@@ -692,20 +694,16 @@ namespace structured{
    *  \return the new memory window (with correct boundary conditions)
    */
   template<typename FieldType, typename PrototypeType>
-  inline MemoryWindow create_new_memory_window(const PrototypeType & prototype) {
-    const BoundaryCellInfo prototypeBC = prototype.boundary_info();
-    const BoundaryCellInfo newBC = create_new_boundary_cell_info<FieldType, PrototypeType>(prototype);
-
-    const MemoryWindow prototypeWindow = prototype.window_with_ghost();
-
-    return MemoryWindow(prototypeWindow.glob_dim() - prototypeBC.has_extra() + newBC.has_extra(),
-                        prototypeWindow.offset(),
-                        prototypeWindow.extent() - prototypeBC.has_extra() + newBC.has_extra());
+  inline MemoryWindow create_new_memory_window( const PrototypeType& prototype )
+  {
+    const BoundaryCellInfo newBC = create_new_boundary_cell_info<FieldType,PrototypeType>(prototype);
+    const MemoryWindow& prototypeWindow = prototype.window_with_ghost();
+    const IntVec inc = newBC.has_bc() * Subtract< typename FieldType::Location::BCExtra, typename PrototypeType::Location::BCExtra >::result::int_vec();
+    return MemoryWindow( prototypeWindow.glob_dim() + inc,
+                         prototypeWindow.offset(),
+                         prototypeWindow.extent() + inc );
   }
 
-//------------------------------------------------------------------
-
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialField_h

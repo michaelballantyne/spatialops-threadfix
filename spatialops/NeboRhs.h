@@ -49,27 +49,23 @@
           : value_(v)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_with_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_without_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
           inline bool has_extents(void) const { return false; }
 
-          inline structured::IntVec extents(void) const {
-             return structured::IntVec(0, 0, 0);
-          }
+          inline IntVec extents(void) const { return IntVec(0, 0, 0); }
 
-          inline structured::IntVec has_bc(void) const {
-             return structured::IntVec(0, 0, 0);
-          }
+          inline IntVec has_bc(void) const { return IntVec(0, 0, 0); }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(value_);
           }
 
@@ -83,9 +79,9 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(value_);
              }
@@ -112,9 +108,9 @@
              : value_(value)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(value_);
              }
 
@@ -184,28 +180,28 @@
           : field_(f)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return field_.get_valid_ghost_data() + point_to_ghost(field_.boundary_info().has_extra());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return field_.get_valid_ghost_data();
           }
 
           inline bool has_extents(void) const { return true; }
 
-          inline structured::IntVec extents(void) const {
+          inline IntVec extents(void) const {
              return field_.window_with_ghost().extent() - field_.get_valid_ghost_data().get_minus()
                     - field_.get_valid_ghost_data().get_plus();
           }
 
-          inline structured::IntVec has_bc(void) const {
+          inline IntVec has_bc(void) const {
              return field_.boundary_info().has_bc();
           }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(field_);
           }
 
@@ -223,9 +219,9 @@
                 return field_.is_valid_field(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, field_);
              }
@@ -254,9 +250,9 @@
              : field_(f)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(field_);
              }
 
@@ -336,13 +332,11 @@
       template<typename T>
        struct NeboConstSingleValueField<Initial, T> {
          public:
-          SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                               SingleValue,
-                                               T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          field_type;
 
-          SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                               SingleValue,
-                                               T> typedef SingleValueFieldType;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          SingleValueFieldType;
 
           NeboConstSingleValueField<SeqWalk, T> typedef SeqWalkType;
 
@@ -360,27 +354,23 @@
           : field_(f)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_with_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_without_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
           inline bool has_extents(void) const { return false; }
 
-          inline structured::IntVec extents(void) const {
-             return structured::IntVec(0, 0, 0);
-          }
+          inline IntVec extents(void) const { return IntVec(0, 0, 0); }
 
-          inline structured::IntVec has_bc(void) const {
-             return structured::IntVec(0, 0, 0);
-          }
+          inline IntVec has_bc(void) const { return IntVec(0, 0, 0); }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(* field_.field_values(CPU_INDEX));
           }
 
@@ -400,9 +390,9 @@
                 return field_.is_valid_field(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, field_);
              }
@@ -423,9 +413,8 @@
          template<typename T>
           struct NeboConstSingleValueField<Resize, T> {
             public:
-             SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                  SingleValue,
-                                                  T> typedef field_type;
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+             field_type;
 
              NeboConstSingleValueField<SeqWalk, T> typedef SeqWalkType;
 
@@ -433,9 +422,9 @@
              : value_(v)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(value_);
              }
 
@@ -447,9 +436,8 @@
       template<typename T>
        struct NeboConstSingleValueField<SeqWalk, T> {
          public:
-          SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                               SingleValue,
-                                               T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          field_type;
 
           typename field_type::value_type typedef value_type;
 
@@ -468,15 +456,12 @@
          template<typename T>
           struct NeboConstSingleValueField<GPUWalk, T> {
             public:
-             SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                  SingleValue,
-                                                  T> typedef field_type;
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+             field_type;
 
              typename field_type::value_type typedef value_type;
 
-             SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                  SingleValue,
-                                                  T> typedef
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
              SingleValueFieldType;
 
              NeboConstSingleValueField(int const deviceIndex,

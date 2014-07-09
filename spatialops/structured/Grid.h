@@ -27,7 +27,6 @@
 #include <spatialops/structured/MemoryWindow.h>
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    *  \class Grid
@@ -78,7 +77,6 @@ namespace structured{
     void set_coord( FieldT& f ) const;
   };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_structured_Grid_h

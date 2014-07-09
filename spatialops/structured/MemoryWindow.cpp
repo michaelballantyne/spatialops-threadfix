@@ -26,84 +26,81 @@
 using namespace std;
 
 namespace SpatialOps{
-  namespace structured{
 
-    inline bool check_positive( const IntVec& v ){ return (v[0]> 0) & (v[1]> 0) & (v[2]> 0); }
-    inline bool check_ge_zero ( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
+  inline bool check_ge_zero ( const IntVec& v ){ return (v[0]>=0) & (v[1]>=0) & (v[2]>=0); }
 
-    //---------------------------------------------------------------
+  //---------------------------------------------------------------
 
-    MemoryWindow::MemoryWindow( const int npts[3],
-                                const int offset[3],
-                                const int extent[3] )
-    : nptsGlob_( npts ),
-      offset_( offset ),
-      extent_( extent )
-    {
+  MemoryWindow::MemoryWindow( const int npts[3],
+                              const int offset[3],
+                              const int extent[3] )
+  : nptsGlob_( npts ),
+    offset_( offset ),
+    extent_( extent )
+  {
 #     ifndef NDEBUG
-      assert( sanity_check() );
+    assert( sanity_check() );
 #     endif
-    }
+  }
 
-    MemoryWindow::MemoryWindow( const IntVec& npts,
-                                const IntVec& offset,
-                                const IntVec& extent )
-    : nptsGlob_( npts ),
-      offset_( offset ),
-      extent_( extent )
-    {
+  MemoryWindow::MemoryWindow( const IntVec& npts,
+                              const IntVec& offset,
+                              const IntVec& extent )
+  : nptsGlob_( npts ),
+    offset_( offset ),
+    extent_( extent )
+  {
 #     ifndef NDEBUG
-      assert( sanity_check() );
+    assert( sanity_check() );
 #     endif
-   }
+  }
 
-    MemoryWindow::MemoryWindow( const int npts[3] )
-    : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
-    {
+  MemoryWindow::MemoryWindow( const int npts[3] )
+  : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
+  {
 #   ifndef NDEBUG
-      assert( sanity_check() );
+    assert( sanity_check() );
 #   endif
-    }
+  }
 
-    MemoryWindow::MemoryWindow( const IntVec& npts )
-    : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
-    {
+  MemoryWindow::MemoryWindow( const IntVec& npts )
+  : nptsGlob_( npts ), offset_(0,0,0), extent_( npts )
+  {
 #     ifndef NDEBUG
-      assert( sanity_check() );
+    assert( sanity_check() );
 #     endif
-    }
+  }
 
-    //---------------------------------------------------------------
+  //---------------------------------------------------------------
 
-    MemoryWindow&
-    MemoryWindow::operator=( const MemoryWindow& other )
-    {
-      nptsGlob_ = other.nptsGlob_;
-      offset_   = other.offset_;
-      extent_   = other.extent_;
-      return *this;
-    }
+  MemoryWindow&
+  MemoryWindow::operator=( const MemoryWindow& other )
+  {
+    nptsGlob_ = other.nptsGlob_;
+    offset_   = other.offset_;
+    extent_   = other.extent_;
+    return *this;
+  }
 
-    //---------------------------------------------------------------
+  //---------------------------------------------------------------
 
-    MemoryWindow::~MemoryWindow()
-    {}
+  MemoryWindow::~MemoryWindow()
+  {}
 
-    //---------------------------------------------------------------
+  //---------------------------------------------------------------
 
-    ostream& operator<<(ostream& os, const MemoryWindow& w ){
-      os << w.nptsGlob_ << w.offset_ << w.extent_;
-      return os;
-    }
+  ostream& operator<<(ostream& os, const MemoryWindow& w ){
+    os << w.nptsGlob_ << w.offset_ << w.extent_;
+    return os;
+  }
 
-    bool
-    MemoryWindow::sanity_check() const
-    {
-      return check_positive( nptsGlob_ ) &&
-             check_ge_zero ( offset_   ) &&
-             check_ge_zero ( extent_   ) &&
-             check_ge_zero ( nptsGlob_ - extent_ );
-    }
+  bool
+  MemoryWindow::sanity_check() const
+  {
+    return check_ge_zero( nptsGlob_ ) &&
+        check_ge_zero( offset_   ) &&
+        check_ge_zero( extent_   ) &&
+        check_ge_zero( nptsGlob_ - extent_ );
+  }
 
-  } // namespace structured
 } // namespace SpatialOps

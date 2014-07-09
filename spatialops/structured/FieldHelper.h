@@ -25,7 +25,7 @@
 
 template<typename Field>
 inline void internal_initialize_field(typename Field::iterator fi,
-                                      const SpatialOps::structured::MemoryWindow mw,
+                                      const SpatialOps::MemoryWindow mw,
                                       const double start,
                                       const bool print,
                                       const double range)
@@ -66,7 +66,7 @@ inline void interior_initialize_field(Field & f,
 
 template<typename Field>
 inline void internal_print_field(typename Field::const_iterator fi,
-                                 SpatialOps::structured::MemoryWindow const & mw)
+                                 SpatialOps::MemoryWindow const & mw)
 {
   int xLength = mw.extent(0);
   int yLength = mw.extent(1);
@@ -96,7 +96,7 @@ inline void interior_print_field(Field const & f) {
 template<typename Field>
 inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
                                             typename Field::const_iterator if2,
-                                            SpatialOps::structured::MemoryWindow const & mw,
+                                            SpatialOps::MemoryWindow const & mw,
                                             bool display,
                                             bool print)
 {

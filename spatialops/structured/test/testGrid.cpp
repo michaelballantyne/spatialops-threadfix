@@ -1,12 +1,10 @@
 #include <spatialops/structured/Grid.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <test/TestHelper.h>
 
 #include <cmath>
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 

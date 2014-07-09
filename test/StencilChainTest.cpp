@@ -2,7 +2,6 @@
 
 //--- SpatialOps includes ---//
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/IntVec.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
@@ -18,7 +17,6 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-using namespace structured;
 
 #define RUN_TEST(TEST,							\
 		 TYPE)							\
@@ -56,7 +54,7 @@ inline void evaluate_serial_example(FieldType & result,
 				    int number_of_runs) {
 
     SpatialOps::OperatorDatabase opDB;
-    SpatialOps::structured::build_stencils(npts[0],
+    SpatialOps::build_stencils(npts[0],
                                            npts[1],
                                            npts[2],
                                            Lx,
@@ -122,7 +120,7 @@ inline void evaluate_chaining_example(FieldType & result,
 
 
     SpatialOps::OperatorDatabase opDB;
-    SpatialOps::structured::build_stencils(npts[0],
+    SpatialOps::build_stencils(npts[0],
                                            npts[1],
                                            npts[2],
                                            Lx,

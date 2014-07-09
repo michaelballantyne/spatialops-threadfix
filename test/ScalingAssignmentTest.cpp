@@ -2,7 +2,6 @@
 
 //--- SpatialOps includes ---//
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/Nebo.h>
 
@@ -13,11 +12,10 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-namespace SS = SpatialOps::structured;
 
 int main( int iarg, char* carg[] )
 {
-  typedef SpatialOps::structured::SVolField Field;
+  typedef SpatialOps::SVolField Field;
 
   std::vector<int> npts(3,1);
   int number_of_runs;
@@ -52,9 +50,9 @@ int main( int iarg, char* carg[] )
 #endif
   }
 
-  const SS::GhostData ghost(1);
-  const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<Field>(true,true,true);
-  const SS::MemoryWindow window( SpatialOps::structured::get_window_with_ghost(npts,ghost,bc) );
+  const GhostData ghost(1);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<Field>(true,true,true);
+  const MemoryWindow window( SpatialOps::get_window_with_ghost(npts,ghost,bc) );
 
   // build fields
   Field f01  ( window, bc, ghost, NULL );

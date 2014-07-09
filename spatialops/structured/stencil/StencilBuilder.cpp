@@ -27,7 +27,6 @@
 #include <spatialops/OperatorDatabase.h>
 
 namespace SpatialOps{
-namespace structured{
 
 #define REG_BASIC_OP_TYPES( VOL )                                       \
   {                                                                     \
@@ -211,5 +210,4 @@ namespace structured{
 
   //------------------------------------------------------------------
 
-} // namespace structured
 } // namespace SpatialOps

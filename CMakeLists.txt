@@ -7,6 +7,7 @@ set( PATCH_VERSION "0" )
 
 
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
+option( ENABLE_EXAMPLES "Enable building of examples tests" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
 option( NEBO_REPORT_BACKEND "Require Nebo to report what backend it is using" OFF )
@@ -203,6 +204,10 @@ endmacro( nebo_add_library )
 
 add_subdirectory( spatialops )
 
+
+if( ENABLE_EXAMPLES )
+  add_subdirectory( examples )
+endif( ENABLE_EXAMPLES )
 
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.

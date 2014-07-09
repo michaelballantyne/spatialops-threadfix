@@ -45,31 +45,31 @@
           #endif
           /* __CUDACC__ */
 
-          NeboMask(structured::SpatialMask<FieldType> const & m)
+          NeboMask(SpatialMask<FieldType> const & m)
           : mask_(m)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return mask_.get_valid_ghost_data() + point_to_ghost(mask_.boundary_info().has_extra());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return mask_.get_valid_ghost_data();
           }
 
           inline bool has_extents(void) const { return true; }
 
-          inline structured::IntVec extents(void) const {
+          inline IntVec extents(void) const {
              return mask_.window_without_ghost().extents();
           }
 
-          inline structured::IntVec has_bc(void) const {
+          inline IntVec has_bc(void) const {
              return point_to_ghost(mask_.boundary_info().has_bc());
           }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(mask_);
           }
 
@@ -87,17 +87,16 @@
                 return mask_.find_consumer(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, mask_);
              }
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<structured::SpatialMask<FieldType> *>(&mask_)->
-                   add_consumer(deviceIndex);
+                   const_cast<SpatialMask<FieldType> *>(&mask_)->add_consumer(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -105,7 +104,7 @@
           /* __CUDACC__ */
 
          private:
-          structured::SpatialMask<FieldType> const mask_;
+          SpatialMask<FieldType> const mask_;
       };
       #ifdef ENABLE_THREADS
          template<typename FieldType>
@@ -115,18 +114,18 @@
 
              NeboMask<SeqWalk, FieldType> typedef SeqWalkType;
 
-             NeboMask(structured::SpatialMask<FieldType> const & m)
+             NeboMask(SpatialMask<FieldType> const & m)
              : mask_(m)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(mask_);
              }
 
             private:
-             structured::SpatialMask<FieldType> const mask_;
+             SpatialMask<FieldType> const mask_;
          }
       #endif
       /* ENABLE_THREADS */;
@@ -137,7 +136,7 @@
 
           typename field_type::value_type typedef value_type;
 
-          NeboMask(structured::SpatialMask<FieldType> const & m)
+          NeboMask(SpatialMask<FieldType> const & m)
           : mask_(m)
           {}
 
@@ -146,7 +145,7 @@
           }
 
          private:
-          structured::SpatialMask<FieldType> const mask_;
+          SpatialMask<FieldType> const mask_;
       };
       #ifdef __CUDACC__
          template<typename FieldType>
@@ -156,8 +155,7 @@
 
              typename field_type::value_type typedef value_type;
 
-             NeboMask(int const deviceIndex,
-                      structured::SpatialMask<FieldType> const & m)
+             NeboMask(int const deviceIndex, SpatialMask<FieldType> const & m)
              : bitField_(m.mask_values(deviceIndex)),
                xOffset_(m.window_with_ghost().offset(0) + m.get_ghost_data().get_minus(0)),
                yOffset_(m.window_with_ghost().offset(1) + m.get_ghost_data().get_minus(1)),

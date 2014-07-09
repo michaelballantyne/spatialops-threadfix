@@ -40,7 +40,6 @@
 #include <spatialops/structured/MemoryPool.h>
 
 namespace SpatialOps{
-namespace structured{
 
   class ConstMaskIterator : public std::iterator<std::random_access_iterator_tag, bool> {
     typedef ConstMaskIterator MyType;
@@ -230,7 +229,7 @@ namespace structured{
 
   /**
    *  \class BitField
-   *  \ingroup structured
+   *  \ingroup fields
    *
    *  \brief Implements a mask as a bitfield.
    *
@@ -342,7 +341,7 @@ namespace structured{
      *  \brief Construct a BitField
      *  \param points - the points in the mask
      *  \param window - the window to build
-     *  \param interiorWindow - the interior window
+     *  \param ghosts - the ghost information
      */
     BitField(const std::vector<IntVec> & points,
              const MemoryWindow & window,
@@ -552,10 +551,9 @@ namespace structured{
         throw(std::runtime_error(msg.str()));
       }
       return NULL;   // should never get here.  This line is just to eliminate compiler warnings.
-    };
+    }
   };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_BitField_h

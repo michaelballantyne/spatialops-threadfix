@@ -331,7 +331,7 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
      *          - decide how many 16x16 blocks are needed to tile the base plane.
      *            This might be a value that is not a multiple of 16.
      **/
-    using namespace SpatialOps::structured;
+    using namespace SpatialOps;
     cudaError err;
 
     MemoryWindow window = f->window_with_ghost();
@@ -377,7 +377,7 @@ void __host__ divergence_float_gpu(FieldT* f, float dx, float dy, float dz){
     //_div_float_opt1<<<dimGrid, dimBlock, 0, 0>>>( d_workspace,
     _div_float_opt2<<<dimGrid_op2, dimBlock_op2, 0, 0>>>( d_workspace,
     //_div_float_opt3<<<dimGrid_op3, dimBlock_op3, 0, 0>>>( d_workspace,
-    											f->field_values(GPU_INDEX),
+                                                f->field_values(GPU_INDEX),
                                                 dx, dy, dz,
                                                 extent[0], extent[1], extent[2] );
 

@@ -33,7 +33,7 @@ namespace Point{
   struct PointFieldTraits{
     typedef NODIR FaceDir;
     typedef NODIR StagLoc;
-    typedef structured::IndexTriplet<0,0,0> BCExtra;
+    typedef IndexTriplet<0,0,0> BCExtra;
   };
 
   /**
@@ -45,7 +45,7 @@ namespace Point{
    *  points from a parent field and return them back to a parent
    *  field.
    */
-  typedef structured::SpatialField< Point::PointFieldTraits >  PointField;
+  typedef SpatialField< Point::PointFieldTraits >  PointField;
 
 }  // namespace Point
 } // namespace SpatialOps

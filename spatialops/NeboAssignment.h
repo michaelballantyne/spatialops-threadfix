@@ -60,12 +60,12 @@
 
       template<typename FieldType>
        inline FieldType const & operator <<=(FieldType & lhs,
-                                             SpatialOps::structured::
-                                             SpatialField<SpatialOps::structured::
-                                                          SingleValue,
-                                                          typename FieldType::
-                                                          value_type> const &
-                                             rhs) {
+                                             SpatialOps::SpatialField<SpatialOps::
+                                                                      SingleValue,
+                                                                      typename
+                                                                      FieldType::
+                                                                      value_type>
+                                             const & rhs) {
           NeboConstSingleValueField<Initial, typename FieldType::value_type>
           typedef RhsType;
 
@@ -88,92 +88,46 @@
        };
 
       template<typename T>
-       inline SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                   SingleValue,
-                                                   T> const & operator <<=(SpatialOps::
-                                                                           structured::
-                                                                           SpatialField<SpatialOps::
-                                                                                        structured::
-                                                                                        SingleValue,
-                                                                                        T>
-                                                                           & lhs,
-                                                                           typename
-                                                                           SpatialOps::
-                                                                           structured::
-                                                                           SpatialField<SpatialOps::
-                                                                                        structured::
-                                                                                        SingleValue,
-                                                                                        T>::
-                                                                           value_type
-                                                                           const
-                                                                           & rhs) {
+       inline SpatialOps::SpatialField<SpatialOps::SingleValue, T> const &
+       operator <<=(SpatialOps::SpatialField<SpatialOps::SingleValue, T> & lhs,
+                    typename SpatialOps::SpatialField<SpatialOps::SingleValue, T>::
+                    value_type const & rhs) {
           NeboScalar<Initial,
-                     typename SpatialOps::structured::SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T>::
-                     value_type> typedef RhsType;
+                     typename SpatialOps::SpatialField<SpatialOps::SingleValue,
+                                                       T>::value_type> typedef
+          RhsType;
 
           NeboField<Initial,
-                    SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                         SingleValue,
-                                                         T> >(lhs).template
-                                                                   assign<RhsType>(true,
-                                                                                   RhsType(rhs));
+                    SpatialOps::SpatialField<SpatialOps::SingleValue, T> >(lhs).template
+                                                                                assign<RhsType>(true,
+                                                                                                RhsType(rhs));
 
           return lhs;
        };
 
       template<typename T>
-       inline SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                   SingleValue,
-                                                   T> const & operator <<=(SpatialOps::
-                                                                           structured::
-                                                                           SpatialField<SpatialOps::
-                                                                                        structured::
-                                                                                        SingleValue,
-                                                                                        T>
-                                                                           & lhs,
-                                                                           SpatialOps::
-                                                                           structured::
-                                                                           SpatialField<SpatialOps::
-                                                                                        structured::
-                                                                                        SingleValue,
-                                                                                        T>
-                                                                           const
-                                                                           & rhs) {
+       inline SpatialOps::SpatialField<SpatialOps::SingleValue, T> const &
+       operator <<=(SpatialOps::SpatialField<SpatialOps::SingleValue, T> & lhs,
+                    SpatialOps::SpatialField<SpatialOps::SingleValue, T> const &
+                    rhs) {
           NeboConstSingleValueField<Initial, T> typedef RhsType;
 
           NeboField<Initial,
-                    SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                         SingleValue,
-                                                         T> >(lhs).template
-                                                                   assign<RhsType>(true,
-                                                                                   RhsType(rhs));
+                    SpatialOps::SpatialField<SpatialOps::SingleValue, T> >(lhs).template
+                                                                                assign<RhsType>(true,
+                                                                                                RhsType(rhs));
 
           return lhs;
        };
 
       template<typename RhsType, typename T>
-       inline SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                   SingleValue,
-                                                   T> const & operator <<=(SpatialOps::
-                                                                           structured::
-                                                                           SpatialField<SpatialOps::
-                                                                                        structured::
-                                                                                        SingleValue,
-                                                                                        T>
-                                                                           & lhs,
-                                                                           NeboSingleValueExpression<RhsType,
-                                                                                                     T>
-                                                                           const
-                                                                           & rhs) {
+       inline SpatialOps::SpatialField<SpatialOps::SingleValue, T> const &
+       operator <<=(SpatialOps::SpatialField<SpatialOps::SingleValue, T> & lhs,
+                    NeboSingleValueExpression<RhsType, T> const & rhs) {
           NeboField<Initial,
-                    SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                         SingleValue,
-                                                         T> >(lhs).template
-                                                                   assign<RhsType>(true,
-                                                                                   rhs.expr());
+                    SpatialOps::SpatialField<SpatialOps::SingleValue, T> >(lhs).template
+                                                                                assign<RhsType>(true,
+                                                                                                rhs.expr());
 
           return lhs;
        };
@@ -213,13 +167,12 @@
 
       template<typename FieldType>
        inline FieldType const & interior_assign(FieldType & lhs,
-                                                SpatialOps::structured::
-                                                SpatialField<SpatialOps::
-                                                             structured::
-                                                             SingleValue,
-                                                             typename FieldType::
-                                                             value_type> const &
-                                                rhs) {
+                                                SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         typename
+                                                                         FieldType::
+                                                                         value_type>
+                                                const & rhs) {
           NeboConstSingleValueField<Initial, typename FieldType::value_type>
           typedef RhsType;
 
@@ -242,105 +195,57 @@
        };
 
       template<typename T>
-       inline SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                   SingleValue,
-                                                   T> const & interior_assign(SpatialOps::
-                                                                              structured::
-                                                                              SpatialField<SpatialOps::
-                                                                                           structured::
-                                                                                           SingleValue,
-                                                                                           T>
-                                                                              &
-                                                                              lhs,
-                                                                              typename
-                                                                              SpatialOps::
-                                                                              structured::
-                                                                              SpatialField<SpatialOps::
-                                                                                           structured::
-                                                                                           SingleValue,
-                                                                                           T>::
-                                                                              value_type
-                                                                              const
-                                                                              &
-                                                                              rhs) {
+       inline SpatialOps::SpatialField<SpatialOps::SingleValue, T> const &
+       interior_assign(SpatialOps::SpatialField<SpatialOps::SingleValue, T> &
+                       lhs,
+                       typename SpatialOps::SpatialField<SpatialOps::SingleValue,
+                                                         T>::value_type const &
+                       rhs) {
           NeboScalar<Initial,
-                     typename SpatialOps::structured::SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T>::
-                     value_type> typedef RhsType;
+                     typename SpatialOps::SpatialField<SpatialOps::SingleValue,
+                                                       T>::value_type> typedef
+          RhsType;
 
           NeboField<Initial,
-                    SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                         SingleValue,
-                                                         T> >(lhs).template
-                                                                   assign<RhsType>(false,
-                                                                                   RhsType(rhs));
+                    SpatialOps::SpatialField<SpatialOps::SingleValue, T> >(lhs).template
+                                                                                assign<RhsType>(false,
+                                                                                                RhsType(rhs));
 
           return lhs;
        };
 
       template<typename T>
-       inline SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                   SingleValue,
-                                                   T> const & interior_assign(SpatialOps::
-                                                                              structured::
-                                                                              SpatialField<SpatialOps::
-                                                                                           structured::
-                                                                                           SingleValue,
-                                                                                           T>
-                                                                              &
-                                                                              lhs,
-                                                                              SpatialOps::
-                                                                              structured::
-                                                                              SpatialField<SpatialOps::
-                                                                                           structured::
-                                                                                           SingleValue,
-                                                                                           T>
-                                                                              const
-                                                                              &
-                                                                              rhs) {
+       inline SpatialOps::SpatialField<SpatialOps::SingleValue, T> const &
+       interior_assign(SpatialOps::SpatialField<SpatialOps::SingleValue, T> &
+                       lhs,
+                       SpatialOps::SpatialField<SpatialOps::SingleValue, T>
+                       const & rhs) {
           NeboConstSingleValueField<Initial, T> typedef RhsType;
 
           NeboField<Initial,
-                    SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                         SingleValue,
-                                                         T> >(lhs).template
-                                                                   assign<RhsType>(false,
-                                                                                   RhsType(rhs));
+                    SpatialOps::SpatialField<SpatialOps::SingleValue, T> >(lhs).template
+                                                                                assign<RhsType>(false,
+                                                                                                RhsType(rhs));
 
           return lhs;
        };
 
       template<typename RhsType, typename T>
-       inline SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                   SingleValue,
-                                                   T> const & interior_assign(SpatialOps::
-                                                                              structured::
-                                                                              SpatialField<SpatialOps::
-                                                                                           structured::
-                                                                                           SingleValue,
-                                                                                           T>
-                                                                              &
-                                                                              lhs,
-                                                                              NeboSingleValueExpression<RhsType,
-                                                                                                        T>
-                                                                              const
-                                                                              &
-                                                                              rhs) {
+       inline SpatialOps::SpatialField<SpatialOps::SingleValue, T> const &
+       interior_assign(SpatialOps::SpatialField<SpatialOps::SingleValue, T> &
+                       lhs,
+                       NeboSingleValueExpression<RhsType, T> const & rhs) {
           NeboField<Initial,
-                    SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                         SingleValue,
-                                                         T> >(lhs).template
-                                                                   assign<RhsType>(false,
-                                                                                   rhs.expr());
+                    SpatialOps::SpatialField<SpatialOps::SingleValue, T> >(lhs).template
+                                                                                assign<RhsType>(false,
+                                                                                                rhs.expr());
 
           return lhs;
        };
 
       template<typename FieldType>
-       inline FieldType const & masked_assign(structured::SpatialMask<FieldType>
-                                              const & mask,
+       inline FieldType const & masked_assign(SpatialMask<FieldType> const &
+                                              mask,
                                               FieldType & lhs,
                                               typename FieldType::value_type
                                               const & rhs) {
@@ -363,8 +268,8 @@
        };
 
       template<typename FieldType>
-       inline FieldType const & masked_assign(structured::SpatialMask<FieldType>
-                                              const & mask,
+       inline FieldType const & masked_assign(SpatialMask<FieldType> const &
+                                              mask,
                                               FieldType & lhs,
                                               FieldType const & rhs) {
           NeboConstField<Initial, FieldType> typedef RhsType;
@@ -386,8 +291,8 @@
        };
 
       template<typename RhsType, typename FieldType>
-       inline FieldType const & masked_assign(structured::SpatialMask<FieldType>
-                                              const & mask,
+       inline FieldType const & masked_assign(SpatialMask<FieldType> const &
+                                              mask,
                                               FieldType & lhs,
                                               NeboExpression<RhsType, FieldType>
                                               const & rhs) {

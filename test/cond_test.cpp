@@ -1,5 +1,4 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 
 #include <spatialops/Nebo.h>
 
@@ -7,7 +6,6 @@
 #include <vector>
 
 using namespace SpatialOps;
-using namespace structured;
 
 int print_length = 8;
 

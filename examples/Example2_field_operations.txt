@@ -1,0 +1,38 @@
+/**
+
+\example Example2_field_operations.cpp  Operations using fields.
+
+# Goal of this example
+This example will show how to use SpatialFields in SpatialOps to perform a 
+variety of field operations.
+
+# Key Concepts
+
+ -# Most mathematical operations/functions are supported in Nebo's field 
+    operations.  They are lifted over fields.  This includes standard mathematical
+    operations such as \c sin \c cos \c exp, etc.
+    
+ -# Nebo supports a variety of Field Reduction operations including \c min \c max, \c norm, etc.
+   
+ -# Nebo supports conditional operations that unroll to the equivalent of point-wise
+    \c if statements.  These are achieved via the \c cond construct:
+    \code
+    f <<= cond( condition1, result1 )
+              ( condition2, result2 )
+              ...
+              ( default_result );
+    \endcode
+    which is equivalent to
+    \code
+    for i
+      if     ( condition1 ) f[i] = result1[i];
+      else if( condition2 ) f[i] = result2[i];
+      ...
+      else                  f[i] = default_result[i]; 
+    end
+    \endcode
+    Note that the \c result1 \c result2 etc. may be expressions themselves, fields,
+    or scalar values.
+
+*/
+ 

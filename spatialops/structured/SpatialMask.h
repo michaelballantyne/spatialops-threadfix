@@ -36,11 +36,9 @@
 #include <spatialops/structured/BitField.h>
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    *  \class SpatialMask
-   *  \ingroup structured
    *
    *  \brief Abstracts a mask.
    *
@@ -79,7 +77,6 @@ namespace structured{
     typedef SpatialMask<FieldType> mask_type;
     typedef MemoryWindow memory_window;
     typedef ConstMaskIterator const_iterator;
-    typedef ConstMaskIterator const_interior_iterator;
 
   private:
 
@@ -223,12 +220,12 @@ namespace structured{
 
     inline const_iterator end() const { return bitField_.end(maskWindow_); };
 
-    inline const_interior_iterator interior_begin() const
+    inline const_iterator interior_begin() const
     {
       return bitField_.begin(interiorMaskWindow_);
     };
 
-    inline const_interior_iterator interior_end() const
+    inline const_iterator interior_end() const
     {
       return bitField_.end(interiorMaskWindow_);
     };
@@ -282,7 +279,6 @@ namespace structured{
     };
   };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialMask_h

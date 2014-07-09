@@ -26,7 +26,6 @@
 #include "testExternalField.h"
 
 using namespace SpatialOps;
-using namespace structured;
 using namespace Point;
 using namespace ema::cuda;
 

@@ -13,7 +13,6 @@
 #include <spatialops/OperatorDatabase.h>
 #include <spatialops/structured/SpatialMask.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FieldComparisons.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/stencil/FVStaggeredBCOp.h>
@@ -26,14 +25,10 @@
 #include <spatialops/structured/FieldHelper.h>
 
 using namespace SpatialOps;
-using namespace structured;
 
 int main()
 {
   TestHelper status(true);
-
-  using namespace SpatialOps;
-  using namespace structured;
 
   typedef SVolField PhiFieldT;
   typedef SSurfXField GammaFieldT;
@@ -113,7 +108,7 @@ int main()
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
-    typedef structured::BasicOpTypes<PhiFieldT>::GradX OpT;
+    typedef BasicOpTypes<PhiFieldT>::GradX OpT;
     const OpT* const op = opdb.retrieve_operator<OpT>();
     NeboBoundaryConditionBuilder<OpT> BC(*op);
 
@@ -218,7 +213,7 @@ int main()
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
-    typedef structured::BasicOpTypes<XVolField>::GradX OpT;
+    typedef BasicOpTypes<XVolField>::GradX OpT;
     const OpT* const op = opdb.retrieve_operator<OpT>();
     NeboBoundaryConditionBuilder<OpT> BC(*op);
 
@@ -323,7 +318,7 @@ int main()
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
-    typedef structured::BasicOpTypes<YVolField>::GradY OpT;
+    typedef BasicOpTypes<YVolField>::GradY OpT;
     const OpT* const op = opdb.retrieve_operator<OpT>();
     NeboBoundaryConditionBuilder<OpT> BC(*op);
 
@@ -425,7 +420,7 @@ int main()
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
-    typedef structured::OperatorTypeBuilder<GradientX,XVolField,XVolField>::type OpT;
+    typedef OperatorTypeBuilder<GradientX,XVolField,XVolField>::type OpT;
     const OpT* const op = opdb.retrieve_operator<OpT>();
     NeboBoundaryConditionBuilder<OpT> BC(*op);
 

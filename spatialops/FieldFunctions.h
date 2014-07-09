@@ -337,9 +337,10 @@ class GaussianFunction : public FieldFunction1D<FieldT,PatchT>
 //====================================================================
 
 /**
- *  @class Hyperbolic tangent Function
+ *  @class HyperTanFunction
  *  @author Naveen Punati
  *  @date January, 2009
+ *  @brief Hyperbolic tangent Function
  *
  * Implements the function
  *  \f[

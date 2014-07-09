@@ -1,0 +1,41 @@
+/**
+
+\example Example1_field_creation.cpp  Basics of field creation.
+
+# Goal of this example
+This example will show how to create a field in SpatialOps
+
+# Key Concepts
+
+ -# A \link SpatialOps::SpatialField SpatialField \endlink is
+comprised of a few things:
+
+  - A \link SpatialOps::MemoryWindow MemoryWindow \endlink to
+    describe the logical layout of the field in memory
+
+  - A \link SpatialOps::BoundaryCellInfo BoundaryCellInfo \endlink
+    object to describe the behavior of a field at a boundary
+
+  - The raw block of memory for the field and its
+    \link SpatialOps::StorageMode StorageMode \endlink.  
+    This can either be supplied (for externally managed memory) or it will be
+    created internally.  For internally created fields, the supplied memory
+    block can be NULL.
+
+  - The location of the field (CPU, GPU, etc.)
+
+ -# A \link SpatialOps::SpatialField SpatialField \endlink is
+  strongly typed.  There are several supported field types defined for fields
+  associated with structured meshes listed \link fieldtypes here\endlink.
+ 
+ -# For face fields on structured meshes, the (+) face on the (+) side of the
+    domain has an extra storage location.  The
+    \link SpatialOps::BoundaryCellInfo BoundaryCellInfo \endlink
+    object encodes this information.
+
+ -# The \link SpatialOps::SpatialFieldStore SpatialFieldStore\endlink can be
+    used to quickly build fields.  It returns
+    \link SpatialOps::SpatFldPtr SpatFldPtr \endlink objects that have pointer
+    semantics and are reference-counted. 
+*/
+ 

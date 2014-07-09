@@ -66,7 +66,6 @@
 #endif
 
 namespace SpatialOps{
-namespace structured{
 
   //Forward Declaration
   template <typename T> class Pool;
@@ -662,7 +661,6 @@ namespace structured{
 
 //------------------------------------------------------------------
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SPATIALOPS_FIELDINFO_H

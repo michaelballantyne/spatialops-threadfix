@@ -219,26 +219,22 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          static inline structured::GhostData possible_ghosts(void) {
+          static inline GhostData possible_ghosts(void) {
              return min(additive_reductive_point_to_ghost(Point::int_vec()),
                         Collection::possible_ghosts());
           }
 
-          static inline structured::GhostData possible_ghosts(structured::
-                                                              GhostData const &
-                                                              ghosts) {
+          static inline GhostData possible_ghosts(GhostData const & ghosts) {
              return ghosts + possible_ghosts();
           }
 
-          static inline structured::GhostData possible_additive_ghosts(void) {
+          static inline GhostData possible_additive_ghosts(void) {
              return min(addative_point_to_ghost(Point::int_vec()),
                         Collection::possible_ghosts());
           }
 
-          static inline structured::GhostData possible_additive_ghosts(structured::
-                                                                       GhostData
-                                                                       const &
-                                                                       ghosts) {
+          static inline GhostData possible_additive_ghosts(GhostData const &
+                                                           ghosts) {
              return ghosts + possible_additive_ghosts();
           }
       };
@@ -263,24 +259,20 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          static inline structured::GhostData possible_ghosts(void) {
+          static inline GhostData possible_ghosts(void) {
              return additive_reductive_point_to_ghost(Point::int_vec());
           }
 
-          static inline structured::GhostData possible_ghosts(structured::
-                                                              GhostData const &
-                                                              ghosts) {
+          static inline GhostData possible_ghosts(GhostData const & ghosts) {
              return ghosts + possible_ghosts();
           }
 
-          static inline structured::GhostData possible_additive_ghosts(void) {
+          static inline GhostData possible_additive_ghosts(void) {
              return additive_point_to_ghost(Point::int_vec());
           }
 
-          static inline structured::GhostData possible_additive_ghosts(structured::
-                                                                       GhostData
-                                                                       const &
-                                                                       ghosts) {
+          static inline GhostData possible_additive_ghosts(GhostData const &
+                                                           ghosts) {
              return ghosts + possible_additive_ghosts();
           }
       };
@@ -316,25 +308,23 @@
           : arg_(a), coefs_(coefs)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return Pts::possible_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return Pts::possible_ghosts(arg_.ghosts_without_bc());
           }
 
           inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline structured::IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline structured::IntVec has_bc(void) const { return arg_.has_bc(); }
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(arg_.init(extents, ghosts, hasBC), coefs_);
           }
 
@@ -352,9 +342,9 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(arg_.gpu_init(extents,
                                                  ghosts,
@@ -392,9 +382,9 @@
              : arg_(arg), coefs_(coefs)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(arg_.init(extents, ghosts, hasBC), coefs_);
              }
 
@@ -568,25 +558,23 @@
           : arg_(a), coefs_(coefs)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return Pts::possible_additive_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return Pts::possible_additive_ghosts(arg_.ghosts_without_bc());
           }
 
           inline bool has_extents(void) const { return arg_.has_extent(); }
 
-          inline structured::IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline structured::IntVec has_bc(void) const { return arg_.has_bc(); }
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(arg_.init(extents, ghosts, hasBC),
                                 coefs_,
                                 lowest_indicies(),
@@ -610,9 +598,9 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(arg_.gpu_init(extents,
                                                  ghosts,
@@ -630,15 +618,15 @@
           #endif
           /* __CUDACC__ */
 
-          inline structured::GhostData actual_ghosts(void) const {
+          inline GhostData actual_ghosts(void) const {
              return Pts::possible_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::IntVec lowest_indicies(void) const {
+          inline IntVec lowest_indicies(void) const {
              return -(actual_ghosts().get_minus());
           }
 
-          inline structured::IntVec highest_indicies(void) const {
+          inline IntVec highest_indicies(void) const {
              return actual_ghosts().get_plus() + extents();
           }
 
@@ -662,14 +650,14 @@
 
              NeboEdgelessStencil(Arg const & arg,
                                  Coefs const & coefs,
-                                 structured::IntVec const & low,
-                                 structured::IntVec const & high)
+                                 IntVec const & low,
+                                 IntVec const & high)
              : arg_(arg), coefs_(coefs), low_(low), high_(high)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(arg_.init(extents, ghosts, hasBC),
                                    coefs_,
                                    low_,
@@ -681,9 +669,9 @@
 
              Coefs const coefs_;
 
-             structured::IntVec const low_;
+             IntVec const low_;
 
-             structured::IntVec const high_;
+             IntVec const high_;
          }
       #endif
       /* ENABLE_THREADS */;
@@ -733,14 +721,14 @@
 
           NeboEdgelessStencil(Arg const & arg,
                               Coefs const & coefs,
-                              structured::IntVec const & low,
-                              structured::IntVec const & high)
+                              IntVec const & low,
+                              IntVec const & high)
           : arg_(arg), coefs_(coefs), low_(low), high_(high)
           {}
 
           inline value_type eval(int const x, int const y, int const z) const {
              #ifndef NDEBUG
-                structured::IntVec index = structured::IntVec(x, y, z);
+                IntVec index = IntVec(x, y, z);
                 if(index < low_ || index >= high_) {
                    std::ostringstream msg;
                    msg << "Nebo error in " << "Nebo Edgeless Stencil" << ":\n";
@@ -760,9 +748,9 @@
 
           Coefs const coefs_;
 
-          structured::IntVec const low_;
+          IntVec const low_;
 
-          structured::IntVec const high_;
+          IntVec const high_;
       };
       #ifdef __CUDACC__
          template<typename Pts, typename Arg, typename FieldType>
@@ -864,25 +852,23 @@
           : arg_(a)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return Pts::possible_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return Pts::possible_ghosts(arg_.ghosts_without_bc());
           }
 
           inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline structured::IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline structured::IntVec has_bc(void) const { return arg_.has_bc(); }
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(arg_.init(extents, ghosts, hasBC));
           }
 
@@ -900,9 +886,9 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(arg_.gpu_init(extents,
                                                  ghosts,
@@ -935,9 +921,9 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(arg_.init(extents, ghosts, hasBC));
              }
 
@@ -1060,9 +1046,7 @@
       /* __CUDACC__ */;
 
       template<typename Point>
-       static inline structured::GhostData point_possible_ghosts(structured::
-                                                                 GhostData const
-                                                                 & ghosts) {
+       static inline GhostData point_possible_ghosts(GhostData const & ghosts) {
           return ghosts + additive_reductive_point_to_ghost(Point::int_vec());
        };
 
@@ -1102,25 +1086,23 @@
           : arg_(a)
           {}
 
-          inline structured::GhostData ghosts_with_bc(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return point_possible_ghosts<Point>(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData ghosts_without_bc(void) const {
+          inline GhostData ghosts_without_bc(void) const {
              return point_possible_ghosts<Point>(arg_.ghosts_without_bc());
           }
 
           inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline structured::IntVec extents(void) const {
-             return arg_.extents();
-          }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline structured::IntVec has_bc(void) const { return arg_.has_bc(); }
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
 
-          inline SeqWalkType init(structured::IntVec const & extents,
-                                  structured::GhostData const & ghosts,
-                                  structured::IntVec const & hasBC) const {
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(arg_.init(extents, ghosts, hasBC));
           }
 
@@ -1138,9 +1120,9 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(structured::IntVec const & extents,
-                                         structured::GhostData const & ghosts,
-                                         structured::IntVec const & hasBC,
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
                                          int const deviceIndex) const {
                 return GPUWalkType(arg_.gpu_init(extents,
                                                  ghosts,
@@ -1175,9 +1157,9 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(structured::IntVec const & extents,
-                                     structured::GhostData const & ghosts,
-                                     structured::IntVec const & hasBC) const {
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
                 return SeqWalkType(arg_.init(extents, ghosts, hasBC));
              }
 

@@ -36,6 +36,7 @@ namespace Particle{
     *  @class  ParticleToCell
     *  @author James C. Sutherland
     *  @brief Interpolates an extensive particle field onto an underlying mesh field.
+    *  @ingroup optypes
     *
     *  Note that this should only be used to interpolate extensive quantities and
     *  not intensive quantities.
@@ -48,9 +49,13 @@ namespace Particle{
      typedef CellField     DestFieldType;
 
      /**
-      * @param xcoord  mesh x-coordinate field
-      * @param ycoord  mesh y-coordinate field
-      * @param zcoord  mesh z-coordinate field
+      * @brief construct a ParticleToCell operator
+      * @param dx  x-direction mesh spacing
+      * @param xlo x-direction low coordinate
+      * @param dy  y-direction mesh spacing
+      * @param ylo y-direction low coordinate
+      * @param dz  z-direction mesh spacing
+      * @param zlo z-direction low coordinate
       */
      ParticleToCell( const double dx,    const double xlo,
                      const double dy=-1, const double ylo =0,
@@ -87,6 +92,7 @@ namespace Particle{
    *  @class CellToParticle
    *  @brief Operator to interpolate a mesh field onto a particle.
    *  @author James C. Sutherland
+   *  @ingroup optypes
    *
    *  Note that this can be used for either intensive or extensive quantities.
    */
@@ -98,7 +104,13 @@ namespace Particle{
     typedef ParticleField DestFieldType;
 
     /**
-     *  @param meshCoord Field of coordinates for the underlying mesh
+     * @brief Construct a CellToParticle operator
+     * @param dx  x-direction mesh spacing
+     * @param xlo x-direction low coordinate
+     * @param dy  y-direction mesh spacing
+     * @param ylo y-direction low coordinate
+     * @param dz  z-direction mesh spacing
+     * @param zlo z-direction low coordinate
      */
     CellToParticle( const double dx,    const double xlo,
                     const double dy=-1, const double ylo =0,

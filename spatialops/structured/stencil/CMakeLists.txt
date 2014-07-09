@@ -13,14 +13,8 @@ endif( ENABLE_TESTS )
 install( FILES
   FVStaggeredBCOp.h
   StencilBuilder.h
-  DESTINATION include/spatialops/structured/stencil/
-  PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
-  )
-
-install( FILES
-  FVStaggered.h
   FVStaggeredOperatorTypes.h
-  DESTINATION include/spatialops/structured/
+  DESTINATION include/spatialops/structured/stencil/
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )
 

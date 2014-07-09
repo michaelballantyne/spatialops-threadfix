@@ -31,15 +31,12 @@
 /**
  *  \file FVStaggeredLocationTypes.h
  *
- *  \addtogroup structured
- *  @{
- *  \addtogroup fields
+ *  \addtogroup fieldtypes
  *  @{
  *
  */
 
 namespace SpatialOps{
-namespace structured{
 
 
   // FaceDir: The direction relative to its volume field that this field is staggered.
@@ -128,11 +125,9 @@ namespace structured{
    */
   struct SingleValue { typedef NODIR FaceDir; typedef IndexTriplet<0,0,0> Offset; typedef IndexTriplet<0,0,0> BCExtra; };
 
-}// namespace structured
 }// namespace SpatialOps
 
 /**
- *  @}
  *  @}
  */
 

@@ -3,7 +3,6 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/OperatorDatabase.h>
 
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 
@@ -18,7 +17,6 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-using namespace structured;
 
 #include <stdexcept>
 using std::cout;
@@ -80,7 +78,7 @@ bool test_stencil2(const IntVec npts,
   test <<= 0.0;
 
   //get operator:
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
   const Op* const op = opdb.retrieve_operator<Op>();
 
   //run reference:
@@ -119,7 +117,7 @@ bool test_stencil4(const IntVec npts,
   test <<= 0.0;
 
   //get operator:
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
   const Op* const op = opdb.retrieve_operator<Op>();
 
   //run reference:
@@ -157,7 +155,7 @@ bool test_fd_stencil2(const IntVec npts,
   test <<= 0.0;
 
   //get operator:
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
   const Op* const op = opdb.retrieve_operator<Op>();
 
   //run reference:
@@ -196,7 +194,7 @@ bool test_null_stencil(const IntVec npts,
   test <<= 0.0;
 
   //get operator:
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpType,SrcType,DestType>::type Op;
   const Op* const op = opdb.retrieve_operator<Op>();
 
   //run reference:
@@ -229,7 +227,7 @@ bool test_box_filter_stencil(const IntVec npts,
   test <<= 0.0;
 
   //get operator:
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpType,FieldType,FieldType>::type Op;
   const Op* const op = opdb.retrieve_operator<Op>();
 
   //run reference:
@@ -296,7 +294,6 @@ inline bool test_basic_stencils(const IntVec npts,
 bool test_compile_time()
 {
   using namespace SpatialOps;
-  using namespace structured;
   using namespace RefStencil2Detail;
 
   TestHelper status(false);

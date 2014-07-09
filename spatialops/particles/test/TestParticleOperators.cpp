@@ -4,10 +4,7 @@
 using std::cout;
 using std::endl;
 
-
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
-#include <spatialops/structured/MemoryWindow.h>
 
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/particles/ParticleOperators.h>
@@ -16,11 +13,8 @@ using std::endl;
 
 #include <test/TestHelper.h>
 
-typedef SpatialOps::structured::SVolField CellField;
-using SpatialOps::structured::IntVec;
-using SpatialOps::write_matlab;
-using SpatialOps::structured::MemoryWindow;
-namespace SS=SpatialOps::structured;
+typedef SpatialOps::SVolField CellField;
+using namespace SpatialOps;
 
 int main()
 {
@@ -29,9 +23,9 @@ int main()
 
   IntVec dim(10,1,1);
 
-  const SS::GhostData cg(1);
-  const SS::BoundaryCellInfo cbc = SS::BoundaryCellInfo::build<CellField>();
-  const MemoryWindow mw = get_window_with_ghost( dim, cg, SS::BoundaryCellInfo::build<CellField>(false,false,false) );
+  const GhostData cg(1);
+  const BoundaryCellInfo cbc = BoundaryCellInfo::build<CellField>();
+  const MemoryWindow mw = get_window_with_ghost( dim, cg, BoundaryCellInfo::build<CellField>(false,false,false) );
 
   //
   // build the fields
@@ -40,8 +34,8 @@ int main()
   CellField cellFieldvalues( mw, cbc, cg, NULL );
   CellField            ctmp( mw, cbc, cg, NULL );
 
-  const SS::GhostData pg(0);
-  const SS::BoundaryCellInfo pbc = SS::BoundaryCellInfo::build<SpatialOps::Particle::ParticleField>();
+  const GhostData pg(0);
+  const BoundaryCellInfo pbc = BoundaryCellInfo::build<SpatialOps::Particle::ParticleField>();
   const MemoryWindow pmw( IntVec(np,1,1) );
 
   SpatialOps::Particle::ParticleField pCoord( pmw, pbc, pg, NULL );

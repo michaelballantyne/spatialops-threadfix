@@ -28,13 +28,12 @@
 #include <spatialops/Nebo.h>
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    *  \struct OperatorTypeBuilder
    *  \author James C. Sutherland
-   *
-   *  \brief Builds operator types
+   *  \ingroup optypes
+   *  \brief Builds operator types from field types and operator type descriptors.
    *  \tparam OpT the type of operator (\c Interpolant, \c Gradient, \c Divergence)
    *  \tparam SrcT the field type that the operator acts on
    *  \tparam DestT the field type that the operator produces
@@ -73,7 +72,7 @@ namespace structured{
   /**
    *  \struct BasicOpTypes
    *  \author James C. Sutherland
-   *
+   *  \ingroup optypes
    *  \brief Provides typedefs for common operator types on a given volume
    *  \tparam CellT the type of volume we are considering.
    *
@@ -81,9 +80,9 @@ namespace structured{
    *   - \c InterpC2FX Interpolate to the x-surface
    *   - \c InterpC2FY Interpolate to the y-surface
    *   - \c InterpC2FZ Interpolate to the z-surface
-   *   - \c GradX Calculate \f$\frac{\partial}{\partial x}$\f on the x-surface
-   *   - \c GradY Calculate \f$\frac{\partial}{\partial y}$\f on the y-surface
-   *   - \c GradZ Calculate \f$\frac{\partial}{\partial z}$\f on the z-surface
+   *   - \c GradX Calculate \f$\frac{\partial}{\partial x}\f$ on the x-surface
+   *   - \c GradY Calculate \f$\frac{\partial}{\partial y}\f$ on the y-surface
+   *   - \c GradZ Calculate \f$\frac{\partial}{\partial z}\f$ on the z-surface
    *   - \c DivX Calculate the divergence from the x-surface to the volume
    *   - \c DivY Calculate the divergence from the y-surface to the volume
    *   - \c DivZ Calculate the divergence from the z-surface to the volume
@@ -282,7 +281,6 @@ namespace structured{
   FD_ALL_VOL_FIELDS( GradientY )
   FD_ALL_VOL_FIELDS( GradientZ )
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_structured_FVStaggeredOpTypes_h

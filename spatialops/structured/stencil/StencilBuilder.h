@@ -31,8 +31,6 @@ namespace SpatialOps{
 
   class OperatorDatabase;
 
-namespace structured{
-
   /**
    *  \fn void build_stencils( const unsigned int nx,
    *                           const unsigned int ny,
@@ -58,7 +56,6 @@ namespace structured{
                        const double Lz,
                        OperatorDatabase& opdb );
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_structured_StencilBuilder_h

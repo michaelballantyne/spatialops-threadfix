@@ -36,7 +36,6 @@
 #include <spatialops/structured/Numeric3Vec.h>
 
 namespace SpatialOps{
-namespace structured{
 
   typedef  Numeric3Vec<int> IntVec; ///< a lightweight class to deal with a 3D vector of integers.
 
@@ -74,7 +73,6 @@ namespace structured{
                     (first[2] < second[2] ? first[2] : second[2]));
   }
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif /* SpatialOps_IntVec_h */

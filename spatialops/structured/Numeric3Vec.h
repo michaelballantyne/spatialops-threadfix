@@ -35,7 +35,7 @@
 
 
 namespace SpatialOps{
-  namespace structured{
+
 /**
  * \class Numeric3Vec
  * \author John Hutchins
@@ -181,11 +181,6 @@ template<typename T>
    return os;
  }
 
-
-
-
-}
-}
-
+} // namespace SpatialOps
 
 #endif /* Numeric3Vec_H_ */

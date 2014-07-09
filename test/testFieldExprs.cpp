@@ -1,35 +1,31 @@
 #include <spatialops/Nebo.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
-
 #include <spatialops/structured/FieldComparisons.h>
 #include "TestHelper.h"
 
 #include <numeric>
 
-namespace SS = SpatialOps::structured;
-
 using namespace SpatialOps;
 
 template< typename FieldT >
-bool test( const SS::IntVec dim )
+bool test( const IntVec dim )
 {
   TestHelper status(false);
-  const SS::GhostData ghost(1);
-  const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<FieldT>(true,true,true);
-  const SS::MemoryWindow w( SS::get_window_with_ghost(dim,ghost,bc) );
+  const GhostData ghost(1);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
+  const MemoryWindow w( get_window_with_ghost(dim,ghost,bc) );
   FieldT f1(w,bc,ghost,NULL),
          f2(w,bc,ghost,NULL),
          f3(w,bc,ghost,NULL),
          f4(w,bc,ghost,NULL),
           x(w,bc,ghost,NULL);
 
-  const SS::IntVec& globDim = w.glob_dim();
+  const IntVec& globDim = w.glob_dim();
   const double dx = 3.1415 / (globDim[0]);
   for( int k=0; k<globDim[2]; ++k ){
     for( int j=0; j<globDim[1]; ++j ){
       for( int i=0; i<globDim[0]; ++i ){
-        const size_t ix = w.flat_index( SS::IntVec(i,j,k) );
+        const size_t ix = w.flat_index( IntVec(i,j,k) );
         x[ ix ] = dx*i;
       }
     }
@@ -78,29 +74,29 @@ bool test( const SS::IntVec dim )
 }
 
 
-bool drive_test( const SS::IntVec& dim )
+bool drive_test( const IntVec& dim )
 {
   TestHelper status( true );
 
-  status( test<SS::SVolField  >( dim ), "SVolField" );
-  status( test<SS::SSurfXField>( dim ), "SSurfXField" );
-  status( test<SS::SSurfYField>( dim ), "SSurfYField" );
-  status( test<SS::SSurfZField>( dim ), "SSurfZField" );
+  status( test<SVolField  >( dim ), "SVolField" );
+  status( test<SSurfXField>( dim ), "SSurfXField" );
+  status( test<SSurfYField>( dim ), "SSurfYField" );
+  status( test<SSurfZField>( dim ), "SSurfZField" );
 
-  status( test<SS::XVolField  >( dim ), "XVolField" );
-  status( test<SS::XSurfXField>( dim ), "XSurfXField" );
-  status( test<SS::XSurfYField>( dim ), "XSurfYField" );
-  status( test<SS::XSurfZField>( dim ), "XSurfZField" );
+  status( test<XVolField  >( dim ), "XVolField" );
+  status( test<XSurfXField>( dim ), "XSurfXField" );
+  status( test<XSurfYField>( dim ), "XSurfYField" );
+  status( test<XSurfZField>( dim ), "XSurfZField" );
 
-  status( test<SS::YVolField  >( dim ), "YVolField" );
-  status( test<SS::YSurfXField>( dim ), "YSurfXField" );
-  status( test<SS::YSurfYField>( dim ), "YSurfYField" );
-  status( test<SS::YSurfZField>( dim ), "YSurfZField" );
+  status( test<YVolField  >( dim ), "YVolField" );
+  status( test<YSurfXField>( dim ), "YSurfXField" );
+  status( test<YSurfYField>( dim ), "YSurfYField" );
+  status( test<YSurfZField>( dim ), "YSurfZField" );
 
-  status( test<SS::ZVolField  >( dim ), "ZVolField" );
-  status( test<SS::ZSurfXField>( dim ), "ZSurfXField" );
-  status( test<SS::ZSurfYField>( dim ), "ZSurfYField" );
-  status( test<SS::ZSurfZField>( dim ), "ZSurfZField" );
+  status( test<ZVolField  >( dim ), "ZVolField" );
+  status( test<ZSurfXField>( dim ), "ZSurfXField" );
+  status( test<ZSurfYField>( dim ), "ZSurfYField" );
+  status( test<ZSurfZField>( dim ), "ZSurfZField" );
 
   return status.ok();
 }
@@ -110,15 +106,15 @@ int main()
 {
   TestHelper status( true );
 
-  status( drive_test( SS::IntVec(10,1,1) ), "Dimension: (10,1,1) tests");
-  status( drive_test( SS::IntVec(1,10,1) ), "Dimension: (1,10,1) tests");
-  status( drive_test( SS::IntVec(1,1,10) ), "Dimension: (1,1,10) tests");
+  status( drive_test( IntVec(10,1,1) ), "Dimension: (10,1,1) tests");
+  status( drive_test( IntVec(1,10,1) ), "Dimension: (1,10,1) tests");
+  status( drive_test( IntVec(1,1,10) ), "Dimension: (1,1,10) tests");
 
-  status( drive_test( SS::IntVec(10,10,1) ), "Dimension: (10,10,1) tests");
-  status( drive_test( SS::IntVec(10,1,10) ), "Dimension: (10,1,10) tests");
-  status( drive_test( SS::IntVec(1,10,10) ), "Dimension: (1,10,10) tests");
+  status( drive_test( IntVec(10,10,1) ), "Dimension: (10,10,1) tests");
+  status( drive_test( IntVec(10,1,10) ), "Dimension: (10,1,10) tests");
+  status( drive_test( IntVec(1,10,10) ), "Dimension: (1,10,10) tests");
 
-  status( drive_test( SS::IntVec(10,10,10) ), "Dimension: (10,10,10) tests");
+  status( drive_test( IntVec(10,10,10) ), "Dimension: (10,10,10) tests");
 
   if( status.ok() ) return 0;
   return -1;

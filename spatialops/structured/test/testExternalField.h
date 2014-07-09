@@ -26,7 +26,6 @@
 #define DEBUG_SPATIAL_FIELD
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/MemoryWindow.h>
@@ -35,8 +34,8 @@ namespace SpatialOps {
 namespace Point {
 
 struct PointFieldGhostTraits {
-    typedef SpatialOps::structured::IndexTriplet<0,0,0> NGhostMinus;
-    typedef SpatialOps::structured::IndexTriplet<0,0,0> NGhostPlus;
+    typedef SpatialOps::IndexTriplet<0,0,0> NGhostMinus;
+    typedef SpatialOps::IndexTriplet<0,0,0> NGhostPlus;
 };
 
 struct PointFieldTraits { typedef NODIR FaceDir; typedef NODIR StagLoc; };
@@ -50,7 +49,7 @@ struct PointFieldTraits { typedef NODIR FaceDir; typedef NODIR StagLoc; };
  *  points from a parent field and return them back to a parent
  *  field.
  */
-typedef structured::SpatialField<Point::PointFieldTraits,
+typedef SpatialField<Point::PointFieldTraits,
     Point::PointFieldGhostTraits> PointField;
 
 } // namespace Point

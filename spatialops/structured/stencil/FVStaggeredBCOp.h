@@ -29,7 +29,6 @@
 #include <spatialops/Nebo.h>
 
 namespace SpatialOps{
-namespace structured{
 
   namespace bmpl = boost::mpl;
 
@@ -92,7 +91,7 @@ namespace structured{
     typedef BCEval BCEvalT;  ///< Expose the BCEval type.
 
     /**
-     *  \param destIndex The i,j,k location at which we want to specify
+     *  \param destIndex The (i,j,k) location at which we want to specify
      *         the boundary condition.  This is indexed 0-based on
      *         the interior (neglecting ghost cells), and refers to
      *         the index in the "destination" field of the operator.
@@ -100,7 +99,7 @@ namespace structured{
      *  \param side The side of the cell (MINUS_SIDE or PLUS_SIDE) that
      *         this BC is to be applied on.
      *
-     *  \param eval The evaluator to obtain the bc value at this point.
+     *  \param bceval The evaluator to obtain the bc value at this point.
      *
      *  \param opdb The database for spatial operators. An operator of
      *         type OpT will be extracted from this database.
@@ -120,7 +119,7 @@ namespace structured{
      *  \param side The side of the cell (MINUS_SIDE or PLUS_SIDE) that
      *         this BC is to be applied on.
      *
-     *  \param eval The evaluator to obtain the bc value at this point.
+     *  \param bceval The evaluator to obtain the bc value at this point.
      *
      *  \param opdb The database for spatial operators. An operator of
      *         type OpT will be extracted from this database.
@@ -187,7 +186,7 @@ namespace structured{
 
   template< typename OpT, typename BCEval >
   BoundaryConditionOp<OpT,BCEval>::
-  BoundaryConditionOp( const SpatialOps::structured::MemoryWindow& window,
+  BoundaryConditionOp( const SpatialOps::MemoryWindow& window,
                        const std::vector<IntVec>& destIJKPoints,
                        const BCSide side,
                        const BCEval bceval,
@@ -245,7 +244,6 @@ namespace structured{
 
   //------------------------------------------------------------------
 
-} // namespace
 } // namespace SpatialOps
 
 #endif // SpatialOps_FVStaggeredStencilBCOp_h
