@@ -50,7 +50,7 @@ int main()
   // Create fields
   typedef SpatialOps::SVolField FieldT;
 
-  // set some objects that are requried to construct a field.
+  // set some objects that are required to construct a field.
   // Don't worry about these too much for now. Just use these values as defaults.
   const bool bcx=true, bcy=true, bcz=true;
   const GhostData nghost(0);

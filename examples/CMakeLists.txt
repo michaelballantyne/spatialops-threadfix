@@ -8,6 +8,18 @@ nebo_add_executable( example_2 Example2_field_operations.cpp )
 target_link_libraries( example_2 spatialops )
 add_test( example_2 example_2 )
 
-nebo_add_executable( example_field_type_inference Example_field_type_inference.cpp )
+nebo_add_executable( example_3 Example3_field_reductions.cpp )
+target_link_libraries( example_3 spatialops )
+add_test( example_3 example_3 )
+
+nebo_add_executable( example_field_type_inference Example4_field_type_inference.cpp )
 target_link_libraries( example_field_type_inference spatialops )
 add_test( example_field_type_inference example_field_type_inference )
+
+nebo_add_executable( example_stencil_types Example5_stencil_type_inference.cpp )
+target_link_libraries( example_stencil_types spatialops )
+add_test( example_stencil_types example_stencil_types )
+
+nebo_add_executable( example_stencils Example7_stencils.cpp )
+target_link_libraries( example_stencils spatialops )
+add_test( example_stencils example_stencils )

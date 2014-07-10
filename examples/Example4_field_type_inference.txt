@@ -1,5 +1,5 @@
 /**
-\example Example_field_type_inference.cpp  Inferring field types.
+\example Example4_field_type_inference.cpp  Inferring field types.
 
 # Goal of this example
  This example will show how to obtain related field types from an existing field

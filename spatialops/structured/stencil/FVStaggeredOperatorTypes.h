@@ -77,15 +77,18 @@ namespace SpatialOps{
    *  \tparam CellT the type of volume we are considering.
    *
    *  The following public typedefs are made:
-   *   - \c InterpC2FX Interpolate to the x-surface
-   *   - \c InterpC2FY Interpolate to the y-surface
-   *   - \c InterpC2FZ Interpolate to the z-surface
-   *   - \c GradX Calculate \f$\frac{\partial}{\partial x}\f$ on the x-surface
-   *   - \c GradY Calculate \f$\frac{\partial}{\partial y}\f$ on the y-surface
-   *   - \c GradZ Calculate \f$\frac{\partial}{\partial z}\f$ on the z-surface
-   *   - \c DivX Calculate the divergence from the x-surface to the volume
-   *   - \c DivY Calculate the divergence from the y-surface to the volume
-   *   - \c DivZ Calculate the divergence from the z-surface to the volume
+   *
+   *  Operator Type  | Description
+   *  ---------------|----------------
+   *  \c InterpC2FX  | Interpolate to the x-surface
+   *  \c InterpC2FY  | Interpolate to the y-surface
+   *  \c InterpC2FZ  | Interpolate to the z-surface
+   *  \c GradX       | Calculate \f$\frac{\partial}{\partial x}\f$ on the x-surface
+   *  \c GradY       | Calculate \f$\frac{\partial}{\partial y}\f$ on the y-surface
+   *  \c GradZ       | Calculate \f$\frac{\partial}{\partial z}\f$ on the z-surface
+   *  \c DivX        | Calculate the divergence from the x-surface to the volume
+   *  \c DivY        | Calculate the divergence from the y-surface to the volume
+   *  \c DivZ        | Calculate the divergence from the z-surface to the volume
    *
    *  This struct is defined for the following field types:
    *   - \c SVolField
@@ -93,8 +96,8 @@ namespace SpatialOps{
    *   - \c YVolField
    *   - \c ZVolField
    *
-   *  Examples:
-   *  \code
+   *  Example usage:
+   *  \code{.cpp}
    *  typedef BasicOpTypes<SVolField>::GradY      MyGradYType;
    *  typedef BasicOpTypes<SVolField>::InterpC2FX InterpSVolSSurfX;
    *  \endcode

@@ -1,5 +1,5 @@
 /**
- *  \file   Example_field_type_inference.cpp
+ *  \file   Example4_field_type_inference.cpp
  *  \date   Jul 10, 2014
  *  \author "James C. Sutherland"
  *
