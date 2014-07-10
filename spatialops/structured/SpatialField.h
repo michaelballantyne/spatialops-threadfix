@@ -1420,23 +1420,12 @@ set_field_loc_active( const short int deviceLoc )
             << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
-# ifndef NDEBUG
-  if( multiFieldMap_.find( deviceLoc ) == multiFieldMap_.end() ){
-    std::ostringstream msg;
-    msg << "Error : Requesting to set a field location as active that doesn't exist\n"
-        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
+  // Add a field if it doesn't exist
+  if( multiFieldMap_.find( deviceLoc ) == multiFieldMap_.end() ) this->add_field_loc(deviceLoc);
 
   // check if the field location that is active is indeed "VALID"
-  if( !multiFieldMap_[deviceLoc].isValid ){
-    std::ostringstream msg;
-    msg << "Error : FieldLocation " << DeviceTypeTools::get_memory_type_description(deviceLoc)
-        << " trying to set active, is not valid.\n"
-        << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-# endif
+  if( !multiFieldMap_[deviceLoc].isValid ) this->sync_location(deviceLoc);
+
   activeDeviceIndex_ = deviceLoc;
 }
 
