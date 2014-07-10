@@ -25,13 +25,15 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
+/** \file SpatialOpsDefs.h */
+
 namespace SpatialOps{
 
   //==================================================================
 
   /**
    * @defgroup DirectionDefinitions Direction Definitions
-   * @brief Specification of the directions in cartesian coordinates
+   * @brief Specification of the directions in Cartesian coordinates
    * @{
    */
 

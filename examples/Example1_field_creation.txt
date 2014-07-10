@@ -30,7 +30,7 @@ comprised of a few things:
 
   - The location of the field (CPU, GPU, etc.).
 
-  For now, dont worry about these details - they will be covered in more detail
+  For now, don't worry about these details - they will be covered in more detail
   in later examples.
 
  -# A \link SpatialOps::SpatialField SpatialField \endlink is

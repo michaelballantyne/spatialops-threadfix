@@ -36,7 +36,7 @@
 namespace SpatialOps{
 
   /**
-   *  \ingroup fieldtypes
+   *  \addtogroup fieldtypes
    *  @{
    *
    *  \typedef typedef SVolField;
@@ -122,12 +122,12 @@ namespace SpatialOps{
    */
   typedef SpatialField< SingleValue > SingleValueField;
 
-
   /**
    *  \struct FaceTypes
    *  \brief Define Face field types in terms of a cell field type.
    *
    *  Class template specializations exist for the following field types:
+   *   - Link to SpatialOps::SVolField
    *   - \link SpatialOps::SVolField  SVolField \endlink
    *   - \link SpatialOps::XVolField  XVolField \endlink
    *   - \link SpatialOps::YVolField  YVolField \endlink
@@ -179,7 +179,6 @@ namespace SpatialOps{
 
 
   /**
-   * @{
    *  \struct VolType
    *  \brief Define face field types in terms of a volume field type.
    *
@@ -198,7 +197,7 @@ namespace SpatialOps{
    *   - \link SpatialOps::ZSurfZField ZSurfZField \endlink
    *
    *  Example usage:
-   *  \code
+   *  \code{.cpp}
    *  typedef VolType< FaceT       >::VolField FieldT;
    *  typedef VolType< SSurfZField >::VolField FieldT;
    *  \endcode
@@ -222,7 +221,6 @@ namespace SpatialOps{
   template<> struct VolType<ZSurfXField>{ typedef ZVolField VolField; };
   template<> struct VolType<ZSurfYField>{ typedef ZVolField VolField; };
   template<> struct VolType<ZSurfZField>{ typedef ZVolField VolField; };
-  /**@}*/
 
 /**
  *  @} // fieldtypes group
