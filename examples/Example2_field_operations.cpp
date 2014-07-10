@@ -81,6 +81,10 @@ int main()
   f <<= sin(x) + cos(y) + tanh(z);
 
   // Field reduction operations - currently only supported on CPU
+  // To perform field reduction operations, any field on GPU has to be brought back to CPU
+  # ifdef ENABLE_CUDA
+  if( IS_GPU_INDEX(f.device_index()) ) f.add_field_loc( CPU_INDEX );
+  # endif
   const double fmax = field_max( f );                   // maximum of a field
   const double max2 = field_max( sin(x)*cos(x) + 2.0 ); // maximum of an expression
   const double fnorm = field_norm( f );                 // L2 norm of f
