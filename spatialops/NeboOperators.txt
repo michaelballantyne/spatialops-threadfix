@@ -55,6 +55,7 @@ hyperbolic tan                       | `tanh`     | `result <<= tanh(arg)`     |
 natural logarithm                    | `log`      | `result <<= log(arg)`      | SpatialOps::LogFcn       
 base 10 logarithm                    | `log10`    | `result <<= log10(arg)`    | SpatialOps::Log10Fcn       
 exponentiation                       | `pow`      | `result <<= pow(arg,val)`  | SpatialOps::PowFcn
+square root                          | `sqrt`     | `result <<= sqrt(arg)`     | SpatialOps::SqrtFcn
 
 
 \section compops Comparison Operations
