@@ -54,33 +54,21 @@ int main()
   // Also create this field in the appropriate location (GPU/CPU) depending on
   // how this was configured.
   typedef SVolField FieldT;  // SVolField = Scalar Volume Field (non-staggered, cell-centered field)
-  const GhostData nghost(1);
+  const GhostData nghost(0);
   const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
   const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
 
+  //============================================================================
+  // BUILD THE FIELD
   FieldT f( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  //============================================================================
 
 
   //----------------------------------------------------------------------------
   // Create some fields from the "SpatialFieldStore" using the previously
   // created field as a prototype.  SpatFldPtr has regular pointer semantics
   // but is a reference-counted pointer.
-
   SpatFldPtr<FieldT> f2 = SpatialFieldStore::get<FieldT>(f); // field with same layout as "f"
-
-
-  //----------------------------------------------------------------------------
-  // f and f2 are volume fields on the scalar (non-staggered) mesh.  Now let's
-  // create a few surface fields.  We will use type inference to get the face
-  // field associated with the cell field type that we are using
-
-  typedef FaceTypes<FieldT>::XFace XFaceT;  // X-face field on the scalar mesh
-  typedef FaceTypes<FieldT>::YFace YFaceT;  // Y-face field on the scalar mesh
-  typedef FaceTypes<FieldT>::ZFace ZFaceT;  // Z-face field on the scalar mesh
-
-  SpatFldPtr<XFaceT> fx = SpatialFieldStore::get<XFaceT>(f); // field on x-face of the same grid as "f"
-  SpatFldPtr<YFaceT> fy = SpatialFieldStore::get<YFaceT>(f); // field on y-face of the same grid as "f"
-  SpatFldPtr<ZFaceT> fz = SpatialFieldStore::get<ZFaceT>(f); // field on z-face of the same grid as "f"
 
   return 0;
 }

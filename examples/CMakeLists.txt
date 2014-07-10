@@ -7,3 +7,6 @@ add_test( example_1 example_1 )
 nebo_add_executable( example_2 Example2_field_operations.cpp )
 target_link_libraries( example_2 spatialops )
 add_test( example_2 example_2 )
+
+nebo_add_executable( example_field_type_inference Example_field_type_inference.cpp )
+add_test( example_field_type_inference example_field_type_inference )

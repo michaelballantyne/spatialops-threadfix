@@ -32,33 +32,43 @@
 #include <spatialops/structured/Grid.h> // convenient way to define coordinates
 using namespace SpatialOps;
 
+// If we are compiling with GPU CUDA support, create fields on the device.
+// Otherwise, create them on the host.
+#ifdef ENABLE_CUDA
+# define LOCATION GPU_INDEX
+#else
+# define LOCATION CPU_INDEX
+#endif
+
 int main()
 {
   // Define the size of the field (nx,ny,nz)
   const IntVec fieldDim( 10, 9, 8 );
+
+
+  //----------------------------------------------------------------------------
+  // Create fields
+  typedef SpatialOps::SVolField FieldT;
+
+  // set some objects that are requried to construct a field.
+  // Don't worry about these too much for now. Just use these values as defaults.
+  const bool bcx=true, bcy=true, bcz=true;
+  const GhostData nghost(0);
+  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
+  const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
+
+  FieldT x( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT y( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT z( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+
+  FieldT f( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT g( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
 
   //----------------------------------------------------------------------------
   // Build a grid. This is a convenient way to set coordinate values that will
   // be used below.
   std::vector<double> domainLength(3,1.0);  // a cube of unit length
   const Grid grid( fieldDim, domainLength );
-
-  //----------------------------------------------------------------------------
-  // Create fields
-  typedef SpatialOps::SVolField FieldT;
-
-  const bool bcx=true, bcy=true, bcz=true;
-  const GhostData nghost(1);
-  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
-  const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
-
-  FieldT x( window, bcInfo, nghost, NULL, InternalStorage );
-  FieldT y( window, bcInfo, nghost, NULL, InternalStorage );
-  FieldT z( window, bcInfo, nghost, NULL, InternalStorage );
-
-  FieldT f( window, bcInfo, nghost, NULL, InternalStorage );
-  FieldT g( window, bcInfo, nghost, NULL, InternalStorage );
-
   grid.set_coord<XDIR>(x);
   grid.set_coord<YDIR>(y);
   grid.set_coord<ZDIR>(z);
