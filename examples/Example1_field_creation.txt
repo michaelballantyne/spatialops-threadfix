@@ -28,7 +28,9 @@ comprised of a few things:
     created internally.  For internally created fields, the supplied memory
     block can be NULL.
 
-  - The location of the field (CPU, GPU, etc.).
+  - The location of the field (CPU, GPU, etc.).  Fields can be created on a
+    CPU, GPU, etc. and moved between these. In fact, a field can have multiple
+    locations associated with it.
 
   For now, don't worry about these details - they will be covered in more detail
   in later examples.
