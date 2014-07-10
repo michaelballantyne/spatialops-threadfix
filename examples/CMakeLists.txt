@@ -9,4 +9,5 @@ target_link_libraries( example_2 spatialops )
 add_test( example_2 example_2 )
 
 nebo_add_executable( example_field_type_inference Example_field_type_inference.cpp )
+target_link_libraries( example_field_type_inference spatialops )
 add_test( example_field_type_inference example_field_type_inference )
