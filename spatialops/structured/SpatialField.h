@@ -234,12 +234,8 @@ namespace SpatialOps{
     : matchGlobalWindow_( window.fits_between(other.info_->window_without_ghost(),
                                               other.info_->window_with_all_ghost()) ),
       localWindow_( window ),
-      bcInfo_( matchGlobalWindow_ ?
-               other.info_->boundary_info() :
-               BoundaryCellInfo::build<field_type>(false,false,false) ),
-      localValidGhosts_( matchGlobalWindow_ ?
-                         other.localValidGhosts_.limit_by_extent(window.extent()) :
-                         GhostData(0,0,0,0,0,0) ),
+      bcInfo_( other.info_->boundary_info() ),
+      localValidGhosts_( other.localValidGhosts_.limit_by_extent(window.extent()) ),
       info_( other.info_ )
     {
       SingleValueCheck<Location>::check(window, localValidGhosts_);
