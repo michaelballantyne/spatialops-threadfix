@@ -12,7 +12,8 @@ bool test( const IntVec dim )
 {
   TestHelper status(false);
   const GhostData ghost(1);
-  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
+  // Boundary present if direction is active
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(dim[0]>1,dim[1]>1,dim[2]>1);
   const MemoryWindow w( get_window_with_ghost(dim,ghost,bc) );
   FieldT f1(w,bc,ghost,NULL),
          f2(w,bc,ghost,NULL),
