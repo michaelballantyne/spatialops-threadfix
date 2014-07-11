@@ -34,7 +34,8 @@ bool test_iterator( const IntVec npts,
   TestHelper status(verboseOutput);
 
   const GhostData ghost(1);
-  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
+  // Boundary present if a dir is active
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( npts[0]>1, npts[1]>1, npts[2]>1 );
   const MemoryWindow window( get_window_with_ghost(npts,ghost,bc) );
   FieldT f1( window, bc, ghost, NULL );
   FieldT f2( window, bc, ghost, NULL );

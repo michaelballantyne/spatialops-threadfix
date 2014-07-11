@@ -1,0 +1,20 @@
+/**
+
+\example Example3_field_reductions.cpp  Operations using fields.
+
+# Goal of this example
+This example will show how to use SpatialFields in SpatialOps to perform
+reduction operations (norm, max, min) on field
+
+# Key Concepts
+
+ -# Nebo supports reduction operations on fields.
+ -# Currently, field reductions only have support for CPU fields.
+ -# This example also illustrates the different layouts of fields.
+
+\sa \ref Example1_field_creation.cpp
+\sa \ref Example2_field_operations.cpp
+
+# Example Code
+*/
+ 

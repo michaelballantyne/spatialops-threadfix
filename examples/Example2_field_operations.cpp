@@ -32,33 +32,43 @@
 #include <spatialops/structured/Grid.h> // convenient way to define coordinates
 using namespace SpatialOps;
 
+// If we are compiling with GPU CUDA support, create fields on the device.
+// Otherwise, create them on the host.
+#ifdef ENABLE_CUDA
+# define LOCATION GPU_INDEX
+#else
+# define LOCATION CPU_INDEX
+#endif
+
 int main()
 {
   // Define the size of the field (nx,ny,nz)
   const IntVec fieldDim( 10, 9, 8 );
+
+
+  //----------------------------------------------------------------------------
+  // Create fields
+  typedef SpatialOps::SVolField FieldT;
+
+  // set some objects that are required to construct a field.
+  // Don't worry about these too much for now. Just use these values as defaults.
+  const bool bcx=true, bcy=true, bcz=true;
+  const GhostData nghost(0);
+  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
+  const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
+
+  FieldT x( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT y( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT z( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+
+  FieldT f( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT g( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
 
   //----------------------------------------------------------------------------
   // Build a grid. This is a convenient way to set coordinate values that will
   // be used below.
   std::vector<double> domainLength(3,1.0);  // a cube of unit length
   const Grid grid( fieldDim, domainLength );
-
-  //----------------------------------------------------------------------------
-  // Create fields
-  typedef SpatialOps::SVolField FieldT;
-
-  const bool bcx=true, bcy=true, bcz=true;
-  const GhostData nghost(1);
-  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
-  const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
-
-  FieldT x( window, bcInfo, nghost, NULL, InternalStorage );
-  FieldT y( window, bcInfo, nghost, NULL, InternalStorage );
-  FieldT z( window, bcInfo, nghost, NULL, InternalStorage );
-
-  FieldT f( window, bcInfo, nghost, NULL, InternalStorage );
-  FieldT g( window, bcInfo, nghost, NULL, InternalStorage );
-
   grid.set_coord<XDIR>(x);
   grid.set_coord<YDIR>(y);
   grid.set_coord<ZDIR>(z);
@@ -69,13 +79,6 @@ int main()
   // Assign field values.  Note that this is a vectorized statement that will
   // work on GPU, serial CPU and multicore CPU.
   f <<= sin(x) + cos(y) + tanh(z);
-
-  // Field reduction operations - currently only supported on CPU
-  const double fmax = field_max( f );                   // maximum of a field
-  const double max2 = field_max( sin(x)*cos(x) + 2.0 ); // maximum of an expression
-  const double fnorm = field_norm( f );                 // L2 norm of f
-
-  g <<= field_max(f) + field_min(f) + exp(-x-y-z);      // combine several field operations
 
   // conditional (if/then/else...)
   g <<= cond( f >  0, x+z )          // if     ( f[i] >  0 ) g[i] = x[i]+z[i];

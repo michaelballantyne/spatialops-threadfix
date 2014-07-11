@@ -1,0 +1,20 @@
+/**
+ \example Example7_stencils.cpp
+
+# Goal
+Illustrate how to use stencil operators within SpatialOps/Nebo
+
+# Key Concepts
+ -# There are a number of predefined operators/stencils in SpatialOps.  The 
+    simplest way to obtain these is via the \link SpatialOps::BasicOpTypes
+    BasicOpTypes\endlink struct. Much of this was covered in \ref Example5_stencil_type_inference.cpp
+ -# Stencils can be stored and retrieved in the \link SpatialOps::OperatorDatabase
+    OperatorDatabase\endlink which provides simple storage and retrieval of
+    operators by type.
+ -# SpatialOps defines many stencils for use on structured, finite-volume meshes.
+    The build_stencils function can be used to easily populate an OperatorDatabase
+    with the predefined operators in SpatialOps.
+
+# Example Code
+
+ */

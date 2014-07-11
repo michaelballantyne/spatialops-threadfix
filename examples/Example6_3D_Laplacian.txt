@@ -1,0 +1,23 @@
+/**
+ \example Example6_3D_Laplacian.h
+
+# Goals
+ - Illustrate how to use stencil operators
+ - Illustrate type inference from fields to operators
+
+# Key Concepts
+ -# There are a number of predefined operators/stencils in SpatialOps.  The 
+    simplest way to obtain these is via the \link SpatialOps::BasicOpTypes
+    BasicOpTypes\endlink struct.
+ -# Stencils can be stored and retrieved in the \link SpatialOps::OperatorDatabase
+    OperatorDatabase\endlink which provides simple storage and retrieval of
+    operators by type.
+ -# Using type inference, highly generic code can be written that is also very
+    robust.
+    
+\sa \ref Example5_stencil_type_inference.cpp 
+\sa \ref Example7_stencils.cpp
+
+# Example Code
+
+ */

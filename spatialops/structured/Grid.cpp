@@ -67,6 +67,15 @@ namespace SpatialOps{
 
     typedef typename FieldT::iterator FieldIter;
 
+#   ifdef ENABLE_CUDA
+    // if the field is on GPU, move it to CPU, populate it, then sync it back.
+    // this is slow, but the Grid class isn't used much in production, and this
+    // could be done only during the setup phase rather than repeatedly.
+    const short devIx = f.device_index();
+    const bool isCPU = (devIx == CPU_INDEX);
+    if( !isCPU ) f.set_field_loc_active( CPU_INDEX );
+#   endif
+
     FieldIter iter=f.begin();
 
     const MemoryWindow& mwInterior = f.window_without_ghost();
@@ -85,6 +94,9 @@ namespace SpatialOps{
         }
       }
     }
+#   ifdef ENABLE_CUDA
+    if( !isCPU ) f.sync_location( devIx );
+#   endif
   }
 
   //==================================================================

@@ -36,20 +36,19 @@
 namespace SpatialOps{
 
   /**
-   *
    *  \addtogroup fieldtypes
    *  @{
    *
-   *  \typedef typedef SpatialField< SVol > SVolField;
+   *  \typedef typedef SVolField;
    *  \brief defines a volume field on the scalar volume.
    *
-   *  \typedef typedef SpatialField< SSurfX > SSurfXField;
+   *  \typedef typedef SSurfXField;
    *  \brief defines a x-surface field on the scalar volume
    *
-   *  \typedef typedef SpatialField< SSurfY > SSurfYField;
+   *  \typedef typedef SSurfYField;
    *  \brief defines a y-surface field on the scalar volume
    *
-   *  \typedef typedef SpatialField< SSurfZ > SSurfZField;
+   *  \typedef typedef SSurfZField;
    *  \brief defines a z-surface field on the scalar volume
    */
   typedef SpatialField< SVol   > SVolField;
@@ -59,16 +58,16 @@ namespace SpatialOps{
 
 
   /**
-   *  \typedef typedef SpatialField< XVol > XVolField;
+   *  \typedef typedef XVolField;
    *  \brief defines a volume field on the x-staggered volume
    *
-   *  \typedef typedef SpatialField< XSurfX > XSurfXField;
+   *  \typedef typedef XSurfXField;
    *  \brief defines a x-surface field on the x-staggered volume
    *
-   *  \typedef typedef SpatialField< XSurfY > XSurfYField;
+   *  \typedef typedef XSurfYField;
    *  \brief defines a y-surface field on the x-staggered volume
    *
-   *  \typedef typedef SpatialField< XSurfZ > XSurfZField;
+   *  \typedef typedef XSurfZField;
    *  \brief defines a z-surface field on the x-staggered volume
    */
   typedef SpatialField< XVol   > XVolField;
@@ -78,16 +77,16 @@ namespace SpatialOps{
 
 
   /**
-   *  \typedef typedef SpatialField< YVol > YVolField;
+   *  \typedef typedef YVolField;
    *  \brief defines a volume field on the y-staggered volume
    *
-   *  \typedef typedef SpatialField< YSurfX > YSurfXField;
+   *  \typedef typedef YSurfXField;
    *  \brief defines a x-surface field on the y-staggered volume
    *
-   *  \typedef typedef SpatialField< YSurfY > YSurfYField;
+   *  \typedef typedef YSurfYField;
    *  \brief defines a y-surface field on the y-staggered volume
    *
-   *  \typedef typedef SpatialField< YSurfZ > YSurfZField;
+   *  \typedef typedef YSurfZField;
    *  \brief defines a z-surface field on the y-staggered volume
    */
   typedef SpatialField< YVol   > YVolField;
@@ -97,16 +96,16 @@ namespace SpatialOps{
 
 
   /**
-   *  \typedef typedef SpatialField< ZVol > ZVolField;
+   *  \typedef typedef ZVolField;
    *  \brief defines a volume field on the z-staggered volume
    *
-   *  \typedef typedef SpatialField< ZSurfX > ZSurfXField;
+   *  \typedef typedef ZSurfXField;
    *  \brief defines a x-surface field on the z-staggered volume
    *
-   *  \typedef typedef SpatialField< ZSurfY > ZSurfYField;
+   *  \typedef typedef ZSurfYField;
    *  \brief defines a y-surface field on the z-staggered volume
    *
-   *  \typedef typedef SpatialField< ZSurfZ > ZSurfZField;
+   *  \typedef typedef ZSurfZField;
    *  \brief defines a z-surface field on the z-staggered volume
    */
   typedef SpatialField< ZVol   > ZVolField;
@@ -123,16 +122,16 @@ namespace SpatialOps{
    */
   typedef SpatialField< SingleValue > SingleValueField;
 
-
   /**
    *  \struct FaceTypes
    *  \brief Define Face field types in terms of a cell field type.
    *
    *  Class template specializations exist for the following field types:
-   *   - SVolField
-   *   - XVolField
-   *   - YVolField
-   *   - ZVolField
+   *   - Link to SpatialOps::SVolField
+   *   - \link SpatialOps::SVolField  SVolField \endlink
+   *   - \link SpatialOps::XVolField  XVolField \endlink
+   *   - \link SpatialOps::YVolField  YVolField \endlink
+   *   - \link SpatialOps::ZVolField  ZVolField \endlink
    *
    *  Specializations of this struct define the following typedefs:
    *   - \c XFace - the type of the field on the x-face
@@ -140,11 +139,13 @@ namespace SpatialOps{
    *   - \c ZFace - the type of the field on the z-face
    *
    *  Example usage:
-   *  \code
+   *  \code{.cpp}
    *  typedef FaceTypes< CellT >::XFace XFaceT;
    *  typedef FaceTypes< CellT >::YFace YFaceT;
    *  typedef FaceTypes< CellT >::ZFace ZFaceT;
    *  \endcode
+   *
+   *  See also \ref VolType.
    */
   template< typename CellFieldT > struct FaceTypes;
 
@@ -182,24 +183,26 @@ namespace SpatialOps{
    *  \brief Define face field types in terms of a volume field type.
    *
    *  Class template specializations exist for the following field types:
-   *   - SSurfXField
-   *   - SSurfYField
-   *   - SSurfZField
-   *   - XSurfXField
-   *   - XSurfYField
-   *   - XSurfZField
-   *   - YSurfXField
-   *   - YSurfYField
-   *   - YSurfZField
-   *   - ZSurfXField
-   *   - ZSurfYField
-   *   - ZSurfZField
+   *   - \link SpatialOps::SSurfXField SSurfXField \endlink
+   *   - \link SpatialOps::SSurfYField SSurfYField \endlink
+   *   - \link SpatialOps::SSurfZField SSurfZField \endlink
+   *   - \link SpatialOps::XSurfXField XSurfXField \endlink
+   *   - \link SpatialOps::XSurfYField XSurfYField \endlink
+   *   - \link SpatialOps::XSurfZField XSurfZField \endlink
+   *   - \link SpatialOps::YSurfXField YSurfXField \endlink
+   *   - \link SpatialOps::YSurfYField YSurfYField \endlink
+   *   - \link SpatialOps::YSurfZField YSurfZField \endlink
+   *   - \link SpatialOps::ZSurfXField ZSurfXField \endlink
+   *   - \link SpatialOps::ZSurfYField ZSurfYField \endlink
+   *   - \link SpatialOps::ZSurfZField ZSurfZField \endlink
    *
    *  Example usage:
-   *  \code
+   *  \code{.cpp}
    *  typedef VolType< FaceT       >::VolField FieldT;
    *  typedef VolType< SSurfZField >::VolField FieldT;
    *  \endcode
+   *
+   *  See also \ref FaceTypes.
    */
   template<typename FaceT> struct VolType;
 
