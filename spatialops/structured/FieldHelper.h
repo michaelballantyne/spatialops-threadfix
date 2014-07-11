@@ -22,6 +22,8 @@
 
 #include<spatialops/structured/MemoryWindow.h>
 
+/** \file FieldHelper.h */
+
 /**
  * \brief INTERNAL initialize a field with pseudorandom numbers
  *
@@ -37,7 +39,9 @@
  * This function assigns non-integer values to the field described
  * by iterator fi and memory window mw.  The value assigned to a cell
  * with index (x,y,z) is given by:
+ * \code
  *   range * sin(start + x + y * xExtent + z * xExtent * yExtent)
+ * \endcode
  *
  * Since sine of anything returns values between [-1, 1], the range of values
  * assigned by this function are [-range, range].
@@ -77,6 +81,7 @@ inline void internal_initialize_field(typename Field::iterator fi,
 }
 
 /**
+ * \ingroup fields
  * \brief initialize a field (and ghost cells) with pseudorandom numbers
  *
  * \param f field to initialize
@@ -86,7 +91,9 @@ inline void internal_initialize_field(typename Field::iterator fi,
  *
  * This function assigns non-integer values to the field f, including
  * ghost cells.  The value assigned to a cell with index (x,y,z) is given by:
+ * \code
  *   range * sin(start + x + y * xExtent + z * xExtent * yExtent)
+ * \endcode
  *
  * Since sine of anything returns values between [-1, 1], the range of values
  * assigned by this function are [-range, range].
@@ -112,6 +119,7 @@ inline void initialize_field(Field & f,
 }
 
 /**
+ * \ingroup fields
  * \brief initialize a field (without ghost cells) with pseudorandom numbers
  *
  * \param f field to initialize
@@ -121,7 +129,9 @@ inline void initialize_field(Field & f,
  *
  * This function assigns non-integer values to the field f, NOT including
  * ghost cells.  The value assigned to a cell with index (x,y,z) is given by:
+ * \code
  *   range * sin(start + x + y * xExtent + z * xExtent * yExtent)
+ * \endcode
  *
  * Since sine of anything returns values between [-1, 1], the range of values
  * assigned by this function are [-range, range].
@@ -163,28 +173,28 @@ inline void interior_initialize_field(Field & f,
  *
  * Graphically, with X-axis extent of I, Y-axis extent of J, and Z-axis extent
  * of K:
- *
- *  (0,0,0) (1,0,0) ... (I,0,0)
- *  (0,1,0) (1,1,0) ... (I,1,0)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,0) (1,J,0) ... (I,J,0)
- *
- *  (0,0,1) (1,0,1) ... (I,0,1)
- *  (0,1,1) (1,1,1) ... (I,1,1)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,1) (1,J,1) ... (I,J,1)
- *
- *  (0,0,K) (1,0,K) ... (I,0,K)
- *  (0,1,K) (1,1,K) ... (I,1,K)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,K) (1,J,K) ... (I,J,K)
- *
+ * \verbatim
+    (0,0,0) (1,0,0) ... (I,0,0)
+    (0,1,0) (1,1,0) ... (I,1,0)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,0) (1,J,0) ... (I,J,0)
+
+    (0,0,1) (1,0,1) ... (I,0,1)
+    (0,1,1) (1,1,1) ... (I,1,1)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,1) (1,J,1) ... (I,J,1)
+
+    (0,0,K) (1,0,K) ... (I,0,K)
+    (0,1,K) (1,1,K) ... (I,1,K)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,K) (1,J,K) ... (I,J,K)
+   \endverbatim
  * Currently this function only works on CPU-allocated memory and fields.
  * (CPU is at least valid, if not active.)
  */
@@ -208,6 +218,7 @@ inline void internal_print_field(typename Field::const_iterator fi,
 }
 
 /**
+ * \ingroup fields
  * \brief print the values of a field (and ghost cells) to standard output
  *
  * \param f field to print
@@ -220,28 +231,28 @@ inline void internal_print_field(typename Field::const_iterator fi,
  *
  * Graphically, with X-axis extent of I, Y-axis extent of J, and Z-axis extent
  * of K:
- *
- *  (0,0,0) (1,0,0) ... (I,0,0)
- *  (0,1,0) (1,1,0) ... (I,1,0)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,0) (1,J,0) ... (I,J,0)
- *
- *  (0,0,1) (1,0,1) ... (I,0,1)
- *  (0,1,1) (1,1,1) ... (I,1,1)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,1) (1,J,1) ... (I,J,1)
- *
- *  (0,0,K) (1,0,K) ... (I,0,K)
- *  (0,1,K) (1,1,K) ... (I,1,K)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,K) (1,J,K) ... (I,J,K)
- *
+ * \verbatim
+    (0,0,0) (1,0,0) ... (I,0,0)
+    (0,1,0) (1,1,0) ... (I,1,0)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,0) (1,J,0) ... (I,J,0)
+
+    (0,0,1) (1,0,1) ... (I,0,1)
+    (0,1,1) (1,1,1) ... (I,1,1)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,1) (1,J,1) ... (I,J,1)
+
+    (0,0,K) (1,0,K) ... (I,0,K)
+    (0,1,K) (1,1,K) ... (I,1,K)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,K) (1,J,K) ... (I,J,K)
+   \endverbatim
  * For the use in this function, (0,0,0) is the lowest ghost cell, and (I,J,K)
  * is the highest ghost cell.
  *
@@ -254,6 +265,7 @@ inline void print_field(Field const & f) {
 };
 
 /**
+ * \ingroup fields
  * \brief print the values of a field (without ghost cells) to standard output
  *
  * \param f field to print
@@ -266,28 +278,28 @@ inline void print_field(Field const & f) {
  *
  * Graphically, with X-axis extent of I, Y-axis extent of J, and Z-axis extent
  * of K:
- *
- *  (0,0,0) (1,0,0) ... (I,0,0)
- *  (0,1,0) (1,1,0) ... (I,1,0)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,0) (1,J,0) ... (I,J,0)
- *
- *  (0,0,1) (1,0,1) ... (I,0,1)
- *  (0,1,1) (1,1,1) ... (I,1,1)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,1) (1,J,1) ... (I,J,1)
- *
- *  (0,0,K) (1,0,K) ... (I,0,K)
- *  (0,1,K) (1,1,K) ... (I,1,K)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,K) (1,J,K) ... (I,J,K)
- *
+ * \verbatim
+    (0,0,0) (1,0,0) ... (I,0,0)
+    (0,1,0) (1,1,0) ... (I,1,0)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,0) (1,J,0) ... (I,J,0)
+
+    (0,0,1) (1,0,1) ... (I,0,1)
+    (0,1,1) (1,1,1) ... (I,1,1)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,1) (1,J,1) ... (I,J,1)
+
+    (0,0,K) (1,0,K) ... (I,0,K)
+    (0,1,K) (1,1,K) ... (I,1,K)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,K) (1,J,K) ... (I,J,K)
+   \endverbatim
  * For the use in this function, (0,0,0) is the lowest interior cell, and
  * (I,J,K) is the highest interior cell. No ghost cells are printed with
  * this function.
@@ -321,28 +333,28 @@ inline void interior_print_field(Field const & f) {
  *
  * Graphically, with X-axis extent of I, Y-axis extent of J, and Z-axis extent
  * of K:
- *
- *  (0,0,0) (1,0,0) ... (I,0,0)
- *  (0,1,0) (1,1,0) ... (I,1,0)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,0) (1,J,0) ... (I,J,0)
- *
- *  (0,0,1) (1,0,1) ... (I,0,1)
- *  (0,1,1) (1,1,1) ... (I,1,1)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,1) (1,J,1) ... (I,J,1)
- *
- *  (0,0,K) (1,0,K) ... (I,0,K)
- *  (0,1,K) (1,1,K) ... (I,1,K)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,K) (1,J,K) ... (I,J,K)
- *
+ * \verbatim
+    (0,0,0) (1,0,0) ... (I,0,0)
+    (0,1,0) (1,1,0) ... (I,1,0)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,0) (1,J,0) ... (I,J,0)
+
+    (0,0,1) (1,0,1) ... (I,0,1)
+    (0,1,1) (1,1,1) ... (I,1,1)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,1) (1,J,1) ... (I,J,1)
+
+    (0,0,K) (1,0,K) ... (I,0,K)
+    (0,1,K) (1,1,K) ... (I,1,K)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,K) (1,J,K) ... (I,J,K)
+   \endverbatim
  * If display is true, prints 0 or 1 for each index. 0 is printed if values
  * in fields are different at that index. 1 is printed if values in fields
  * are the same.
@@ -366,7 +378,7 @@ inline void interior_print_field(Field const & f) {
  */
 template<typename Field>
 inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
-                                            typename Field::const_iterator if2,
+                                            typename Field::const_iterator fi2,
                                             SpatialOps::MemoryWindow const & mw,
                                             bool display,
                                             bool print)
@@ -378,7 +390,7 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
 
   //copies of iterators for printing
   typename Field::const_iterator cfi1 = fi1;
-  typename Field::const_iterator cif2 = if2;
+  typename Field::const_iterator cif2 = fi2;
 
   // end condition for each test: index < axisExtent && (result || print || display)
   //  this ends the loops early if and only if the result has been found to be false in some cell
@@ -386,8 +398,8 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
   //                                       AND display == false
   for(int z = 0; z < zExtent && (result || print || display); z++) {
     for(int y = 0; y < yExtent && (result || print || display); y++) {
-      for(int x = 0; x < xExtent && (result || print || display); x++, fi1++, if2++) {
-        bool compare = (*fi1 == *if2);
+      for(int x = 0; x < xExtent && (result || print || display); x++, fi1++, fi2++) {
+        bool compare = (*fi1 == *fi2);
         result = result && compare;
         if(display) std::cout << compare << " ";
       }
@@ -410,10 +422,11 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
 }
 
 /**
+ * \ingroup fields
  * \brief compare two fields and possibly print values (with ghost cells)
  *
- * \param f1 first field to use to read values
- * \param f2 second field to use to read values
+ * \param field1 first field to use to read values
+ * \param field2 second field to use to read values
  * \param display boolean value, if true prints comparison of each index
  * \param print boolean value, if true prints values of each index of each iterator
  * \return boolean value, if true fields are equal within given window
@@ -426,28 +439,28 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
  *
  * Graphically, with X-axis extent of I, Y-axis extent of J, and Z-axis extent
  * of K:
- *
- *  (0,0,0) (1,0,0) ... (I,0,0)
- *  (0,1,0) (1,1,0) ... (I,1,0)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,0) (1,J,0) ... (I,J,0)
- *
- *  (0,0,1) (1,0,1) ... (I,0,1)
- *  (0,1,1) (1,1,1) ... (I,1,1)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,1) (1,J,1) ... (I,J,1)
- *
- *  (0,0,K) (1,0,K) ... (I,0,K)
- *  (0,1,K) (1,1,K) ... (I,1,K)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,K) (1,J,K) ... (I,J,K)
- *
+ * \verbatim
+    (0,0,0) (1,0,0) ... (I,0,0)
+    (0,1,0) (1,1,0) ... (I,1,0)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,0) (1,J,0) ... (I,J,0)
+
+    (0,0,1) (1,0,1) ... (I,0,1)
+    (0,1,1) (1,1,1) ... (I,1,1)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,1) (1,J,1) ... (I,J,1)
+
+    (0,0,K) (1,0,K) ... (I,0,K)
+    (0,1,K) (1,1,K) ... (I,1,K)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,K) (1,J,K) ... (I,J,K)
+   \endverbatim
  * For the use in this function, (0,0,0) is the lowest ghost cell, and (I,J,K)
  * is the highest ghost cell.
  *
@@ -486,10 +499,11 @@ inline bool display_fields_compare(Field const & field1,
 }
 
 /**
+ * \ingroup fields
  * \brief compare two fields and possibly print values (without ghost cells)
  *
- * \param f1 first field to use to read values
- * \param f2 second field to use to read values
+ * \param field1 first field to use to read values
+ * \param field2 second field to use to read values
  * \param display boolean value, if true prints comparison of each index
  * \param print boolean value, if true prints values of each index of each iterator
  * \return boolean value, if true fields are equal within given window
@@ -502,28 +516,28 @@ inline bool display_fields_compare(Field const & field1,
  *
  * Graphically, with X-axis extent of I, Y-axis extent of J, and Z-axis extent
  * of K:
- *
- *  (0,0,0) (1,0,0) ... (I,0,0)
- *  (0,1,0) (1,1,0) ... (I,1,0)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,0) (1,J,0) ... (I,J,0)
- *
- *  (0,0,1) (1,0,1) ... (I,0,1)
- *  (0,1,1) (1,1,1) ... (I,1,1)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,1) (1,J,1) ... (I,J,1)
- *
- *  (0,0,K) (1,0,K) ... (I,0,K)
- *  (0,1,K) (1,1,K) ... (I,1,K)
- *     .       .    .      .
- *     .       .     .     .
- *     .       .      .    .
- *  (0,J,K) (1,J,K) ... (I,J,K)
- *
+ * \verbatim
+    (0,0,0) (1,0,0) ... (I,0,0)
+    (0,1,0) (1,1,0) ... (I,1,0)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,0) (1,J,0) ... (I,J,0)
+
+    (0,0,1) (1,0,1) ... (I,0,1)
+    (0,1,1) (1,1,1) ... (I,1,1)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,1) (1,J,1) ... (I,J,1)
+
+    (0,0,K) (1,0,K) ... (I,0,K)
+    (0,1,K) (1,1,K) ... (I,1,K)
+       .       .    .      .
+       .       .     .     .
+       .       .      .    .
+    (0,J,K) (1,J,K) ... (I,J,K)
+   \endverbatim
  * For the use in this function, (0,0,0) is the lowest interior cell, and
  * (I,J,K) is the highest interior cell. No ghost cells are printed with
  * this function.
