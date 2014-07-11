@@ -239,7 +239,7 @@ namespace SpatialOps{
     bool fits_between( MemoryWindow const & inner,
                        MemoryWindow const & outer ) const {
 #ifndef NDEBUG
-      assert( fit_in(inner, outer) );
+      assert( inner.fits_in(outer) );
 #endif
       return ( inner.fits_in(*this)   &&
                (*this).fits_in(outer) );
