@@ -71,7 +71,6 @@ void CudaFree(void* src, const unsigned int device);
 void CudaFreeHost(void* src, const unsigned int device);
 void CudaMemcpy(void* src, const void* dest, const unsigned int device, const size_t sz,
                 cudaMemcpyKind cmkk);
-void CudaStreamSync(cudaStream_t stream );
 
 /* \brief Device management structure for all GPU devices */
 class CUDADeviceManager {
@@ -87,9 +86,6 @@ class CUDADeviceManager {
 
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
-
-    /** \brief perform synchronization on a stream */
-    void needs_sync( cudaStream_t stream );
 
     /** \brief return sthe best possible device from multiple GPUs */
     int get_best_device() const;
