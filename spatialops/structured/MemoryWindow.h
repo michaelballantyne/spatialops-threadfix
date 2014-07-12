@@ -47,6 +47,7 @@
 namespace SpatialOps{
 
   /**
+   *  \ingroup fields
    *  \class MemoryWindow
    *  \author James C. Sutherland
    *  \date September 2010
@@ -172,14 +173,14 @@ namespace SpatialOps{
      */
     inline bool operator==( const MemoryWindow& w ) const{
       return (nptsGlob_ == w.nptsGlob_) &&
-          (extent_   == w.extent_  ) &&
-          (offset_   == w.offset_  );
+             (extent_   == w.extent_  ) &&
+             (offset_   == w.offset_  );
     }
 
     inline bool operator!=( const MemoryWindow& w ) const{
       return (nptsGlob_ != w.nptsGlob_) ||
-          (extent_   != w.extent_  ) ||
-          (offset_   != w.offset_  );
+             (extent_   != w.extent_  ) ||
+             (offset_   != w.offset_  );
     }
 
     /**
@@ -189,7 +190,7 @@ namespace SpatialOps{
     inline std::string print() const {
       std::stringstream s;
       s << "Offset: " << offset_ << std::endl
-          << "Extent: " << extent_ << std::endl;
+        << "Extent: " << extent_ << std::endl;
       return s.str();
     }
 
@@ -222,9 +223,7 @@ namespace SpatialOps{
                                  const int plusGhost,
                                  const int bc )
   {
-    return ( nNoGhost > 1
-        ? ( nNoGhost + minusGhost + plusGhost + bc )
-            : 1 );
+    return ( nNoGhost > 1 ? ( nNoGhost + minusGhost + plusGhost + bc ) : 1 );
   }
 
   //------------------------------------------------------------------
@@ -248,8 +247,8 @@ namespace SpatialOps{
                                 const BoundaryCellInfo& bc )
   {
     return MemoryWindow( IntVec( get_dim_with_ghost( localDim[0], ghost.get_minus(0), ghost.get_plus(0), bc.has_extra(0) ),
-        get_dim_with_ghost( localDim[1], ghost.get_minus(1), ghost.get_plus(1), bc.has_extra(1) ),
-        get_dim_with_ghost( localDim[2], ghost.get_minus(2), ghost.get_plus(2), bc.has_extra(2) ) ) );
+                                 get_dim_with_ghost( localDim[1], ghost.get_minus(1), ghost.get_plus(1), bc.has_extra(1) ),
+                                 get_dim_with_ghost( localDim[2], ghost.get_minus(2), ghost.get_plus(2), bc.has_extra(2) ) ) );
   }
 
   //============================================================================
