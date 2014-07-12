@@ -1499,10 +1499,20 @@ is_valid_field( const short int deviceLoc ) const
 # endif
 
   cmapIter MapIter = multiFieldMap_.find( deviceLoc );
-  if( MapIter == multiFieldMap_.end() ) return false;
+  if( MapIter == multiFieldMap_.end() ){
+#   ifndef NDEBUG
+    std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not allocated. " << std::endl;
+#   endif
+    return false;
+  }
 
   // check if it field at deviceLoc has valid field values
-  if( !MapIter->second.isValid || MapIter->second.field == NULL ) return false;
+  if( !MapIter->second.isValid || MapIter->second.field == NULL ){
+#   ifndef NDEBUG
+    std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not valid " << std::endl;
+#   endif
+    return false;
+  }
   else                                                            return true;
 }
 
