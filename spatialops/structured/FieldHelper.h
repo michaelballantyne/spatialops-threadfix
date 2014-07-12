@@ -599,10 +599,10 @@ void write_matlab( const FieldT& field,
                    const std::string prefix,
                    const bool includeGhost=false )
 {
-#   ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   // IO only works on CPU.  Ensure that we have a field there.
-  f.add_field_loc( CPU_INDEX );
-#   endif
+  field.add_field_loc( CPU_INDEX );
+# endif
 
   const std::string fname = "load_"+prefix+".m";
 
