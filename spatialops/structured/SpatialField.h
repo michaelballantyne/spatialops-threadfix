@@ -437,6 +437,15 @@ namespace SpatialOps{
        */
       void remove_multiple_fields();
 
+      /**
+       * @brief waits till synchronization is performed and the host thread will return only when
+       *        all the instructions on device are completed.
+       */
+      inline void wait_for_synchronization(){
+        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+        if( this->get_stream() != NULL ) CDI.needs_sync( this->get_stream() );
+      };
+
   #   endif
 
       /**
@@ -716,7 +725,7 @@ namespace SpatialOps{
     */
    inline void add_field_loc_sync(short int deviceLoc){
       sfsharedPtr_->add_field_loc_async( deviceLoc );
-      wait_for_synchronization();
+      sfsharedPtr_->wait_for_synchronization();
    };
 
    /**
@@ -741,7 +750,7 @@ namespace SpatialOps{
    */
    inline void validate_location_sync(const short int deviceLoc){
      sfsharedPtr_->validate_location_async( deviceLoc );
-     wait_for_synchronization();
+     sfsharedPtr_->wait_for_synchronization();
    }
 
   /**
@@ -754,15 +763,6 @@ namespace SpatialOps{
    inline void validate_location_async(const short int deviceLoc){
      sfsharedPtr_->validate_location_async( deviceLoc );
    }
-
-  /**
-   * @brief waits till synchronization is performed and the host thread will return only when
-   *        all the instructions on device are completed.
-   */
-   inline void wait_for_synchronization(){
-     ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-     if( this->get_stream() != NULL ) CDI.needs_sync( this->get_stream() );
-   };
 
    /**
     * @brief Finds if the field has any other locations using has_multiple_fields().
@@ -783,7 +783,6 @@ namespace SpatialOps{
    */
    inline void set_field_loc_active(const short int deviceLoc){
      sfsharedPtr_->set_field_loc_active( deviceLoc );
-     wait_for_synchronization();
    }
 
   /**
@@ -1474,10 +1473,16 @@ set_field_loc_active( const short int deviceLoc )
 
   // Add a field if it doesn't exist( Sync version is used because a valid location has to be
   // set as active before some other method starts using it )
-  if( multiFieldMap_.find( deviceLoc ) == multiFieldMap_.end() ) this->add_field_loc_async(deviceLoc);
+  if( multiFieldMap_.find( deviceLoc ) == multiFieldMap_.end() ) {
+    this->add_field_loc_async(deviceLoc);
+    this->wait_for_synchronization();
+  }
 
   // check if the field location that's active is indeed "VALID"
-  if( !multiFieldMap_[deviceLoc].isValid ) this->validate_location_async(deviceLoc);
+  if( !multiFieldMap_[deviceLoc].isValid ){
+    this->validate_location_async(deviceLoc);
+    this->wait_for_synchronization();
+  }
 
   activeDeviceIndex_ = deviceLoc;
 }
