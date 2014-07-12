@@ -95,7 +95,7 @@ namespace SpatialOps{
       }
     }
 #   ifdef ENABLE_CUDA
-    if( !isCPU ) f.sync_location( devIx );
+    if( !isCPU ) f.validate_location_sync( devIx );
 #   endif
   }
 

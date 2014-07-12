@@ -173,12 +173,7 @@ void CudaMemcpy(void* dest, const void* src, const size_t sz, const unsigned int
       throw(std::runtime_error(msg.str()));
    }
 #ifndef NDEBUG
-   if (cudaSuccess != (err = cudaStreamSynchronize(stream)) ) {
-      std::ostringstream msg;
-      msg << "CudaStreamSynchronize failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
-      msg << "\t - " << cudaGetErrorString(err);
-      throw(std::runtime_error(msg.str()));
-   }
+   CudaStreamSync( stream );
 #endif
   }
 
@@ -211,17 +206,44 @@ void CudaMemcpyPeer(void* dest, const int dID, const void* src, const int sID, c
 
 /*---------------------------------------------------------------------*/
 
+void CudaStreamSync( const cudaStream_t stream ) {
+//#ifdef DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaStreamSync wrapper called (stream) : " << stream << std::endl;
+//#endif
+
+   //CudaSetDevice(device);
+   cudaError err;
+   if (cudaErrorInvalidResourceHandle == (err = cudaStreamSynchronize(stream)) ) {
+      std::ostringstream msg;
+      msg << "CudaStreamSynchronize failed - invalid stream, at" << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "\t - " << cudaGetErrorString(err);
+      throw(std::runtime_error(msg.str()));
+   }
+   else {
+      std::ostringstream msg;
+      msg << "CudaStreamSynchronize failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "\t - " << cudaGetErrorString(err);
+      throw(std::runtime_error(msg.str()));
+   }
+#ifdef DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaStreamSync wrapper exiting \n";
+#endif
+}
+
+/*---------------------------------------------------------------------*/
+
 void CudaMemset(void* dest, const int value, const size_t sz, const unsigned int device) {
 #ifdef DEBUG_EXT_SET_MEM
   std::cout << "CudaMemset wrapper called (dest, value, size, device)-> ( ";
   std::cout << dest << "," << value << "," << sz << "," << device << " )" << std::endl;
 #endif
-  cudaError err;
 
   CudaSetDevice(device);
+
+  cudaError err;
   if (cudaSuccess != (err = cudaMemset(dest, value, sz))) {
     std::ostringstream msg;
-    msg << "Memset failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+    msg << "CudaMemset failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
     msg << "\t - " << cudaGetErrorString(err);
     throw(std::runtime_error(msg.str()));
   }
@@ -508,12 +530,16 @@ void CUDADeviceInterface::memcpy_peer(void* dest, const int dID, const void* src
 
 /*---------------------------------------------------------------------*/
 
+void CUDADeviceInterface::needs_sync(const cudaStream_t stream){
+  CudaStreamSync(stream);
+}
+
+/*---------------------------------------------------------------------*/
+
 void CUDADeviceInterface::memset(void* dest, const int value, const size_t sz,
     const unsigned int deviceID) {
   CudaMemset(dest, value, sz, deviceID);
 }
-
-/*---------------------------------------------------------------------*/
 
 void CUDADeviceInterface::memset(CUDASharedPointer& dest, const int value, const size_t sz) {
   CudaMemset(dest.ptr_, value, sz, (*dest.deviceID_));

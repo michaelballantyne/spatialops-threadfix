@@ -99,6 +99,9 @@ namespace cuda { //ema::cuda
     /** \brief Returns the number of available CUDA capable compute devices */
     int get_device_count() const;
 
+    /** \brief perform sychronization on a stream */
+    void needs_sync( cudaStream_t stream=0 );
+
     /** \brief returns the best GPU from multiple GPU devices */
     int get_best_device() const;
 

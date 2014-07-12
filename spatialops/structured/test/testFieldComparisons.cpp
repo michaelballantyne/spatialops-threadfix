@@ -116,10 +116,10 @@ bool manual_error_compare(FieldT& f1,
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
   if(f1.device_index() == GPU_INDEX) {
-    f1.add_field_loc(CPU_INDEX);
+    f1.add_field_loc_sync(CPU_INDEX);
   }
   if(f2.device_index() == GPU_INDEX) {
-    f2.add_field_loc(CPU_INDEX);
+    f2.add_field_loc_sync(CPU_INDEX);
   }
 #endif
 
@@ -384,7 +384,7 @@ class TestFieldEqual
       FieldT gf3(window, bc, gd, NULL, InternalStorage, GPU_INDEX);
       //move local initialized fields to gpu if necessary
       if(IS_GPU_INDEX(devIdx1)) {
-        lf1.add_field_loc(GPU_INDEX);
+        lf1.add_field_loc_sync(GPU_INDEX);
         gf1 <<= lf1;
         f1 = &gf1;
       }
@@ -392,7 +392,7 @@ class TestFieldEqual
         f1 = &lf1;
       }
       if(IS_GPU_INDEX(devIdx2)) {
-        lf2.add_field_loc(GPU_INDEX);
+        lf2.add_field_loc_sync(GPU_INDEX);
         gf2 <<= lf2;
         f2 = &gf2;
       }
@@ -410,7 +410,7 @@ class TestFieldEqual
       //change second field and compare not equal
 #ifdef __CUDACC__
       if(IS_GPU_INDEX(devIdx2)) {
-        lf3.add_field_loc(GPU_INDEX);
+        lf3.add_field_loc_sync(GPU_INDEX);
         gf3 <<= lf3;
         f2 = &gf3;
       }
@@ -553,7 +553,7 @@ bool manual_error_compare(double d,
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
   if(IS_GPU_INDEX(f1.device_index())) {
-    f1.add_field_loc(CPU_INDEX);
+    f1.add_field_loc_sync(CPU_INDEX);
   }
 #endif
   //iterate through fields.

@@ -106,7 +106,7 @@
                                 (concat (val-call (type-template 'const_cast (ptr FT-chunk))
                                                   (take-ptr 'field_))
                                         '->
-                                        (val-call 'add_field_loc DI-chunk))
+                                        (val-call 'add_field_loc_sync DI-chunk))
                                 null
                                 (stmt-dcl-variable (const FT-chunk) 'field_))
                 (bs-Resize-rhs null
@@ -178,7 +178,7 @@
                                 (concat (val-call (type-template 'const_cast (ptr SVFT-chunk))
                                                   (take-ptr 'field_))
                                         '->
-                                        (val-call 'add_field_loc DI-chunk))
+                                        (val-call 'add_field_loc_sync DI-chunk))
                                 null
                                 (stmt-dcl-variable (const SVFT-chunk) 'field_))
                 (bs-Resize-rhs null
