@@ -9,8 +9,6 @@ using std::endl;
 #include <spatialops/particles/ParticleFieldTypes.h>
 #include <spatialops/particles/ParticleOperators.h>
 
-#include <spatialops/WriteMatlab.h>
-
 #include <test/TestHelper.h>
 
 typedef SpatialOps::SVolField CellField;

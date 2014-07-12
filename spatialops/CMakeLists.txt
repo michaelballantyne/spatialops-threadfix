@@ -18,7 +18,6 @@ set( SO_HEADERS
   OperatorDatabase.h
   SpatialOpsDefs.h
   SpatialOpsTools.h
-  WriteMatlab.h
   Semaphore.h
   )
 
