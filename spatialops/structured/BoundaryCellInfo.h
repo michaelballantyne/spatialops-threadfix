@@ -140,7 +140,7 @@ namespace SpatialOps {
      * \brief obtain the number of extra cells *actually* present on this field due to presence of physical boundaries
      * @param dir the direction of interest (0=x, 1=y, 2=z)
      */
-    inline int has_extra( const int dir ) const{ return has_bc(dir) ? num_extra(dir) : 0; }
+    inline int has_extra( const int dir ) const{ assert(dir<=2 && dir>=0); return has_bc(dir) ? num_extra(dir) : 0; }
 
     /**
      * \brief obtain the number of extra cells *actually* present on this field due to presence of physical boundaries
