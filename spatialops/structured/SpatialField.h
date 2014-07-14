@@ -1328,10 +1328,13 @@ void SpatialField<Location, T>::SpatialFieldLoc::
         validfieldValues_  = validIter->second.field;
     } else{
       std::ostringstream msg;
-      msg << "Error : sync_location() didn't find a valid field entry in the map. \n"
+      msg << "Error : sync_location() didn't find a valid field location. \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
+
+    // Location is already valid
+    if( validIndex == deviceLoc ) return;
 
 # ifndef NDEBUG
     // Source field Values is NULL
