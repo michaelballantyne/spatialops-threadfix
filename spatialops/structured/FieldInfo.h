@@ -545,7 +545,7 @@ namespace SpatialOps{
     } else if( deviceMap_.find(deviceIndex) == deviceMap_.end() ) {
       //device is not available
       std::ostringstream msg;
-      msg << "Error : Requesting to set a device as active that doesn't exist\n"
+      msg << "Error : Trying to a device as active that doesn't exist\n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     } else {

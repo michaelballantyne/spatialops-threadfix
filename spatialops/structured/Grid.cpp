@@ -71,9 +71,12 @@ namespace SpatialOps{
     // if the field is on GPU, move it to CPU, populate it, then sync it back.
     // this is slow, but the Grid class isn't used much in production, and this
     // could be done only during the setup phase rather than repeatedly.
-    const short devIx = f.device_index();
+    const short devIx = f.active_device_index();
     const bool isCPU = (devIx == CPU_INDEX);
-    if( !isCPU ) f.set_field_loc_active( CPU_INDEX );
+    if( !isCPU ) {
+      f.add_device( CPU_INDEX );
+      f.set_device_as_active( CPU_INDEX );
+    }
 #   endif
 
     FieldIter iter=f.begin();
@@ -95,7 +98,7 @@ namespace SpatialOps{
       }
     }
 #   ifdef ENABLE_CUDA
-    if( !isCPU ) f.sync_location( devIx );
+    if( !isCPU ) f.sync_device( devIx );
 #   endif
   }
 

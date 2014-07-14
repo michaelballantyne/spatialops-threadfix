@@ -100,8 +100,8 @@
                                 (val-member-call (val-member-call 'field_ 'boundary_info) 'has_bc)
                                 'field_
                                 'field_
-                                (val-member-call 'field_ 'is_valid_field 'CPU_INDEX)
-                                (val-member-call 'field_ 'is_valid_field DI-chunk)
+                                (val-member-call 'field_ 'is_valid 'CPU_INDEX)
+                                (val-member-call 'field_ 'is_valid DI-chunk)
                                 (list DI-chunk 'field_)
                                 (concat (val-call (type-template 'const_cast (ptr FT-chunk))
                                                   (take-ptr 'field_))
@@ -172,8 +172,8 @@
                                 (val-call IntVec 0 0 0)
                                 (add-spaces '* (val-member-call 'field_ 'field_values 'CPU_INDEX))
                                 (add-spaces '* (val-member-call 'field_ 'field_values 'CPU_INDEX))
-                                (val-member-call 'field_ 'is_valid_field 'CPU_INDEX)
-                                (val-member-call 'field_ 'is_valid_field DI-chunk)
+                                (val-member-call 'field_ 'is_valid 'CPU_INDEX)
+                                (val-member-call 'field_ 'is_valid DI-chunk)
                                 (list DI-chunk 'field_)
                                 (concat (val-call (type-template 'const_cast (ptr SVFT-chunk))
                                                   (take-ptr 'field_))
