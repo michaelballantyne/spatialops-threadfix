@@ -104,7 +104,7 @@ int main()
         ig++;
       }
 
-    print_field(*gamma);
+    print_field(*gamma,std::cout);
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
@@ -209,7 +209,7 @@ int main()
         ir++;
       }
 
-    print_field(*gamma);
+    print_field(*gamma,std::cout);
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
@@ -314,7 +314,7 @@ int main()
         ir++;
       }
 
-    print_field(*gamma);
+    print_field(*gamma,std::cout);
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );
@@ -416,7 +416,7 @@ int main()
         ig++;
       }
 
-    print_field(*gamma);
+    print_field(*gamma,std::cout);
     //make the BC:
     OperatorDatabase opdb;
     build_stencils( dim[0], dim[1], dim[2], length, length, length, opdb );

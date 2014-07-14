@@ -22,7 +22,14 @@
 
 #include<spatialops/structured/MemoryWindow.h>
 
+#include <ostream>
+#include <fstream>
+#include <string>
+#include <cmath>
+
 /** \file FieldHelper.h */
+
+namespace SpatialOps{
 
 /**
  * \brief INTERNAL initialize a field with pseudorandom numbers
@@ -59,7 +66,7 @@
  */
 template<typename Field>
 inline void internal_initialize_field(typename Field::iterator fi,
-                                      const SpatialOps::MemoryWindow mw,
+                                      const MemoryWindow mw,
                                       const double start,
                                       const bool print,
                                       const double range)
@@ -71,7 +78,7 @@ inline void internal_initialize_field(typename Field::iterator fi,
   for(int z = 1; z <= zExtent; z++) {
     for(int y = 1; y <= yExtent; y++) {
       for(int x = 1; x <= xExtent; x++, fi++) {
-        *fi = range * sin(start + x + y * xExtent + z * xExtent * yExtent);
+        *fi = range * std::sin(start + x + y * xExtent + z * xExtent * yExtent);
         if(print) std::cout << *fi << " ";
       }
       if(print) std::cout << std::endl;
@@ -200,7 +207,8 @@ inline void interior_initialize_field(Field & f,
  */
 template<typename Field>
 inline void internal_print_field(typename Field::const_iterator fi,
-                                 SpatialOps::MemoryWindow const & mw)
+                                 MemoryWindow const & mw,
+                                 std::ostream& os )
 {
   int xExtent = mw.extent(0);
   int yExtent = mw.extent(1);
@@ -209,11 +217,11 @@ inline void internal_print_field(typename Field::const_iterator fi,
   for(int z = 1; z <= zExtent; z++) {
     for(int y = 1; y <= yExtent; y++) {
       for(int x = 1; x <= xExtent; x++, fi++) {
-        std::cout << *fi << " ";
+        os << *fi << " ";
       }
-      std::cout << std::endl;
+      os << std::endl;
     }
-    std::cout << std::endl;
+    os << std::endl;
   }
 }
 
@@ -260,8 +268,8 @@ inline void internal_print_field(typename Field::const_iterator fi,
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline void print_field(Field const & f) {
-    internal_print_field<Field>(f.begin(), f.window_with_ghost());
+inline void print_field( const Field& f, std::ostream& os ){
+  internal_print_field<Field>(f.begin(), f.window_with_ghost(), os );
 };
 
 /**
@@ -308,8 +316,8 @@ inline void print_field(Field const & f) {
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline void interior_print_field(Field const & f) {
-    internal_print_field<Field>(f.interior_begin(), f.window_without_ghost());
+inline void interior_print_field( const Field& f, std::ostream& os ){
+    internal_print_field<Field>(f.interior_begin(), f.window_without_ghost(), os );
 };
 
 /**
@@ -379,7 +387,7 @@ inline void interior_print_field(Field const & f) {
 template<typename Field>
 inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
                                             typename Field::const_iterator fi2,
-                                            SpatialOps::MemoryWindow const & mw,
+                                            MemoryWindow const & mw,
                                             bool display,
                                             bool print)
 {
@@ -576,3 +584,107 @@ inline bool interior_display_fields_compare(Field const & field1,
                                                 print);
 }
 
+
+/**
+ *  \ingroup fields
+ *  \fn void write_matlab( const FieldT&, const std::string, const bool)
+ *  \brief writes a field to a matlab file
+ *  \tparam FieldT the type of SpatialField
+ *  \param field the field to write
+ *  \param prefix the name of the field
+ *  \param includeGhost [false] true to include ghost cells in the file
+ */
+template<typename FieldT>
+void write_matlab( const FieldT& field,
+                   const std::string prefix,
+                   const bool includeGhost=false )
+{
+# ifdef ENABLE_CUDA
+  // IO only works on CPU.  Ensure that we have a field there.
+  const_cast<FieldT&>(field).add_field_loc( CPU_INDEX );
+# endif
+
+  const std::string fname = "load_"+prefix+".m";
+
+  std::ofstream fout( fname.c_str() );
+  fout << "function [f,n] = load_" << prefix << "()" << std::endl;
+  fout << std::scientific;
+
+  const MemoryWindow& mw = includeGhost ? field.window_with_ghost() : field.window_without_ghost();
+
+  typename FieldT::const_iterator fi = includeGhost ? field.begin() : field.interior_begin();
+  const typename FieldT::const_iterator fie = includeGhost ? field.end() : field.interior_end();
+
+  const size_t nx = mw.extent(0);
+  const size_t ny = mw.extent(1);
+  const size_t nz = mw.extent(2);
+
+  fout << "f = [\n";
+
+//    for( ; fi!=fie; ++fi ){
+//      fout << *fi << "\n";
+//    }
+//    fout << "];\n";
+//    fout << "f = reshape(f," << mw.extent(0) << "," << mw.extent(1) << "," << mw.extent(2) << ");\n";
+
+  if( nx>1 && ny>1 && nz>1 ){ // 3D
+    for( size_t k=1; k<=nz; ++k ){
+      if( k>1 ) fout << "f(:,:," << k << ") = [ \n";
+      for( size_t j=1; j<=ny; ++j ){
+        for( size_t i=1; i<=nx; ++i, ++fi ){
+          fout << *fi << " ";
+        }
+        fout << std::endl;
+      }
+      fout << "];\n";
+    }
+    fout << "n=[" << nx << "," << ny << "," <<  nz << "];\n";
+  }
+  else if( mw.extent(0) > 1 && mw.extent(1) > 1 ){ // 2D XY
+    for( size_t j=1; j<=ny; ++j ){
+      for( size_t i=1; i<=nx; ++i, ++fi ){
+        fout << *fi << " ";
+      }
+      fout << std::endl << "];\n";
+    }
+    fout << "];\nn=[" << nx << "," << ny << "];\n";
+  }
+  else if( mw.extent(0) > 1 && mw.extent(2) > 1 ){ // 2D XZ
+    for( size_t j=1; j<=nz; ++j ){
+      for( size_t i=1; i<=nx; ++i, ++fi ){
+        fout << *fi << " ";
+      }
+      fout << std::endl;
+    }
+    fout << "];\nn=[" << nx << "," << nz << "];\n";
+  }
+  else if( mw.extent(1) > 1 && mw.extent(2) > 1 ){ // 2D YZ
+    for( size_t j=1; j<=nz; ++j ){
+      for( size_t i=1; i<=ny; ++i, ++fi ){
+        fout << *fi << " ";
+      }
+      fout << std::endl;
+    }
+    fout << "];\nn=[" << ny << "," << nz << "];\n";
+  }
+  else if( mw.extent(0) > 1 ){ // 1D X
+    for( ; fi!=fie; ++fi ) fout << *fi << " ";
+    fout << std::endl << "];\n";
+    fout << "n=[" << nx << "];\n";
+  }
+  else if( mw.extent(1) > 1 ){ // 1D Y
+    for( ; fi!=fie; ++fi ) fout << *fi << " ";
+    fout << std::endl << "];\n";
+    fout << "n=[" << ny << "];\n";
+  }
+  else if( mw.extent(2) > 1 ){ // 1D Z
+    for( ; fi!=fie; ++fi ) fout << *fi << " ";
+    fout << std::endl << "];\n";
+    fout << "n=[" << nz << "];\n";
+  }
+
+  fout.close();
+}
+
+
+} // namespace SpatialOps

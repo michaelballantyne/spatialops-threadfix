@@ -27,6 +27,6 @@ Illustrate how to obtain stencil operator types.
 
 # Example Code
 
-\sa \ref Example_3D_Laplacian.h.  This uses the concepts shown below to
+\sa \ref Example6_3D_Laplacian.h.  This uses the concepts shown below to
     create a very generic 3D Laplacian function.
  */
