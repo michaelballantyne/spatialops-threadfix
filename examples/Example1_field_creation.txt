@@ -10,27 +10,31 @@ This example will show how to create a field in SpatialOps
  -# A \link SpatialOps::SpatialField SpatialField \endlink is
 comprised of a few things:
 
-  - A \link SpatialOps::MemoryWindow MemoryWindow \endlink to
-    describe the logical layout of the field in memory.  For now, consider this
-    as a description of the domain size.
+  - A \link SpatialOps::MemoryWindow MemoryWindow \endlink object
+    describes the logical layout of the field in memory.  Among other things, a
+    window contains a description of the domain size.
 
   - A \link SpatialOps::BoundaryCellInfo BoundaryCellInfo \endlink
-    object to describe the behavior of a field at a boundary.  
-    For face fields on structured meshes, the (+) face on the (-) side of the
+    object describes the behavior of a field at a boundary.
+    For face fields on structured meshes, the (+) face on the side of the
     domain has an extra storage location.  
-    The \link SpatialOps::BoundaryCellInfo BoundaryCellInfo \endlink
-    object encodes this information.  
     We will explore this more later.
 
-  - The raw block of memory for the field and its
+  - A \link SpatialOps::GhostData GhostData \endlink
+    object describes the number of ghost cells on each face of the domain.
+    These ghost cells are used to exchange data between patches on different nodes
+    and for stencil calculations.
+    We will explore this more later.
+
+  - A pointer to the raw block of memory for the field and its
     \link SpatialOps::StorageMode StorageMode \endlink.  
     This can either be supplied (for externally managed memory) or it will be
     created internally.  For internally created fields, the supplied memory
-    block can be NULL.
+    block will be ignored and can be NULL.
 
   - The location of the field (CPU, GPU, etc.).  Fields can be created on a
-    CPU, GPU, etc. and moved between these. In fact, a field can have multiple
-    locations associated with it.
+    CPU, GPU, etc. and moved between these devices. In fact, a field can be on multiple
+    devices at once.
 
   For now, don't worry about these details - they will be covered in more detail
   in later examples.
@@ -47,4 +51,3 @@ comprised of a few things:
     
 # Example Code 
 */
- 

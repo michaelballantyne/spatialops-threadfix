@@ -30,6 +30,8 @@
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/Grid.h> // convenient way to define coordinates
+#include <spatialops/structured/FieldHelper.h> // convenient way to view small fields
+
 using namespace SpatialOps;
 
 // If we are compiling with GPU CUDA support, create fields on the device.
@@ -43,18 +45,15 @@ using namespace SpatialOps;
 int main()
 {
   // Define the size of the field (nx,ny,nz)
-  const IntVec fieldDim( 10, 9, 8 );
-
+  const IntVec fieldDim( 5, 5, 1 );
 
   //----------------------------------------------------------------------------
-  // Create fields
+  // Create fields:
   typedef SpatialOps::SVolField FieldT;
 
-  // set some objects that are required to construct a field.
-  // Don't worry about these too much for now. Just use these values as defaults.
-  const bool bcx=true, bcy=true, bcz=true;
+  // Use default values to create objects that are required to construct a field.
   const GhostData nghost(0);
-  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
+  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( true, true, true );
   const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
 
   FieldT x( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
@@ -74,17 +73,49 @@ int main()
   grid.set_coord<ZDIR>(z);
 
   //----------------------------------------------------------------------------
+  // Print fields to standard output:
+  std::cout << "x:" << std::endl;
+  print_field(x, std::cout);
+  std::cout << "y:" << std::endl;
+  print_field(y, std::cout);
+  std::cout << "z:" << std::endl;
+  print_field(z, std::cout);
+
+  //----------------------------------------------------------------------------
   // Perform operations on fields
 
   // Assign field values.  Note that this is a vectorized statement that will
   // work on GPU, serial CPU and multicore CPU.
   f <<= sin(x) + cos(y) + tanh(z);
 
-  // conditional (if/then/else...)
-  g <<= cond( f >  0, x+z )          // if     ( f[i] >  0 ) g[i] = x[i]+z[i];
-            ( f < -2, y   )          // else if( f[i] < -2 ) g[i] = y[i];
-            ( f < -1, 3.4 )          // else if( f[i] < -1 ) g[i] = 3.45
-            ( f );                   // else                 g[i] = f[i];
+#ifdef ENABLE_CUDA
+  //If f uses GPU memory, to print f, f needs to be copied to CPU memory.
+  f.add_field_loc(CPU_INDEX);
+#endif
+  std::cout << "f:" << std::endl;
+  print_field(f, std::cout);
+
+  //----------------------------------------------------------------------------
+  // Conditional (if/then/else...) evaluation.
+  // cond in Nebo creates conditional expressions. Each cond clause, except the last,
+  // must have two arguments.  The first argument is the condition (if this), and the
+  // second is the result (then that).  The final clause takes only one arguement
+  // (else other), which is returned only if all previous conditions fail.
+  //
+  // The conditions are evaluated first to last, and evaluation stops when a
+  // condition returns true. Thus, the order of conditions can and will effect
+  // the results.
+  g <<= cond( f > 2.0, x+z )          // if     ( f[i] > 2.0 ) g[i] = x[i]+z[i];
+            ( f > 1.5, y   )          // else if( f[i] > 1.5 ) g[i] = y[i];
+            ( f > 1.0, -f  )          // else if( f[i] > 1.0 ) g[i] = -f[i];
+            ( f );                    // else                  g[i] = f[i];
+
+#ifdef ENABLE_CUDA
+  //If g uses GPU memory, to print g, g needs to be copied to CPU memory.
+  g.add_field_loc(CPU_INDEX);
+#endif
+  std::cout << "g:" << std::endl;
+  print_field(g, std::cout);
 
   return 0;
 }
