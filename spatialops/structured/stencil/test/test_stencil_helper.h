@@ -239,10 +239,9 @@ double apply_stencil( const SpatialOps::IntVec& npts,
   #endif
 
   #ifdef ENABLE_CUDA
-    src.add_field_loc( GPU_INDEX );
     src.set_field_loc_active( GPU_INDEX );
     op->apply_to_field( src, gpuDest );
-    gpuDest.add_field_loc( CPU_INDEX );
+    gpuDest.add_device_sync( CPU_INDEX );
     return interior_norm( gpuDest, destExact );
   #else
     op->apply_to_field( src, dest );

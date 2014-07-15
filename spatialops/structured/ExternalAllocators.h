@@ -102,6 +102,9 @@ namespace cuda { //ema::cuda
     /** \brief returns the best GPU from multiple GPU devices */
     int get_best_device() const;
 
+    /** \brief perform sychronization on a stream */
+    void sync_stream( cudaStream_t stream=0 );
+
     /** \brief Returns the memory structure associated with device K */
     void get_memory_statistics(CUDAMemStats& cms, const int K = 0) const;
 
