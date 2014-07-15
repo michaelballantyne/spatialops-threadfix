@@ -171,6 +171,7 @@ inline void interior_initialize_field(Field & f,
  *
  * \param fi field iterator to use to read values to print
  * \param mw memory window of fi (field iterator)
+ * \param os output stream to write to
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -230,6 +231,7 @@ inline void internal_print_field(typename Field::const_iterator fi,
  * \brief print the values of a field (and ghost cells) to standard output
  *
  * \param f field to print
+ * \param os output stream to write to
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -277,6 +279,7 @@ inline void print_field( const Field& f, std::ostream& os ){
  * \brief print the values of a field (without ghost cells) to standard output
  *
  * \param f field to print
+ * \param os output stream to write to
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
