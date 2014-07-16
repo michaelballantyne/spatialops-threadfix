@@ -12,6 +12,10 @@ nebo_add_executable( example_3 Example3_field_reductions.cpp )
 target_link_libraries( example_3 spatialops )
 add_test( example_3 example_3 )
 
+nebo_add_executable( example_35 Example3_5_field_types.cpp )
+target_link_libraries( example_35 spatialops )
+add_test( example_35 example_35 )
+
 nebo_add_executable( example_field_type_inference Example4_field_type_inference.cpp )
 target_link_libraries( example_field_type_inference spatialops )
 add_test( example_field_type_inference example_field_type_inference )

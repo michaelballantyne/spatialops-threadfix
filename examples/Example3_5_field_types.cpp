@@ -31,6 +31,7 @@
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/Grid.h>
+#include <spatialops/structured/FieldHelper.h>
 
 #include <iostream>
 #include <iomanip>
@@ -38,16 +39,17 @@
 using namespace SpatialOps;
 using namespace std;
 
-int main()
-{
-  typedef SVolField FieldT;
+//==============================================================================
 
-  // Define the size and number of points in the domain.
-  const IntVec fieldDim( 10, 10, 10 ); // 10 x 10 x 10 points
-  vector<double> domainLength(3,1.0);  // a cube of unit length
+template<typename FieldT>
+void driver()
+{
+  // Define the size and number of points in the domain
+  const IntVec fieldDim( 5, 5, 1 ); // 5 x 5 x 1 points
+  vector<double> domainLength(3,5.0);  // a cube of length 5.0
 
   //----------------------------------------------------------------------------
-  // Create fields of type FieldT.
+  // Create coordinate fields of type FieldT.
 
   const bool bcx=true, bcy=true, bcz=true;
   const GhostData nghost(0);
@@ -58,41 +60,64 @@ int main()
   FieldT y( window, bcInfo, nghost, NULL, InternalStorage );
   FieldT z( window, bcInfo, nghost, NULL, InternalStorage );
 
-  FieldT f( window, bcInfo, nghost, NULL, InternalStorage );
-
   //----------------------------------------------------------------------------
-  // Build coordinates.
+  // Set coordinate fields.
   const Grid grid( fieldDim, domainLength );
   grid.set_coord<XDIR>(x);
   grid.set_coord<YDIR>(y);
   grid.set_coord<ZDIR>(z);
 
   //----------------------------------------------------------------------------
-  // Perform operations on fields.
+  // Print coordinates
 
-  f <<= x + y + z;  // set values in a field
+  std::cout << "x:" << std::endl;
+  print_field(x, std::cout);
+  std::cout << "y:" << std::endl;
+  print_field(y, std::cout);
+  std::cout << "z:" << std::endl;
+  print_field(z, std::cout);
 
-  //L-2 norm of f
-  const double fnorm = nebo_norm( f );
-  //maximum value in f
-  const double fmax  = nebo_max ( f );
-  // minimum value in f
-  const double fmin  = nebo_min ( f );
+}
 
-  //----------------------------------------------------------------------------
-  // Print out the domain extents for this field type as well as the max and min
-  // of the "f" field that we created above.
-  cout << setprecision(4) << left
-       << " X-min:  " << setprecision(4) << left << setw(10) << nebo_min(x)
-       << " X-max:  " << setprecision(4) << left << setw(10) << nebo_max(x) << endl
-       << " Y-min:  " << setprecision(4) << left << setw(10) << nebo_min(y)
-       << " Y-max:  " << setprecision(4) << left << setw(10) << nebo_max(y) << endl
-       << " Z-min:  " << setprecision(4) << left << setw(10) << nebo_min(z)
-       << " Z-max:  " << setprecision(4) << left << setw(10) << nebo_max(z) << endl
-       << " f-Min:  " << setprecision(4) << left << setw(10) << fmin
-       << " f-Max:  " << setprecision(4) << left << setw(10) << fmax        << endl
-       << " f-Norm: " << setprecision(4) << left << setw(10) << fnorm
-       << endl << endl;
+//==============================================================================
+
+int main()
+{
+  cout << "SVolField - volume field on the scalar volume\n";
+  driver<SVolField>();
+  cout << "SSurfXField - x-surface field on the scalar volume\n";
+  driver<SSurfXField>();
+  cout << "SSurfYField - y-surface field on the scalar volume\n";
+  driver<SSurfYField>();
+  cout << "SSurfZField - z-surface field on the scalar volume\n";
+  driver<SSurfZField>();
+
+  cout << "XVolField - volume field on the x-staggered volume\n";
+  driver<XVolField>();
+  cout << "XSurfXField - x-surface field on the x-staggered volume\n";
+  driver<XSurfXField>();
+  cout << "XSurfYField - y-surface field on the x-staggered volume\n";
+  driver<XSurfYField>();
+  cout << "XSurfZField - z-surface field on the x-staggered volume\n";
+  driver<XSurfZField>();
+
+  cout << "YVolField - volume field on the y-staggered volume\n";
+  driver<YVolField>();
+  cout << "YSurfXField - x-surface field on the y-staggered volume\n";
+  driver<YSurfXField>();
+  cout << "YSurfYField - y-surface field on the y-staggered volume\n";
+  driver<YSurfYField>();
+  cout << "YSurfZField - z-surface field on the y-staggered volume\n";
+  driver<YSurfZField>();
+
+  cout << "ZVolField - volume field on the z-staggered volume\n";
+  driver<ZVolField>();
+  cout << "ZSurfXField - x-surface field on the z-staggered volume\n";
+  driver<ZSurfXField>();
+  cout << "ZSurfYField - y-surface field on the z-staggered volume\n";
+  driver<ZSurfYField>();
+  cout << "ZSurfZField - z-surface field on the z-staggered volume\n";
+  driver<ZSurfZField>();
 
   return 0;
 }
