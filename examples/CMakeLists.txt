@@ -31,3 +31,7 @@ add_test( example_stencils example_stencils )
 nebo_add_executable( example_masks Example8_masks.cpp )
 target_link_libraries( example_masks spatialops )
 add_test( example_masks example_masks )
+
+nebo_add_executable( example_heat_equation Example9_heat_equation.cpp )
+target_link_libraries( example_heat_equation spatialops )
+add_test( example_heat_equation example_heat_equation )

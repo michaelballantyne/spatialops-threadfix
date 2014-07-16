@@ -1,0 +1,13 @@
+/**
+ \example Example9_heat_equation.cpp
+
+# Goal
+Illustrate how to use Nebo to implement a simple heat transfer simulation.
+
+# Key Concepts
+ -# Use Nebo assignment, reductions, stencils, masks, and cond to create a simple heat transfer equation.
+ -# ...
+
+# Example Code
+
+ */
