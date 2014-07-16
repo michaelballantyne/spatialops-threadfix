@@ -27,3 +27,7 @@ add_test( example_stencil_types example_stencil_types )
 nebo_add_executable( example_stencils Example7_stencils.cpp )
 target_link_libraries( example_stencils spatialops )
 add_test( example_stencils example_stencils )
+
+nebo_add_executable( example_masks Example8_masks.cpp )
+target_link_libraries( example_masks spatialops )
+add_test( example_masks example_masks )

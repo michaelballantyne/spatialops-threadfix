@@ -1,0 +1,14 @@
+/**
+ \example Example8_masks.cpp
+
+# Goal
+Illustrate how to use Nebo masks.
+
+# Key Concepts
+ -# A mask is a set of points where conditions are different and require different
+    calculations.
+ -# A mask is used in a cond expression in Nebo, and can be used on CPU or GPU.
+
+# Example Code
+
+ */
