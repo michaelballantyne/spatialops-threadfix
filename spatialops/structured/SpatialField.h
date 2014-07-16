@@ -388,27 +388,45 @@ namespace SpatialOps{
 
 
   #   ifdef ENABLE_CUDA
-      /**
-       * @brief Adds a location to a field. If the field location already exists,
-       *        check if it is valid and make it as the active field Location.
-       *        Else, use sync_location() and set the field as active.
-       *
-       *        increases the memory held by the the spatial field by 'allocated_bytes' for each
-       *        unique device added.
-       *        Note: This operation is guaranteed to be atomic
-       *
-       * @param deviceLoc -- Index to the proper device
-       */
-      void add_field_loc(short int deviceLoc);
+     /**
+      * @brief Adds a location to a field. Performs a "SYNC" version of adding a field location.
+      *        Increases the memory held by the the spatial field by 'allocated_bytes' for each
+      *        unique device added.
+      *        Note: This operation is guaranteed to be atomic and "SYNCHRONOUS", means the host thread
+      *        waits till the task is completed on the GPU.
+      *
+      * @param deviceLoc -- Index to the proper device
+      */
+      void add_device_sync(short int deviceLoc);
 
-      /**
-       * @brief synchronizes all the invalid field location (deviceLoc)
-       *        with the valid field location. Allocates memory and performs
-       *        data-transfer whenever needed.
-       *
-       * @param deviceLoc -- Index to the proper device
-       */
-      void sync_location(short int deviceLoc);
+     /**
+      * @brief Adds a location to a field. Performs a "ASYNC" version of adding a field location.
+      *        Increases the memory held by the the spatial field by 'allocated_bytes' for each
+      *        unique device added.
+      *        Note: This operation is guaranteed to be atomic and "ASYNCHRONOUS", means the host thread
+      *        returns immediately after launches on the GPU.
+      *
+      * @param deviceLoc -- Index to the proper device
+      */
+      void add_device_async(short int deviceLoc);
+
+     /**
+      * @brief validates all the invalid field location (deviceLoc)
+      *        with the valid field location. Performs a "SYNC" data-transfer.
+      *        Note : Host-thread waits till data-transfer is complete.
+      *
+      * @param deviceLoc -- Index to the proper device
+      */
+      void validate_device_sync(short int deviceLoc);
+
+     /**
+      * @brief validates all the invalid field location (deviceLoc)
+      *        with the valid field location. Performs a "ASYNC" data-transfer.
+      *        Note : Host-thread returns to CPU even before the data-transfer is complete.
+      *
+      * @param deviceLoc -- Index to the proper device
+      */
+      void validate_device_async(short int deviceLoc);
 
       /**
        * @brief Finds if the field has any other locations using has_multiple_fields().
@@ -417,6 +435,16 @@ namespace SpatialOps{
        *
        */
       void remove_multiple_fields();
+
+      /**
+       * @brief waits till synchronization is performed and the host thread will return only when
+       *        all the instructions on device are completed.
+       */
+      inline void wait_for_synchronization(){
+        ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
+        if( this->get_stream() != NULL ) CDI.sync_stream( this->get_stream() );
+      };
+
   #   endif
 
       /**
@@ -557,9 +585,9 @@ namespace SpatialOps{
     *         on a given node.
     */
 
-   inline SpatialField( const MemoryWindow& window,
-                        const BoundaryCellInfo& bc,
-                        const GhostData& ghosts,
+   inline SpatialField( const MemoryWindow window,
+                        const BoundaryCellInfo bc,
+                        const GhostData ghosts,
                         T* const fieldValues,
                         const StorageMode mode = InternalStorage,
                         const short int devIdx = CPU_INDEX )
@@ -583,7 +611,7 @@ namespace SpatialOps{
    /**
     *  \brief Shallow copy constructor with new window.
     */
-   inline SpatialField(const MemoryWindow& window,
+   inline SpatialField(const MemoryWindow window,
                        const SpatialField& other)
    : fieldWindow_(window),
      bcInfo_(other.bcInfo_.limit_by_extent(window.extent())),
@@ -686,30 +714,55 @@ namespace SpatialOps{
 
 #   ifdef ENABLE_CUDA
    /**
-    * @brief Adds a location to a field. If the field location already exists,
-    *        check if it is valid and make it as the active field Location.
-    *        Else, use sync_location() and set the field as active.
-    *
-    *        increases the memory held by the the spatial field by 'allocated_bytes' for each
+    * @brief Adds a location to a field. Performs a "SYNC" version of adding a field location.
+    *        Increases the memory held by the the spatial field by 'allocated_bytes' for each
     *        unique device added.
-    *        Note: This operation is guaranteed to be atomic
+    *        Note: This operation is guaranteed to be atomic and "SYNCHRONOUS", means the host thread
+    *        waits till the task is completed on the GPU.
     *
     * @param deviceLoc -- Index to the proper device
     */
-   inline void add_field_loc(short int deviceLoc){
-      sfsharedPtr_->add_field_loc( deviceLoc );
+   inline void add_device_sync(short int deviceLoc){
+      sfsharedPtr_->add_device_async( deviceLoc );
+      sfsharedPtr_->wait_for_synchronization();
    };
 
+    /**
+     * @brief Adds a location to a field. Performs a "ASYNC" version of adding a field location.
+     *        Increases the memory held by the the spatial field by 'allocated_bytes' for each
+     *        unique device added.
+     *        Note: This operation is guaranteed to be atomic and "ASYNCHRONOUS", means the host thread
+     *        returns immediately after launching on GPU.
+     *
+     * @param deviceLoc -- Index to the proper device
+     */
+   inline void add_device_async(const short int deviceLoc){
+     sfsharedPtr_->add_device_async( deviceLoc );
+   }
+
+
   /**
-   * @brief synchronizes all the invalid field location (deviceLoc)
-   *        with the valid field location. Allocates memory and performs
-   *        data-transfer whenever needed.
+   * @brief validates all the invalid field location (deviceLoc)
+   *        with the valid field location. Performs a "SYNC" data-transfer.
+   *        Note : Host-thread waits till data-transfer is complete.
    *
    * @param deviceLoc -- Index to the proper device
    */
-   inline void sync_location(short int deviceLoc){
-     sfsharedPtr_->sync_location( deviceLoc );
+   inline void validate_device_sync(const short int deviceLoc){
+     sfsharedPtr_->validate_device_async( deviceLoc );
+     sfsharedPtr_->wait_for_synchronization();
    }
+
+    /**
+     * @brief validates all the invalid field location (deviceLoc)
+     *        with the valid field location. Performs a "ASYNC" data-transfer.
+     *        Note : Host-thread returns to CPU even before the data-transfer is complete.
+     *
+     * @param deviceLoc -- Index to the proper device
+     */
+    inline void validate_device_async(const short int deviceLoc){
+      sfsharedPtr_->validate_device_async( deviceLoc );
+    }
 
    /**
     * @brief Finds if the field has any other locations using has_multiple_fields().
@@ -1101,7 +1154,7 @@ SpatialField<Location,T>::SpatialFieldLoc::
 ~SpatialFieldLoc()
 {
   // abhi : When a field location with 'mode = ExternalStorage' has a additional
-  //        field location from add_field_loc(), the mode will still be the same
+  //        field location from add_device_async(), the mode will still be the same
   //        which prevents the memory from being released but the memory has to be released
   //        as the FieldInfo reports the _builtField is true.
   for( typename MultiFieldMap::iterator mapIter = multiFieldMap_.begin(); mapIter != multiFieldMap_.end(); ++mapIter ){
@@ -1114,7 +1167,6 @@ SpatialField<Location,T>::SpatialFieldLoc::
       throw( std::runtime_error( msg.str() ) );
     }
     if( builtField_ || mapIter->second._builtField ){
-//      std::cout << "Putting memory back to the pool ~SpatialFieldLoc() : " << mapIter->second.field << std::endl;
       Pool<T>::self().put( mapIter->first, mapIter->second.field );
     }
   }
@@ -1197,7 +1249,7 @@ field_values( const short int deviceLoc )
     if( deviceLoc != activeDeviceIndex_ ){
       std::ostringstream msg;
       msg << "The current field location is not set as active while accessing non-const version of field_values(). \n"
-          << "Use set_field_loc_active() to set the device location.\n"
+          << "Use set_field_loc_active() to set as active.\n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
@@ -1268,10 +1320,10 @@ cfield_values( const short int deviceLoc ) const
 
 template<typename Location, typename T>
 void SpatialField<Location,T>::SpatialFieldLoc::
-    add_field_loc( const short int deviceLoc )
+     add_device_async( const short int deviceLoc )
 {
 #ifdef DEBUG_SF_ALL
-  std::cout << "Call to SpatialField::add_field_loc() for field Location : "
+  std::cout << "Call to SpatialField::add_device_async() for field Location : "
             << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
@@ -1284,25 +1336,24 @@ void SpatialField<Location,T>::SpatialFieldLoc::
   if( mapiter != multiFieldMap_.end() ){
     if( mapiter->second.isValid ) return;
     else{
-      sync_location( deviceLoc );
+      validate_device_async( deviceLoc );
       return;
     }
   }
   else{
     multiFieldMap_[deviceLoc] = FieldInfo( Pool<T>::self().get(deviceLoc, (allocatedBytes_/sizeof(T))), false );
-    sync_location(deviceLoc);
+    validate_device_async(deviceLoc);
   }
 }
 
 //------------------------------------------------------------------
 
-// Currently the sync_location() is called from add_field_loc() only
 template<typename Location, typename T>
 void SpatialField<Location, T>::SpatialFieldLoc::
-     sync_location( const short int deviceLoc )
+     validate_device_async( const short int deviceLoc )
 {
 # ifdef DEBUG_SF_ALL
-  std::cout << "Call to SpatialField::sync_location() for field Location : "
+  std::cout << "Call to SpatialField::validate_device_async() for field Location : "
             << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
@@ -1310,7 +1361,7 @@ void SpatialField<Location, T>::SpatialFieldLoc::
   if( !has_multiple_fields() ){
     if( !multiFieldMap_[deviceLoc].isValid ){
       std::ostringstream msg;
-      msg << "sync_location() called on the field"
+      msg << "validate_device_async() called on the field"
           << DeviceTypeTools::get_memory_type_description(deviceLoc)
           << " that didn't have any copies and it is invalid. \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -1328,7 +1379,7 @@ void SpatialField<Location, T>::SpatialFieldLoc::
         validfieldValues_  = validIter->second.field;
     } else{
       std::ostringstream msg;
-      msg << "Error : sync_location() didn't find a valid field location. \n"
+      msg << "Error : validate_device_async() didn't find a valid field location. \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
@@ -1340,7 +1391,7 @@ void SpatialField<Location, T>::SpatialFieldLoc::
     // Source field Values is NULL
     if(validfieldValues_ == NULL){
       std::ostringstream msg;
-      msg << "Error : valid fieldValues is NULL in sync_location() \n"
+      msg << "Error : valid fieldValues is NULL in validate_device_sync() \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
@@ -1348,7 +1399,7 @@ void SpatialField<Location, T>::SpatialFieldLoc::
     typename std::map<short int, FieldInfo>::iterator destIter = multiFieldMap_.find(deviceLoc);
     if( destIter == multiFieldMap_.end() ){
       std::ostringstream msg;
-      msg << "Error : Destination memory doesn't exist. Please check if add_field_loc() is called. \n"
+      msg << "Error : Destination memory doesn't exist. Please check if add_device_async() is called. \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
@@ -1377,7 +1428,7 @@ void SpatialField<Location, T>::SpatialFieldLoc::
     }
     else{
       std::ostringstream msg;
-      msg << "Error : sync_location() called on the field"
+      msg << "Error : validate_device_async() called on the field"
           << DeviceTypeTools::get_memory_type_description(deviceLoc)
           << "for a GPU-GPU peer copy that is not yet supported. \n"
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -1423,11 +1474,18 @@ set_field_loc_active( const short int deviceLoc )
             << DeviceTypeTools::get_memory_type_description(deviceLoc) << std::endl;
 # endif
 
-  // Add a field if it doesn't exist
-  if( multiFieldMap_.find( deviceLoc ) == multiFieldMap_.end() ) this->add_field_loc(deviceLoc);
+  // Add a field if it doesn't exist( Sync version is used because a valid location has to be
+  // set as active before some other method starts using it )
+  if( multiFieldMap_.find( deviceLoc ) == multiFieldMap_.end() ){
+    this->add_device_async(deviceLoc);
+    this->wait_for_synchronization();
+  }
 
-  // check if the field location that is active is indeed "VALID"
-  if( !multiFieldMap_[deviceLoc].isValid ) this->sync_location(deviceLoc);
+  // check if the field location that's active is indeed "VALID"
+  if( !multiFieldMap_[deviceLoc].isValid ){
+    this->validate_device_async(deviceLoc);
+    this->wait_for_synchronization();
+  }
 
   activeDeviceIndex_ = deviceLoc;
 }
@@ -1444,11 +1502,23 @@ is_valid_field( const short int deviceLoc ) const
 # endif
 
   cmapIter MapIter = multiFieldMap_.find( deviceLoc );
-  if( MapIter == multiFieldMap_.end() ) return false;
+  if( MapIter == multiFieldMap_.end() ){
+#   ifndef NDEBUG
+    std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not allocated. " << std::endl;
+#   endif
+    return false;
+  }
 
   // check if it field at deviceLoc has valid field values
-  if( !MapIter->second.isValid || MapIter->second.field == NULL ) return false;
-  else                                                            return true;
+  if( !MapIter->second.isValid || MapIter->second.field == NULL ){
+#   ifndef NDEBUG
+    std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description(deviceLoc) << " is not valid. " << std::endl;
+#   endif
+    return false;
+  }
+  else{
+    return true;
+  }
 }
 
 //------------------------------------------------------------------

@@ -173,18 +173,38 @@ void CudaMemcpy(void* dest, const void* src, const size_t sz, const unsigned int
       throw(std::runtime_error(msg.str()));
    }
 #ifndef NDEBUG
-   if (cudaSuccess != (err = cudaStreamSynchronize(stream)) ) {
-      std::ostringstream msg;
-      msg << "CudaStreamSynchronize failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
-      msg << "\t - " << cudaGetErrorString(err);
-      throw(std::runtime_error(msg.str()));
-   }
+   CudaStreamSync(stream);
 #endif
   }
 
 #ifdef  DEBUG_EXT_ALLOC_MEM
   std::cout << "CudaMemcpy wrapper exiting (src,dest,size,device,type,stream) -> ( ";
   std::cout << src << "," << dest << "," << sz << "," << device << "," << cmkk << "," << stream << " )" << std::endl;
+#endif
+}
+
+/*---------------------------------------------------------------------*/
+
+void CudaStreamSync( const cudaStream_t stream ) {
+#ifdef DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaStreamSync wrapper called (stream) : " << stream << std::endl;
+#endif
+   //Todo Set context for multi-GPUs
+   cudaError err;
+   if (cudaErrorInvalidResourceHandle == (err = cudaStreamSynchronize(stream)) ) {
+      std::ostringstream msg;
+      msg << "CudaStreamSynchronize failed - invalid stream, at" << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "\t - " << cudaGetErrorString(err);
+      throw(std::runtime_error(msg.str()));
+   }
+   else if(cudaSuccess != err) {
+      std::ostringstream msg;
+      msg << "CudaStreamSynchronize failed, at" << __FILE__ << " : " << __LINE__ << std::endl;
+      msg << "\t - " << cudaGetErrorString(err);
+      throw(std::runtime_error(msg.str()));
+   }
+#ifdef DEBUG_EXT_ALLOC_MEM
+  std::cout << "CudaStreamSync wrapper exiting \n";
 #endif
 }
 
@@ -407,6 +427,12 @@ void CUDADeviceInterface::update_memory_statistics() {
 
 void CUDADeviceInterface::print_device_info() const {
   CUDADeviceManager::self().print_device_info();
+}
+
+/*---------------------------------------------------------------------*/
+
+void CUDADeviceInterface::sync_stream(const cudaStream_t stream) {
+  CudaStreamSync(stream);
 }
 
 /*---------------------------------------------------------------------*/
