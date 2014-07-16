@@ -44,13 +44,12 @@ int main()
 {
   //----------------------------------------------------------------------------
   // Define the domain size and number of points
-  std::vector<double> domainLength(3,7.0);  // a cube of length 7.0
-  // a 5 x 5 x 1 problem with a ghost cell on each edge
-  const IntVec fieldDim( 7, 7, 1 );
+  std::vector<double> domainLength(3,5.0);  // a cube of length 5.0
+  const IntVec fieldDim( 5, 5, 1 );         // a 5 x 5 x 1 problem
 
   //----------------------------------------------------------------------------
   // Create fields
-  const GhostData nghost(0);
+  const GhostData nghost(0);  // try changing this to 1 and see what happens.
   const BoundaryCellInfo sVolBCInfo = BoundaryCellInfo::build<SVolField>( true, true, true );
   const MemoryWindow sVolWindow( get_window_with_ghost( fieldDim, nghost, sVolBCInfo) );
 
@@ -70,28 +69,41 @@ int main()
 
   //----------------------------------------------------------------------------
   // Build a mask.
-  // A mask is a set of indicies where something different should happen, such
+  // A mask is a set of indices where something different should happen, such
   // as a boundary condition: Edge of a flame, fuel injection or exhaust pipe.
   // Indexing for masks has the origin at the first interior point. (Ghosts are
   // negative indices.)
   std::vector<IntVec> maskSet;
-  for(int i = 0; i < 7; i++)
-    maskSet.push_back(IntVec(0, i, 0));
+  for( int i=0; i<7; ++i )
+    maskSet.push_back( IntVec(0, i, 0) );
 
-  // Creating a mask needs a prototype field and a std::vector of indices
-  SpatialMask<SVolField> mask(f, maskSet);
+  // Creating a mask needs a prototype field and a std::vector of indices.
+  SpatialMask<SVolField> mask( f, maskSet );
+# ifdef ENABLE_CUDA
+  // Note that these are created only on a CPU, and must be explicitly
+  // transferred to the GPU for CUDA enabled cases as shown below.
+  mask.add_consumer( GPU_INDEX );
+# endif
 
   //----------------------------------------------------------------------------
   // Use mask:
 
   std::cout << "f before applying mask:" << std::endl;
-  print_field(f, std::cout);
+# ifdef ENABLE_CUDA
+  // If f uses GPU memory, to print f, f needs to be copied to CPU memory.
+  f.add_device_sync( CPU_INDEX );
+# endif
+  print_field( f, std::cout );
 
-  f <<= cond(mask, 10.0 - f)
-            (f);
+  f <<= cond( mask, 90.0 )
+            ( f );
 
+# ifdef ENABLE_CUDA
+  // If f uses GPU memory, to print f, f needs to be copied to CPU memory.
+  f.add_device_sync( CPU_INDEX );
+# endif
   std::cout << "f after applying mask:" << std::endl;
-  print_field(f, std::cout);
+  print_field( f, std::cout );
 
   return 0;
 }

@@ -39,48 +39,55 @@ using namespace SpatialOps;
 # define LOCATION CPU_INDEX
 #endif
 
-// Initialize alpha, thermal conductivity:
-template<typename FieldT>
-void initialize_alpha(Grid const & grid,
-                      FieldT & alpha) {
-  const GhostData nghost(1);
-  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( true, true, true );
-  const MemoryWindow window( get_window_with_ghost( grid.extent(), nghost, bcInfo) );
-  FieldT     x( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
-  FieldT     y( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+//==============================================================================
 
-  grid.set_coord<XDIR>(x);
-  grid.set_coord<YDIR>(y);
+template<typename FieldT>
+void
+initialize_thermal_diffusivity( const Grid& grid, FieldT & alpha )
+{
+  SpatFldPtr<FieldT> x = SpatialFieldStore::get<FieldT>( alpha );
+  SpatFldPtr<FieldT> y = SpatialFieldStore::get<FieldT>( alpha );
+
+  grid.set_coord<XDIR>( *x );
+  grid.set_coord<YDIR>( *y );
   //alpha <<= 0.1 + 0.4 * (x + y + 1.0);
   //alpha <<= 0.1 + 0.4 * (x + y);
   //alpha <<= (x + y + .2) /2;
   alpha <<= 1.0;
 
+# ifdef ENABLE_CUDA
+  alpha.add_device_sync( CPU_INDEX );  // transfer to facilitate printing its values
+# endif
   std::cout << "Initial alpha:" << std::endl;
-  print_field(alpha, std::cout, true);
+  print_field( alpha, std::cout, true );
 }
 
-void initialize_mask_points(Grid const & grid,
-                            std::vector<IntVec> & leftSet,
-                            std::vector<IntVec> & rightSet,
-                            std::vector<IntVec> & topSet,
-                            std::vector<IntVec> & bottomSet) {
-  for(int i = -1; i <= grid.extent()[1]; i++)
-    leftSet.push_back(IntVec(-1, i, 0));
+//==============================================================================
 
-  for(int i = -1; i <= grid.extent()[1]; i++)
-    rightSet.push_back(IntVec(grid.extent()[0], i, 0));
+void
+initialize_mask_points( const Grid& grid,
+                        std::vector<IntVec>& leftSet,
+                        std::vector<IntVec>& rightSet,
+                        std::vector<IntVec>& topSet,
+                        std::vector<IntVec>& bottomSet )
+{
+  for( int i=-1; i<=grid.extent()[1]; ++i ){
+    leftSet .push_back( IntVec(-1, i, 0) );
+    rightSet.push_back( IntVec(grid.extent()[0], i, 0) );
+  }
 
-  for(int i = -1; i <= grid.extent()[0]; i++)
-    topSet.push_back(IntVec(i, -1, 0));
-
-  for(int i = -1; i <= grid.extent()[0]; i++)
-    bottomSet.push_back(IntVec(i, grid.extent()[1], 0));
+  for(int i = -1; i <= grid.extent()[0]; i++){
+    topSet   .push_back( IntVec(i, -1, 0) );
+    bottomSet.push_back( IntVec(i, grid.extent()[1], 0) );
+  }
 }
+
+//==============================================================================
 
 template<typename FieldT>
-double find_deltaT(FieldT const & alpha,
-                   Grid const & grid) {
+double
+find_deltaT( const FieldT& alpha, const Grid& grid )
+{
   const double deltaX = grid.spacing<XDIR>();
   const double deltaY = grid.spacing<YDIR>();
   const double sqrdDeltaX = deltaX * deltaX;
@@ -90,6 +97,8 @@ double find_deltaT(FieldT const & alpha,
 
   return 0.25 * sqrdDeltaXYmult / ( sqrdDeltaXYplus * nebo_min(alpha) );
 }
+
+//==============================================================================
 
 int main()
 {
@@ -108,28 +117,33 @@ int main()
   const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo) );
 
   FieldT   phi( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
-  FieldT     Q( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
+  FieldT   rhs( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
   FieldT alpha( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
 
   const Grid grid( fieldDim, domainLength );
 
   //----------------------------------------------------------------------------
-  // Initialize alpha, thermal conductivity:
-  initialize_alpha(grid, alpha);
+  // Initialize alpha, thermal diffusivity
+  initialize_thermal_diffusivity( grid, alpha );
 
   //----------------------------------------------------------------------------
   // Build and initialize masks:
-  std::vector<IntVec> leftSet;
-  std::vector<IntVec> rightSet;
-  std::vector<IntVec> topSet;
-  std::vector<IntVec> bottomSet;
+  std::vector<IntVec> leftSet, rightSet, topSet, bottomSet;
 
-  initialize_mask_points(grid, leftSet, rightSet, topSet, bottomSet);
+  initialize_mask_points( grid, leftSet, rightSet, topSet, bottomSet );
 
-  SpatialMask<FieldT> left(phi, leftSet);
-  SpatialMask<FieldT> right(phi, rightSet);
-  SpatialMask<FieldT> top(phi, topSet);
-  SpatialMask<FieldT> bottom(phi, bottomSet);
+  SpatialMask<FieldT> left  ( phi, leftSet   );
+  SpatialMask<FieldT> right ( phi, rightSet  );
+  SpatialMask<FieldT> top   ( phi, topSet    );
+  SpatialMask<FieldT> bottom( phi, bottomSet );
+
+# ifdef ENABLE_CUDA
+  // Masks are created on CPU so we need to explicitly transfer them to GPU
+  left  .add_consumer( GPU_INDEX );
+  right .add_consumer( GPU_INDEX );
+  top   .add_consumer( GPU_INDEX );
+  bottom.add_consumer( GPU_INDEX );
+# endif
 
   //----------------------------------------------------------------------------
   // Build stencils:
@@ -154,42 +168,49 @@ int main()
 
   //----------------------------------------------------------------------------
   // Determine a safe deltaT:
-  const double deltaT = find_deltaT(alpha, grid);
+  const double deltaT = find_deltaT( alpha, grid );
 
   //----------------------------------------------------------------------------
   // Initialize phi:
-  phi <<= cond(left, 10.0)
-              (right, 0.0)
-              (5.0);
+  phi <<= cond( left, 10.0 )
+              ( right, 0.0 )
+              ( 5.0 );
 
   std::cout << "Initial phi:" << std::endl;
-  print_field(phi, std::cout, true);
+# ifdef ENABLE_CUDA
+  phi.add_device_sync( CPU_INDEX );
+# endif
+  print_field( phi, std::cout, true );
 
   //----------------------------------------------------------------------------
   // Take time steps:
-  const int total = 40;
-  const int print_every = 1;
-  int count = 1;
-  int i = 0;
-  for(; i <= total; i++, count++) {
-    //Calculate change in phi:
-    Q <<= divX( interpX(alpha) * gradX(phi) ) +
-          divY( interpY(alpha) * gradY(phi) );
+  const int nSteps = 40;
+  const int printInterval = 1;
+  for( int i=0; i<=nSteps; ++i ){
 
-    //Integrate into phi:
-    phi <<= phi + deltaT * Q;
+    // Calculate the RHS (change in phi)
+    rhs <<= divX( interpX(alpha) * gradX(phi) )
+          + divY( interpY(alpha) * gradY(phi) );
 
-    //Reset boundaries:
-    phi <<= cond(left, 10.0)
-                (right, 0.0)
-                (top || bottom, 5.0)
-                (phi);
+    // update the solution
+    phi <<= phi + deltaT * rhs;
 
-    //print current state:
-    if(count >= print_every) {
-      count = 0;
+    // Reset boundaries:
+    phi <<= cond( left,         10.0 )
+                ( right,         0.0 )
+                ( top || bottom, 5.0 )
+                ( phi );
+
+    // print current state:
+    if( i%printInterval == 0 ){
       std::cout << "phi after " << i + 1 << " time steps:" << std::endl;
-      print_field(phi, std::cout, true);
+
+#     ifdef ENABLE_CUDA
+      // If f uses GPU memory, f needs to be copied to CPU memory to print it.
+      phi.add_device_sync( CPU_INDEX );
+#     endif
+
+      print_field( phi, std::cout, true );
     }
   }
 

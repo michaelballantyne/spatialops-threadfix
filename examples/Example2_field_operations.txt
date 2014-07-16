@@ -14,12 +14,15 @@ variety of field operations.
     operations such as \c sin \c cos \c exp, etc.
     
  -# Nebo supports conditional operations that unroll to the equivalent of point-wise
-    \c if statements.  These are achieved via the \link NeboCond nebo cond\endlink
+    \c if statements.  These are achieved via the \link NeboCond nebo cond \endlink
     construct.
 
- -# For fields with CPU-allocated memory, \link print_field print_field \endlink will
+ -# For fields with CPU-allocated memory, \link SpatialOps::print_field print_field \endlink will
     write the field with some formatting to the given output stream. Note that print_field
     prints the lowest index first and ends with the highest index.
+
+# Try This
+ -# Create a function `sin(x)` and then clip its values to be within [-0.1,0.2].
 
 # Example Code
 */

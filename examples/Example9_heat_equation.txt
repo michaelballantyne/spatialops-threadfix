@@ -5,8 +5,13 @@
 Illustrate how to use Nebo to implement a simple heat transfer simulation.
 
 # Key Concepts
- -# Use Nebo assignment, reductions, stencils, masks, and cond to create a simple heat transfer equation.
- -# ...
+ -# Use Nebo assignment, reductions, stencils, masks, and `cond` to create a simple heat transfer equation.
+ -# Show a very simple way to implement Dirichlet boundary conditions.
+ -# Use ghost fields in conjunction with operators.
+
+\sa \ref Example5_stencil_type_inference.cpp
+\sa \ref Example7_stencils.cpp
+\sa \ref Example8_masks.cpp
 
 # Example Code
 

@@ -29,8 +29,8 @@
  */
 
 #include <spatialops/structured/FVStaggered.h>
-#include <spatialops/structured/Grid.h> // convenient way to define coordinates
-#include <spatialops/structured/FieldHelper.h> // convenient way to view small fields
+#include <spatialops/structured/Grid.h>        // a convenient way to define coordinates
+#include <spatialops/structured/FieldHelper.h> // provides methods (print_field()) to view small fields
 
 using namespace SpatialOps;
 
@@ -74,12 +74,9 @@ int main()
 
   //----------------------------------------------------------------------------
   // Print fields to standard output:
-  std::cout << "x:" << std::endl;
-  print_field(x, std::cout);
-  std::cout << "y:" << std::endl;
-  print_field(y, std::cout);
-  std::cout << "z:" << std::endl;
-  print_field(z, std::cout);
+  std::cout << "x:" << std::endl;   print_field( x, std::cout );
+  std::cout << "y:" << std::endl;   print_field( y, std::cout );
+  std::cout << "z:" << std::endl;   print_field( z, std::cout );
 
   //----------------------------------------------------------------------------
   // Perform operations on fields
@@ -88,18 +85,18 @@ int main()
   // work on GPU, serial CPU and multicore CPU.
   f <<= sin(x) + cos(y) + tanh(z);
 
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   //If f uses GPU memory, to print f, f needs to be copied to CPU memory.
-  f.add_device_sync(CPU_INDEX);
-#endif
+  f.add_device_sync( CPU_INDEX );
+# endif
   std::cout << "f:" << std::endl;
-  print_field(f, std::cout);
+  print_field( f, std::cout );
 
   //----------------------------------------------------------------------------
   // Conditional (if/then/else...) evaluation.
   // cond in Nebo creates conditional expressions. Each cond clause, except the last,
   // must have two arguments.  The first argument is the condition (if this), and the
-  // second is the result (then that).  The final clause takes only one arguement
+  // second is the result (then that).  The final clause takes only one argument
   // (else other), which is returned only if all previous conditions fail.
   //
   // The conditions are evaluated first to last, and evaluation stops when a
@@ -110,12 +107,12 @@ int main()
             ( f > 1.0, -f  )          // else if( f[i] > 1.0 ) g[i] = -f[i];
             ( f );                    // else                  g[i] = f[i];
 
-#ifdef ENABLE_CUDA
+# ifdef ENABLE_CUDA
   //If g uses GPU memory, to print g, g needs to be copied to CPU memory.
-  g.add_device_sync(CPU_INDEX);
-#endif
+  g.add_device_sync( CPU_INDEX );
+# endif
   std::cout << "g:" << std::endl;
-  print_field(g, std::cout);
+  print_field( g, std::cout );
 
   return 0;
 }

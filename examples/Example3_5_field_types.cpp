@@ -35,6 +35,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <string>
 
 using namespace SpatialOps;
 using namespace std;
@@ -42,15 +43,16 @@ using namespace std;
 //==============================================================================
 
 template<typename FieldT>
-void driver()
+void driver( const string tag )
 {
+  cout << tag << std::endl;
+
   // Define the size and number of points in the domain
   const IntVec fieldDim( 5, 5, 1 ); // 5 x 5 x 1 points
   vector<double> domainLength(3,5.0);  // a cube of length 5.0
 
   //----------------------------------------------------------------------------
   // Create coordinate fields of type FieldT.
-
   const bool bcx=true, bcy=true, bcz=true;
   const GhostData nghost(0);
   const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
@@ -69,55 +71,34 @@ void driver()
 
   //----------------------------------------------------------------------------
   // Print coordinates
-
-  std::cout << "x:" << std::endl;
-  print_field(x, std::cout);
-  std::cout << "y:" << std::endl;
-  print_field(y, std::cout);
-  std::cout << "z:" << std::endl;
-  print_field(z, std::cout);
-
+  cout << "x:" << std::endl;   print_field( x, cout );
+  cout << "y:" << std::endl;   print_field( y, cout );
+  cout << "z:" << std::endl;   print_field( z, cout );
 }
 
 //==============================================================================
 
 int main()
 {
-  cout << "SVolField - volume field on the scalar volume\n";
-  driver<SVolField>();
-  cout << "SSurfXField - x-surface field on the scalar volume\n";
-  driver<SSurfXField>();
-  cout << "SSurfYField - y-surface field on the scalar volume\n";
-  driver<SSurfYField>();
-  cout << "SSurfZField - z-surface field on the scalar volume\n";
-  driver<SSurfZField>();
+  driver<  SVolField>( "SVolField - volume field on the scalar volume" );
+  driver<SSurfXField>( "SSurfXField - x-surface field on the scalar volume" );
+  driver<SSurfYField>( "SSurfYField - y-surface field on the scalar volume" );
+  driver<SSurfZField>( "SSurfZField - z-surface field on the scalar volume" );
 
-  cout << "XVolField - volume field on the x-staggered volume\n";
-  driver<XVolField>();
-  cout << "XSurfXField - x-surface field on the x-staggered volume\n";
-  driver<XSurfXField>();
-  cout << "XSurfYField - y-surface field on the x-staggered volume\n";
-  driver<XSurfYField>();
-  cout << "XSurfZField - z-surface field on the x-staggered volume\n";
-  driver<XSurfZField>();
+  driver<  XVolField>( "XVolField - volume field on the x-staggered volume" );
+  driver<XSurfXField>( "XSurfXField - x-surface field on the x-staggered volume" );
+  driver<XSurfYField>( "XSurfYField - y-surface field on the x-staggered volume" );
+  driver<XSurfZField>( "XSurfZField - z-surface field on the x-staggered volume" );
 
-  cout << "YVolField - volume field on the y-staggered volume\n";
-  driver<YVolField>();
-  cout << "YSurfXField - x-surface field on the y-staggered volume\n";
-  driver<YSurfXField>();
-  cout << "YSurfYField - y-surface field on the y-staggered volume\n";
-  driver<YSurfYField>();
-  cout << "YSurfZField - z-surface field on the y-staggered volume\n";
-  driver<YSurfZField>();
+  driver<  YVolField>( "YVolField - volume field on the y-staggered volume" );
+  driver<YSurfXField>( "YSurfXField - x-surface field on the y-staggered volume" );
+  driver<YSurfYField>( "YSurfYField - y-surface field on the y-staggered volume" );
+  driver<YSurfZField>( "YSurfZField - z-surface field on the y-staggered volume" );
 
-  cout << "ZVolField - volume field on the z-staggered volume\n";
-  driver<ZVolField>();
-  cout << "ZSurfXField - x-surface field on the z-staggered volume\n";
-  driver<ZSurfXField>();
-  cout << "ZSurfYField - y-surface field on the z-staggered volume\n";
-  driver<ZSurfYField>();
-  cout << "ZSurfZField - z-surface field on the z-staggered volume\n";
-  driver<ZSurfZField>();
+  driver<  ZVolField>( "ZVolField - volume field on the z-staggered volume" );
+  driver<ZSurfXField>( "ZSurfXField - x-surface field on the z-staggered volume" );
+  driver<ZSurfYField>( "ZSurfYField - y-surface field on the z-staggered volume" );
+  driver<ZSurfZField>( "ZSurfZField - z-surface field on the z-staggered volume" );
 
   return 0;
 }

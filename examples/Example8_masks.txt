@@ -7,7 +7,19 @@ Illustrate how to use Nebo masks.
 # Key Concepts
  -# A mask is a set of points where conditions are different and require different
     calculations.
- -# A mask is used in a cond expression in Nebo, and can be used on CPU or GPU.
+ -# A mask is used in a `cond` expression in Nebo, and can be used on CPU or GPU.
+
+# Try this:
+ - Modify the number of ghost cells (try 1 or 2) and notice what happens to the output.
+   Note that you can also specify different number of ghost cells per face via
+   \code{.cpp} GhostData nghost( nxMinus, nxPlux, nyMinus, nyPlus, nzMinus, nzPlus ) \endcode
+ - Modify the mask points
+ - Modify the `cond` statement to obtain different values on the masked points.
+   For example, try this:
+   \code{.cpp} 
+    f <<= cond( mask, 10.0 - f )
+              ( f );
+   \endcode
 
 # Example Code
 

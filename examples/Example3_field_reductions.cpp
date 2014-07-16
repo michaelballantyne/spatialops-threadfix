@@ -72,12 +72,9 @@ int main()
 
   f <<= x + y + z;  // set values in a field
 
-  //L-2 norm of f
-  const double fnorm = nebo_norm( f );
-  //maximum value in f
-  const double fmax  = nebo_max ( f );
-  // minimum value in f
-  const double fmin  = nebo_min ( f );
+  const double fnorm = nebo_norm( f );  // L-2 norm of f
+  const double fmax  = nebo_max ( f );  // maximum value in f
+  const double fmin  = nebo_min ( f );  // minimum value in f
 
   //----------------------------------------------------------------------------
   // Print out the domain extents for this field type as well as the max and min
