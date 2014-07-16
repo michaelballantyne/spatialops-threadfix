@@ -585,9 +585,9 @@ namespace SpatialOps{
     *         on a given node.
     */
 
-   inline SpatialField( const MemoryWindow& window,
-                        const BoundaryCellInfo& bc,
-                        const GhostData& ghosts,
+   inline SpatialField( const MemoryWindow window,
+                        const BoundaryCellInfo bc,
+                        const GhostData ghosts,
                         T* const fieldValues,
                         const StorageMode mode = InternalStorage,
                         const short int devIdx = CPU_INDEX )
@@ -611,7 +611,7 @@ namespace SpatialOps{
    /**
     *  \brief Shallow copy constructor with new window.
     */
-   inline SpatialField(const MemoryWindow& window,
+   inline SpatialField(const MemoryWindow window,
                        const SpatialField& other)
    : fieldWindow_(window),
      bcInfo_(other.bcInfo_.limit_by_extent(window.extent())),

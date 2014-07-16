@@ -43,9 +43,9 @@ namespace SpatialOps{
 #   endif
   }
 
-  MemoryWindow::MemoryWindow( const IntVec& npts,
-                              const IntVec& offset,
-                              const IntVec& extent )
+  MemoryWindow::MemoryWindow( const IntVec npts,
+                              const IntVec offset,
+                              const IntVec extent )
   : nptsGlob_( npts ),
     offset_( offset ),
     extent_( extent )
