@@ -90,7 +90,7 @@ int main()
 
 #ifdef ENABLE_CUDA
   //If f uses GPU memory, to print f, f needs to be copied to CPU memory.
-  f.add_field_loc(CPU_INDEX);
+  f.add_device_sync(CPU_INDEX);
 #endif
   std::cout << "f:" << std::endl;
   print_field(f, std::cout);
@@ -112,7 +112,7 @@ int main()
 
 #ifdef ENABLE_CUDA
   //If g uses GPU memory, to print g, g needs to be copied to CPU memory.
-  g.add_field_loc(CPU_INDEX);
+  g.add_device_sync(CPU_INDEX);
 #endif
   std::cout << "g:" << std::endl;
   print_field(g, std::cout);
