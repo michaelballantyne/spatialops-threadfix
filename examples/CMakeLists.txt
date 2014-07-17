@@ -32,7 +32,7 @@ install( TARGETS example5_stencil_types RUNTIME DESTINATION bin/spatialops )
 
 nebo_add_executable( example7_stencils Example7_stencils.cpp )
 target_link_libraries( example7_stencils spatialops )
-add_test( example7_stencils example_stencils )
+add_test( example7_stencils example7_stencils )
 install( TARGETS example7_stencils RUNTIME DESTINATION bin/spatialops )
 
 nebo_add_executable( example8_masks Example8_masks.cpp )
@@ -42,5 +42,5 @@ target_link_libraries( example8_masks spatialops )
 
 nebo_add_executable( example9_heat_equation Example9_heat_equation.cpp )
 target_link_libraries( example9_heat_equation spatialops )
-add_test( example9_heat_equation example_heat_equation )
+add_test( example9_heat_equation example9_heat_equation )
 install( TARGETS example9_heat_equation RUNTIME DESTINATION bin/spatialops )
