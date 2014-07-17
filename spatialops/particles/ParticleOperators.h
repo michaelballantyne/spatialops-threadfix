@@ -199,7 +199,7 @@ namespace Particle{
      const double zloface = zlo_ - dz_*ngm[2] - dz_/2;
 
      dest <<= 0.0;  // set to zero and accumulate contributions from each particle below.
-//std::cout << "\nParticleToCell\n" << xloface << std::endl;
+
      // Note: here the outer loop is over particles and the inner loop is over
      // cells to sum in the particle contributions.  This should be optimal for
      // situations where there are a relatively small number of particles. In
@@ -233,13 +233,6 @@ namespace Particle{
        const size_t iyhi = py_ ? std::min( nmax[1], int(( pyhi - yloface ) / dy_) + 1 ) : iylo+1;
        const size_t izhi = pz_ ? std::min( nmax[2], int(( pzhi - zloface ) / dz_) + 1 ) : izlo+1;
 
-//       std::cout << "Particle info:\n"
-//           <<   "\tDiameter: " << *ipsize
-//           << "\n\tLocation: " << pxlo << " - " << pxhi
-//           << "\n\tilo: " << ixlo << " (" << xloface + ixlo*dx_ << ")  " << ( pxlo - xloface ) / dx_
-//           << "\n\tihi: " << ixhi-1 << " (" << xloface + ixhi*dx_ << ")"
-//           << "\n";
-
        // Distribute particle through the volume(s) it touches. Here we are
        // doing a highly approximate job at approximating how much fractional
        // particle volume is in each cell.
@@ -266,13 +259,6 @@ namespace Particle{
              // contribution is the fraction of the particle volume in this cell.
              const double contribution = xcont*ycont*zcont / pvol;
              dest(i,j,k) += *isrc * contribution;
-
-//             std::cout << "In cell " << IntVec(i,j,k) << " fractional pvol: " << contribution
-//                 << "\n\tcell bounds: " << xcm << " : " << xcp
-//                 << "\n\tp    bounds: " << pxlo << " : " << pxhi
-//                 << "\n\tploc : " << *ipx
-//                 << std::endl;
-
 #            ifndef NDEBUG
              sumterm += contribution;
 #            endif
@@ -280,7 +266,6 @@ namespace Particle{
          }
        }
 #      ifndef NDEBUG
-//       std::cout << "P2C sum: " << sumterm << std::endl;
        if( std::abs(1.0-sumterm) >= 1e-10 ) std::cout << "sum: " << sumterm << std::endl;
        assert( std::abs(1.0-sumterm) < 1e-10 );
 #      endif
@@ -377,7 +362,7 @@ namespace Particle{
       const double pvol = (px_ ? 2*rp : 1)
                         * (py_ ? 2*rp : 1)
                         * (pz_ ? 2*rp : 1);
-//      std::cout << "PVOL: " << pvol << std::endl;
+
 #     ifndef NDEBUG
       double sumterm=0.0;
 #     endif
