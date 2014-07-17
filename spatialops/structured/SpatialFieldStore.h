@@ -204,8 +204,6 @@ private:
  *  NOTE: this could get us into big trouble if we have threads
  *  running concurrently, since we would not be able to guarantee
  *  that two threads didn't use the same memory.
- *
- *  \todo Implement a thread-safe version of this concept.
  */
 class SpatialFieldStore {
 
