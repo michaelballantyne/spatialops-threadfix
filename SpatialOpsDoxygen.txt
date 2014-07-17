@@ -54,8 +54,8 @@
  
  \section prereqs Prerequisites
  
-  - \link cmake.org CMake \endlink, which SpatialOps uses for its build system
-  - The \link boost.org Boost libraries \endlink
+  - [CMake](cmake.org), which SpatialOps uses for its build system
+  - The [Boost libraries](boost.org)
   - For the GPU backends, a functioning CUDA nvcc installation with an nVidia GPU card
  
  

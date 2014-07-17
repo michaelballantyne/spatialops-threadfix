@@ -20,6 +20,10 @@
  * IN THE SOFTWARE.
  */
 
+/**
+ * \file MemoryPool.h
+ */
+
 #ifndef UT_MemoryPool_h
 #define UT_MemoryPool_h
 
@@ -32,9 +36,9 @@ namespace SpatialOps {
 
 template<typename T>
 class Pool{
-  typedef std::stack<T*> FieldQueue;
+  typedef std::stack<T*>              FieldQueue;
   typedef std::map<size_t,FieldQueue> FQSizeMap;
-  typedef std::map<T*,size_t> FieldSizeMap;
+  typedef std::map<T*,size_t>         FieldSizeMap;
 
   static bool destroyed_;
   bool pinned_;
