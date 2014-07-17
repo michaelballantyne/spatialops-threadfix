@@ -158,10 +158,9 @@ namespace SpatialOps {
         // destination field offset
         typedef typename DestFieldType::Location::Offset                     DestOffset;
         // low (first) stencil point location (relative to the destination point)
-        typedef typename GreaterThan<SrcOffset,
-                                                 DestOffset>::result::Negate LowStPt;
+        typedef typename GreaterThan<SrcOffset, DestOffset>::result::Negate  LowStPt;
         // high (second) stencil point location (relative to the destination point)
-        typedef typename LessThan<SrcOffset, DestOffset>::result HighStPt;
+        typedef typename LessThan<SrcOffset, DestOffset>::result             HighStPt;
         // collection of all stencil points in this stencil
         typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)          StPtCollection;
     };
@@ -178,13 +177,13 @@ namespace SpatialOps {
         struct TemplateIf<false, True, False> { False typedef result; };
 
         // source field offset
-        typedef typename SrcFieldType::Location::Offset                             SrcOffset;
+        typedef typename SrcFieldType::Location::Offset  SrcOffset;
         // destination field offset
-        typedef typename DestFieldType::Location::Offset                            DestOffset;
+        typedef typename DestFieldType::Location::Offset DestOffset;
         // unit vectors
-        typedef IndexTriplet<1, 0, 0>                                   XUnit;
-        typedef IndexTriplet<0, 1, 0>                                   YUnit;
-        typedef IndexTriplet<0, 0, 1>                                   ZUnit;
+        typedef IndexTriplet<1, 0, 0>   XUnit;
+        typedef IndexTriplet<0, 1, 0>   YUnit;
+        typedef IndexTriplet<0, 0, 1>   ZUnit;
         // first direction (unit vector)
         typedef typename TemplateIf<((int)(SrcOffset::X) != (int)(DestOffset::X)),
                                     XUnit,
@@ -219,17 +218,17 @@ namespace SpatialOps {
         typedef typename Add<LoValInFirstDir, HiValInSecondDir>::result StPt3;
         typedef typename Add<HiValInFirstDir, HiValInSecondDir>::result StPt4;
         // collection of all stencil points in this stencil
-      typedef NEBO_FIRST_POINT(StPt1)::NEBO_ADD_POINT(StPt2)
-              ::NEBO_ADD_POINT(StPt3)::NEBO_ADD_POINT(StPt4)                        StPtCollection;
+        typedef NEBO_FIRST_POINT(StPt1)::NEBO_ADD_POINT(StPt2)
+                ::NEBO_ADD_POINT(StPt3)::NEBO_ADD_POINT(StPt4)                      StPtCollection;
     };
 
     template<typename OperatorType, typename SrcFieldType, typename DestFieldType>
     struct FDStencilCollection {
-        typedef typename OperatorType::DirT                                 DirT;
-        typedef typename UnitTriplet<DirT>::type                DirVec;
-        typedef typename DirVec::Negate                                     LowStPt;
-        typedef DirVec                                                      HighStPt;
-        typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)         StPtCollection;
+        typedef typename OperatorType::DirT                          DirT;
+        typedef typename UnitTriplet<DirT>::type                     DirVec;
+        typedef typename DirVec::Negate                              LowStPt;
+        typedef DirVec                                               HighStPt;
+        typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)  StPtCollection;
     };
 
   /**
