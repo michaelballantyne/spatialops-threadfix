@@ -157,8 +157,6 @@ namespace SpatialOps{
     typedef MemoryWindow memory_window;
     typedef FieldIterator<field_type> iterator;
     typedef ConstFieldIterator<field_type> const_iterator;
-    typedef FieldIterator<field_type> interior_iterator;
-    typedef ConstFieldIterator<field_type> const_interior_iterator;
 
     /**
      *  \brief SpatialField constructor
@@ -170,9 +168,9 @@ namespace SpatialOps{
      * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
      * \param devIdx      device index of originally active device (default: CPU_INDEX)
      */
-    inline SpatialField(const MemoryWindow& window,
-                        const BoundaryCellInfo& bc,
-                        const GhostData& ghosts,
+    inline SpatialField(const MemoryWindow window,
+                        const BoundaryCellInfo bc,
+                        const GhostData ghosts,
                         T* const fieldValues = NULL,
                         const StorageMode mode = InternalStorage,
                         const short int devIdx = CPU_INDEX)
@@ -229,7 +227,7 @@ namespace SpatialOps{
      * change the number of valid ghost cells in other copies of this
      * same field that meet the same requirements.)
      */
-    inline SpatialField(const MemoryWindow& window,
+    inline SpatialField(const MemoryWindow window,
                         const SpatialField& other)
     : matchGlobalWindow_( window.fits_between(other.info_->window_without_ghost(),
                                               other.info_->window_with_all_ghost()) ),
@@ -321,13 +319,18 @@ namespace SpatialOps{
 #endif
 
     /**
+     * \brief wait until the current stream is done with all work
+     */
+    inline void wait_for_synchronization() { info_->wait_for_synchronization(); }
+
+    /**
      * \brief return the index of the current active device
      */
     short int active_device_index() const { return info_->active_device_index(); }
 
     /**
      * \Brief add device memory to this field for given device
-     *  and sync it with current active device
+     *  and populate it with values from current active device *SYNCHRONOUS VERSION*
      *
      * \param deviceIndex the index of the device to add
      *
@@ -341,28 +344,88 @@ namespace SpatialOps{
      * field, this function does the bare minumum to make device available
      * and valid for this field.
      *
+     * Note: This operation is guaranteed to be synchronous: The host thread waits
+     * until the task is completed (on the GPU).
+     *
      * Note: This operation is thread safe.
      */
     inline void add_device(short int deviceIndex) { info_->add_device( deviceIndex ); }
 
     /**
-     * \brief synchronize the given device (deviceIndex) with the active device
+     * \Brief add device memory to this field for given device
+     *  and populate it with values from current active device *ASYNCHRONOUS VERSION*
+     *
+     * \param deviceIndex the index of the device to add
+     *
+     * If device (deviceIndex) is already available for this field and
+     * valid, this fuction becomes a no op.
+     *
+     * If device (deviceIndex) is already available for this field but
+     * not valid, this fuction becomes identical to sync_device().
+     *
+     * Thus, regardless of the status of device (deviceIndex) for this
+     * field, this function does the bare minumum to make device available
+     * and valid for this field.
+     *
+     * Note: This operation is asynchronous: The host thread returns immediately after
+     * it launches on the GPU.
+     *
+     * Note: This operation is thread safe.
+     */
+    inline void add_device_async(short int deviceIndex) { info_->add_device_async( deviceIndex ); }
+
+   /**
+     * \brief populate memory on the given device (deviceIndex) with values
+     *  from the active device *SYNCHRONOUS VERSION*
      *
      * This function performs data-transfers when needed and only when needed.
      *
      * \param deviceIndex index for device to synchronize
+     *
+     * Note: This operation is guaranteed to be synchronous: The host thread waits
+     * until the task is completed (on the GPU).
      */
-    inline void sync_device(short int deviceIndex) { info_->sync_device( deviceIndex ); }
+    inline void validate_device(short int deviceIndex) { info_->validate_device( deviceIndex ); }
+
+   /**
+     * \brief populate memory on the given device (deviceIndex) with values
+     *  from the active device *ASYNCHRONOUS VERSION*
+     *
+     * This function performs data-transfers when needed and only when needed.
+     *
+     * \param deviceIndex index for device to synchronize
+     *
+     * Note: This operation is asynchronous: The host thread returns immediately after
+     * it launches on the GPU.
+     */
+    inline void validate_device_async(short int deviceIndex) { info_->validate_device_async( deviceIndex ); }
 
     /**
-     * \brief set given device (deviceIndex)  as active
+     * \brief set given device (deviceIndex) as active *SYNCHRONOUS VERSION*
      *
      * Given device must exist and be valid, otherwise an exception is thrown.
      *
      * \param deviceIndex index to device to be made active
+     *
+     * Note: This operation is guaranteed to be synchronous: The host thread waits
+     * until the task is completed (on the GPU).
      */
     inline void set_device_as_active(const short int deviceIndex) {
       info_->set_device_as_active( deviceIndex );
+    }
+
+    /**
+     * \brief set given device (deviceIndex) as active *ASYNCHRONOUS VERSION*
+     *
+     * Given device must exist and be valid, otherwise an exception is thrown.
+     *
+     * \param deviceIndex index to device to be made active
+     *
+     * Note: This operation is asynchronous: The host thread returns immediately
+     * after it launches on the GPU.
+     */
+    inline void set_device_as_active_async(const short int deviceIndex) {
+      info_->set_device_as_active_async( deviceIndex );
     }
 
     /**
@@ -431,23 +494,23 @@ namespace SpatialOps{
     /**
      * \brief return a constant iterator for CPU without ghost cells
      */
-    inline const_interior_iterator interior_begin() const {
-      return const_interior_iterator( info_->const_field_values( CPU_INDEX ),
-                                      window_without_ghost() );
+    inline const_iterator interior_begin() const {
+      return const_iterator( info_->const_field_values( CPU_INDEX ),
+                             window_without_ghost() );
     }
 
     /**
      * \brief return a nonconstant iterator for CPU without ghost cells
      */
-    inline interior_iterator interior_begin() {
-      return interior_iterator( info_->field_values( CPU_INDEX ),
-                                window_without_ghost() );
+    inline iterator interior_begin() {
+      return iterator( info_->field_values( CPU_INDEX ),
+                       window_without_ghost() );
     }
 
     /**
      * \brief return a constant iterator to end for CPU without ghost cells
      */
-    inline const_interior_iterator interior_end() const {
+    inline const_iterator interior_end() const {
       const MemoryWindow & w = window_without_ghost();
 
       return interior_begin() + w.extent(0) * w.extent(1) * w.extent(2);
@@ -456,7 +519,7 @@ namespace SpatialOps{
     /**
      * \brief return a nonconstant iterator to end for CPU without ghost cells
      */
-    inline interior_iterator interior_end() {
+    inline iterator interior_end() {
       const MemoryWindow & w = window_without_ghost();
 
       return interior_begin() + w.extent(0) * w.extent(1) * w.extent(2);
