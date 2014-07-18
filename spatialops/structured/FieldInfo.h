@@ -623,7 +623,7 @@ namespace SpatialOps{
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
 #endif
 
-    set_device_as_active(deviceIndex);
+    set_device_as_active_async(deviceIndex);
     wait_for_synchronization();
   }
 
