@@ -41,33 +41,41 @@ using namespace SpatialOps;
 
 int main()
 {
+  // SVolField = Scalar Volume Field (non-staggered, cell-centered field)
+  typedef SVolField FieldT;
+
+  //----------------------------------------------------------------------------
+  // Use default values to create objects required to build a field:
+
+  // Ghost cells are needed by some applications and operations
+  // In general, set ghost cells to zero, unless they are needed:
+  const GhostData nghost(0);
+
+  // Determine if we have physical boundaries present on each right/positive (+) face.
+  const bool bcx=true, bcy=true, bcz=true;
+  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
+
   // Define the size of the field (nx,ny,nz)
   const IntVec fieldDim( 10, 9, 8 );
 
-  // Determine if we have physical boundaries present on each (+) face.
-  const bool bcx=true, bcy=true, bcz=true;
-
-
-  //----------------------------------------------------------------------------
-  // Create a field with the specified size and have memory managed internally
-  // (hence the NULL argument and the InternalStorage flag)
-  // Also create this field in the appropriate location (GPU/CPU) depending on
-  // how this was configured.
-  typedef SVolField FieldT;  // SVolField = Scalar Volume Field (non-staggered, cell-centered field)
-  const GhostData nghost(0);
-  const BoundaryCellInfo bcInfo = BoundaryCellInfo::build<FieldT>( bcx, bcy, bcz );
+  // Construct a memory window (logical extents of a field) from dimensions,
+  //  ghost cell data, and boundary cell information
   const MemoryWindow window( get_window_with_ghost( fieldDim, nghost, bcInfo ) );
 
-  //============================================================================
-  // BUILD THE FIELD
+  //----------------------------------------------------------------------------
+  // Create a field from scratch
+  //  parameters:
+  //   window          : logical extents for the field
+  //   bcInfo          : boundary cell information for the field
+  //   nghost          : ghost cell data for the field
+  //   NULL            : externally allocated memory (not needed here; hence, NULL)
+  //   InternalStorage : internally manage memory (could also be ExternalStorage)
+  //   LOCATION        : CPU or GPU memory
   FieldT f( window, bcInfo, nghost, NULL, InternalStorage, LOCATION );
-  //============================================================================
-
 
   //----------------------------------------------------------------------------
-  // Create some fields from the "SpatialFieldStore" using the previously
-  // created field as a prototype.  SpatFldPtr has regular pointer semantics
-  // but is a reference-counted pointer.
+  // Create a field from a prototype using the "SpatialFieldStore." SpatFldPtr has
+  // regular pointer semantics but is a reference-counted pointer.
   SpatFldPtr<FieldT> f2 = SpatialFieldStore::get<FieldT>(f); // field with same layout as "f"
 
   return 0;

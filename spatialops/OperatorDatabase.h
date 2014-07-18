@@ -72,13 +72,8 @@ public:
    *  \param op The operator to register.  Ownership is transfered.
    *         This should be heap-allocated via "new".
    *
-   *  Example: <code>opDB.register_new_operator( new MyOpType(myOpAssembler) );</code>
+   *  Example: <code>opDB.register_new_operator( new MyOpType(...) );</code>
    *
-   *  \todo Consider passing the operator assembler here rather than
-   *        the operator itself.  Then we could build the operator
-   *        internally.  Note that then we would have to provide the
-   *        template argument when calling this method, whereas it can
-   *        be deduced currently.
    */
   template<typename OpT>
   int register_new_operator( OpT* const op );

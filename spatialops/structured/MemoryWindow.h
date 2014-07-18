@@ -87,9 +87,9 @@ namespace SpatialOps{
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
      */
-    MemoryWindow( const IntVec& npts,
-                  const IntVec& offset,
-                  const IntVec& extent );
+    MemoryWindow( const IntVec npts,
+                  const IntVec offset,
+                  const IntVec extent );
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"

@@ -21,49 +21,41 @@
  */
 
 /**
- * \file MemoryPool.h
+ *  \file   DoubleVec.h
  */
+#ifndef SpatialOps_DoubleVec_h
+#define SpatialOps_DoubleVec_h
 
-#ifndef UT_MemoryPool_h
-#define UT_MemoryPool_h
+#include <spatialops/structured/Numeric3Vec.h>
 
-#include <stack>
-#include <map>
+#include <cmath>
+#include <limits>
 
-#include <spatialops/structured/MemoryTypes.h>
 
-namespace SpatialOps {
+namespace SpatialOps{
+  /**
+   * \typedef DoubleVec
+   * \brief Defines a three-component vector of doubles useful for expressing things like coordinates.
+   */
+  typedef SpatialOps::Numeric3Vec<double> DoubleVec;
 
-template<typename T>
-class Pool{
-  typedef std::stack<T*>              FieldQueue;
-  typedef std::map<size_t,FieldQueue> FQSizeMap;
-  typedef std::map<T*,size_t>         FieldSizeMap;
+  // specialize the comparison operators
 
-  static bool destroyed_;
-  bool pinned_;
+  template<>
+  inline bool DoubleVec::operator==( const DoubleVec& v ) const
+  {
+    const static double eps = 2.0*std::numeric_limits<double>::epsilon();
+    return std::abs( v.ijk[0]-ijk[0] ) < eps
+        && std::abs( v.ijk[1]-ijk[1] ) < eps
+        && std::abs( v.ijk[2]-ijk[2] ) < eps;
+  }
 
-  FQSizeMap cpufqm_, gpufqm_;
-  FieldSizeMap fsm_;
-  size_t pad_;
-  size_t cpuhighWater_, gpuhighWater_;
-  Pool();
-  ~Pool();
-  Pool(const Pool&);
-  Pool& operator=(const Pool&);
+  template<>
+  inline bool DoubleVec::operator!=(const DoubleVec& v) const{
+    return !( *this == v );
+  }
 
- public:
+} // namespace SpatialOps
 
-  static Pool& self();
-  T* get( const short int deviceLocation, const size_t n );
-  void put( const short int deviceLocation, T* );
-  size_t active() const;
-  size_t total() const{ return cpuhighWater_; }
-  const unsigned short int deviceIndex_;
-};
 
-template<typename T> bool Pool<T>::destroyed_ = false;
-
-} //namespace SpatialOps
-
-#endif
+#endif /* SpatialOps_DoubleVec_h */

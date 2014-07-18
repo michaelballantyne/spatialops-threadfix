@@ -218,7 +218,7 @@ bool test_bc( const OperatorDatabase& opDB,
 
 bool test_driver( const IntVec& dim )
 {
-  std::vector<double> length(3,1);
+  const DoubleVec length(1,1,1);
   std::vector<bool> bcFlag(3,true);
 
   OperatorDatabase opDB;

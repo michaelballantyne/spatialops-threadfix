@@ -26,6 +26,7 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <iomanip>
 
 /** \file FieldHelper.h */
 
@@ -171,6 +172,8 @@ inline void interior_initialize_field(Field & f,
  *
  * \param fi field iterator to use to read values to print
  * \param mw memory window of fi (field iterator)
+ * \param os output stream to write to
+ * \param add_format boolean flag to either print with tight format or standard precision
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -208,7 +211,8 @@ inline void interior_initialize_field(Field & f,
 template<typename Field>
 inline void internal_print_field(typename Field::const_iterator fi,
                                  MemoryWindow const & mw,
-                                 std::ostream& os )
+                                 std::ostream& os,
+                                 bool add_format)
 {
   int xExtent = mw.extent(0);
   int yExtent = mw.extent(1);
@@ -217,7 +221,10 @@ inline void internal_print_field(typename Field::const_iterator fi,
   for(int z = 1; z <= zExtent; z++) {
     for(int y = 1; y <= yExtent; y++) {
       for(int x = 1; x <= xExtent; x++, fi++) {
-        os << *fi << " ";
+        if(!add_format)
+          os << *fi << " ";
+        else
+          os << std::setprecision(2) << *fi << "\t";
       }
       os << std::endl;
     }
@@ -230,6 +237,8 @@ inline void internal_print_field(typename Field::const_iterator fi,
  * \brief print the values of a field (and ghost cells) to standard output
  *
  * \param f field to print
+ * \param os output stream to write to
+ * \param add_format boolean flag to either print with tight format or standard precision
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -268,8 +277,8 @@ inline void internal_print_field(typename Field::const_iterator fi,
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline void print_field( const Field& f, std::ostream& os ){
-  internal_print_field<Field>(f.begin(), f.window_with_ghost(), os );
+inline void print_field( const Field& f, std::ostream& os, bool add_format = false ){
+  internal_print_field<Field>(f.begin(), f.window_with_ghost(), os, add_format );
 };
 
 /**
@@ -277,6 +286,8 @@ inline void print_field( const Field& f, std::ostream& os ){
  * \brief print the values of a field (without ghost cells) to standard output
  *
  * \param f field to print
+ * \param os output stream to write to
+ * \param add_format boolean flag to either print with tight format or standard precision
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -316,8 +327,8 @@ inline void print_field( const Field& f, std::ostream& os ){
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline void interior_print_field( const Field& f, std::ostream& os ){
-    internal_print_field<Field>(f.interior_begin(), f.window_without_ghost(), os );
+inline void interior_print_field( const Field& f, std::ostream& os, bool add_format = false ){
+  internal_print_field<Field>(f.interior_begin(), f.window_without_ghost(), os, add_format );
 };
 
 /**
@@ -601,7 +612,7 @@ void write_matlab( const FieldT& field,
 {
 # ifdef ENABLE_CUDA
   // IO only works on CPU.  Ensure that we have a field there.
-  const_cast<FieldT&>(field).add_field_loc( CPU_INDEX );
+  const_cast<FieldT&>(field).add_device_sync( CPU_INDEX );
 # endif
 
   const std::string fname = "load_"+prefix+".m";

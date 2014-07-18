@@ -115,10 +115,10 @@ bool manual_error_compare(FieldT& f1,
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
-  if(f1.active_device_index() == GPU_INDEX) {
+  if( IS_GPU_INDEX(f1.active_device_index()) ) {
     f1.add_device(CPU_INDEX);
   }
-  if(f2.active_device_index() == GPU_INDEX) {
+  if( IS_GPU_INDEX(f2.active_device_index()) ) {
     f2.add_device(CPU_INDEX);
   }
 #endif
@@ -552,7 +552,7 @@ bool manual_error_compare(double d,
 {
   //copy the fields to local ram if applicable
 #ifdef __CUDACC__
-  if(IS_GPU_INDEX(f1.active_device_index())) {
+  if( IS_GPU_INDEX(f1.active_device_index()) ) {
     f1.add_device(CPU_INDEX);
   }
 #endif

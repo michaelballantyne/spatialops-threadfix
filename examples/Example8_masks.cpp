@@ -1,8 +1,5 @@
 /**
- *  \file   Example7_stencils.cpp
- *  \date   Jul 10, 2014
- *  \author "James C. Sutherland"
- *
+ *  \file   Example8_masks.cpp
  *
  * The MIT License
  *
@@ -30,6 +27,7 @@
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/Grid.h>
+#include <spatialops/structured/FieldHelper.h>
 
 using namespace SpatialOps;
 
@@ -42,56 +40,70 @@ using namespace SpatialOps;
 # define LOCATION CPU_INDEX
 #endif
 
-
-#define PI 3.141592653589793
-
 int main()
 {
   //----------------------------------------------------------------------------
   // Define the domain size and number of points
-  const DoubleVec length(PI,PI,PI);  // a cube of length pi on each side
-  const IntVec fieldDim( 10, 1, 1 ); // a 1-D problem
-
+  const DoubleVec length( 5, 5, 5 ); // a cube of length 5.0
+  const IntVec fieldDim( 5, 5, 1 );  // a 5 x 5 x 1 problem
 
   //----------------------------------------------------------------------------
   // Create fields
-  const bool bcx=true, bcy=true, bcz=true;
-  const GhostData nghost(1);
-  const BoundaryCellInfo sVolBCInfo = BoundaryCellInfo::build<SVolField>( bcx, bcy, bcz );
-  const BoundaryCellInfo ssxBCInfo = BoundaryCellInfo::build<SSurfXField>( bcx, bcy, bcz );
+  const GhostData nghost(0);  // try changing this to 1 and see what happens.
+  const BoundaryCellInfo sVolBCInfo = BoundaryCellInfo::build<SVolField>( true, true, true );
   const MemoryWindow sVolWindow( get_window_with_ghost( fieldDim, nghost, sVolBCInfo) );
-  const MemoryWindow ssxWindow( get_window_with_ghost( fieldDim, nghost, ssxBCInfo ) );
 
-  SVolField       x( sVolWindow, sVolBCInfo, nghost, NULL, InternalStorage, LOCATION );
-  SVolField       f( sVolWindow, sVolBCInfo, nghost, NULL, InternalStorage, LOCATION );
-  SSurfXField  dfdx(  ssxWindow,  ssxBCInfo, nghost, NULL, InternalStorage, LOCATION );
-  SSurfXField fface(  ssxWindow,  ssxBCInfo, nghost, NULL, InternalStorage, LOCATION );
+  SVolField x( sVolWindow, sVolBCInfo, nghost, NULL, InternalStorage, LOCATION );
+  SVolField y( sVolWindow, sVolBCInfo, nghost, NULL, InternalStorage, LOCATION );
+  SVolField f( sVolWindow, sVolBCInfo, nghost, NULL, InternalStorage, LOCATION );
 
   //----------------------------------------------------------------------------
-  // Build a grid. This is a convenient way to set coordinate values that will
-  // be used below.
+  // Build a coordinates.
   const Grid grid( fieldDim, length );
   grid.set_coord<XDIR>(x);
-
-
-  //----------------------------------------------------------------------------
-  // Build the operators (stencils).  Here we will use predefined stencils that
-  // can be built easily.
-  OperatorDatabase opDB;         // holds stencils that can be retrieved easily
-  build_stencils( grid, opDB );  // builds stencils and places them in opDB
-
-  typedef BasicOpTypes<SVolField>::GradX        GradX;  // x-derivative operator type
-  typedef BasicOpTypes<SVolField>::InterpC2FX InterpX;  // x-interpolant operator type
-
-  const GradX&     gradx = *opDB.retrieve_operator<GradX  >(); // retrieve the GradX operator
-  const InterpX& interpx = *opDB.retrieve_operator<InterpX>(); // retrieve the InterpX operator
-
+  grid.set_coord<YDIR>(y);
 
   //----------------------------------------------------------------------------
-  // perform calculations
-  f     <<=     sin( x ); // Initialize the function value
-  dfdx  <<=   gradx( f ); // gradient of f at the x-faces
-  fface <<= interpx( f ); // interpolated value of f at the x-faces
+  // Assign f:
+  f <<= x + y;
+
+  //----------------------------------------------------------------------------
+  // Build a mask.
+  // A mask is a set of indices where something different should happen, such
+  // as a boundary condition: Edge of a flame, fuel injection or exhaust pipe.
+  // Indexing for masks has the origin at the first interior point. (Ghosts are
+  // negative indices.)
+  std::vector<IntVec> maskSet;
+  for( int i=0; i<7; ++i )
+    maskSet.push_back( IntVec(0, i, 0) );
+
+  // Creating a mask needs a prototype field and a std::vector of indices.
+  SpatialMask<SVolField> mask( f, maskSet );
+# ifdef ENABLE_CUDA
+  // Note that these are created only on a CPU, and must be explicitly
+  // transferred to the GPU for CUDA enabled cases as shown below.
+  mask.add_consumer( GPU_INDEX );
+# endif
+
+  //----------------------------------------------------------------------------
+  // Use mask:
+
+  std::cout << "f before applying mask:" << std::endl;
+# ifdef ENABLE_CUDA
+  // If f uses GPU memory, to print f, f needs to be copied to CPU memory.
+  f.add_device_sync( CPU_INDEX );
+# endif
+  print_field( f, std::cout );
+
+  f <<= cond( mask, 90.0 )
+            ( f );
+
+# ifdef ENABLE_CUDA
+  // If f uses GPU memory, to print f, f needs to be copied to CPU memory.
+  f.add_device_sync( CPU_INDEX );
+# endif
+  std::cout << "f after applying mask:" << std::endl;
+  print_field( f, std::cout );
 
   return 0;
 }

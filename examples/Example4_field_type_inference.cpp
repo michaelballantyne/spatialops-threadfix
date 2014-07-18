@@ -29,7 +29,7 @@
  */
 
 #include <spatialops/structured/FVStaggered.h> // field type definitions, etc.
-#include <spatialops/SpatialOpsTools.h>        // for IsSameType utility
+#include <spatialops/SpatialOpsTools.h>        // for is_same_type
 
 #include <cassert>
 
