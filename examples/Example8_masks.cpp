@@ -91,7 +91,7 @@ int main()
   std::cout << "f before applying mask:" << std::endl;
 # ifdef ENABLE_CUDA
   // If f uses GPU memory, to print f, f needs to be copied to CPU memory.
-  f.add_device_sync( CPU_INDEX );
+  f.add_device( CPU_INDEX );
 # endif
   print_field( f, std::cout );
 
@@ -100,7 +100,7 @@ int main()
 
 # ifdef ENABLE_CUDA
   // If f uses GPU memory, to print f, f needs to be copied to CPU memory.
-  f.add_device_sync( CPU_INDEX );
+  f.add_device( CPU_INDEX );
 # endif
   std::cout << "f after applying mask:" << std::endl;
   print_field( f, std::cout );

@@ -402,7 +402,7 @@ namespace SpatialOps{
    * valid, this fuction becomes a no op.
    *
    * If device (deviceIndex) is already available for this field but
-   * not valid, this fuction becomes identical to validate_device_sync().
+   * not valid, this fuction becomes identical to validate_device().
    *
    * Thus, regardless of the status of device (deviceIndex) for this
    * field, this function does the bare minumum to make device available
@@ -416,7 +416,7 @@ namespace SpatialOps{
   template<typename T>
   void FieldInfo<T>::add_device( const short int deviceIndex ) {
 #ifdef DEBUG_SF_ALL
-    std::cout << "Call to SpatialField::add_device_sync() for device : "
+    std::cout << "Call to SpatialField::add_device() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
 #endif
 
@@ -490,7 +490,7 @@ namespace SpatialOps{
   template<typename T>
   void FieldInfo<T>::validate_device( const short int deviceIndex ) {
 #ifdef DEBUG_SF_ALL
-    std::cout << "Call to SpatialField::validate_device_sync() for device : "
+    std::cout << "Call to SpatialField::validate_device() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
 #endif
 

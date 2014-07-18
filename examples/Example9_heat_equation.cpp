@@ -56,7 +56,7 @@ initialize_thermal_diffusivity( const Grid& grid, FieldT & alpha )
   alpha <<= 1.0;
 
 # ifdef ENABLE_CUDA
-  alpha.add_device_sync( CPU_INDEX );  // transfer to facilitate printing its values
+  alpha.add_device( CPU_INDEX );  // transfer to facilitate printing its values
 # endif
   std::cout << "Initial alpha:" << std::endl;
   print_field( alpha, std::cout, true );
@@ -177,7 +177,7 @@ int main()
 
   std::cout << "Initial phi:" << std::endl;
 # ifdef ENABLE_CUDA
-  phi.add_device_sync( CPU_INDEX );
+  phi.add_device( CPU_INDEX );
 # endif
   print_field( phi, std::cout, true );
 
@@ -206,7 +206,7 @@ int main()
 
 #     ifdef ENABLE_CUDA
       // If f uses GPU memory, f needs to be copied to CPU memory to print it.
-      phi.add_device_sync( CPU_INDEX );
+      phi.add_device( CPU_INDEX );
 #     endif
 
       print_field( phi, std::cout, true );

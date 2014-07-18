@@ -612,7 +612,7 @@ void write_matlab( const FieldT& field,
 {
 # ifdef ENABLE_CUDA
   // IO only works on CPU.  Ensure that we have a field there.
-  const_cast<FieldT&>(field).add_device_sync( CPU_INDEX );
+  const_cast<FieldT&>(field).add_device( CPU_INDEX );
 # endif
 
   const std::string fname = "load_"+prefix+".m";
