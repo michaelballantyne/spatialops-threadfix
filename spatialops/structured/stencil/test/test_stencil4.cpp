@@ -1,7 +1,6 @@
 #include <spatialops/Nebo.h>
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/Grid.h>
 
 #include "test_stencil_helper.h"
 #include <test/TestHelper.h>

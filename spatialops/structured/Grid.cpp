@@ -34,15 +34,11 @@ namespace SpatialOps{
   };
 
   Grid::Grid( const IntVec npts,
-              const std::vector<double>& length )
+              const DoubleVec length )
     : npts_( npts ),
-      length_( length )
-  {
-    assert( length.size() == 3 );
-    for( size_t i=0; i<3; ++i ){
-      spacing_.push_back( length[i] / double(npts[i]) );
-    }
-  }
+      length_( length ),
+      spacing_( length_/npts_ )
+  {}
 
   template<typename CoordT> unsigned int get_dir();
   template<> unsigned int get_dir<XDIR>(){ return 0; }

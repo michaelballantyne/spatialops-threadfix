@@ -43,9 +43,8 @@ using namespace SpatialOps;
 int main( int iarg, char* carg[] )
 {
   size_t ntime;
-  std::vector<int> npts(3,1);
-  std::vector<double> length(3,1.0);
-  std::vector<double> spacing(3,1.0);
+  IntVec npts;
+  DoubleVec length;
 
   // parse the command line options input describing the problem
   {
@@ -79,20 +78,13 @@ int main( int iarg, char* carg[] )
        << endl;
 
   // set mesh spacing (uniform, structured mesh)
-  for( size_t i=0; i<3; ++i )
-    spacing[i] = length[i]/double(npts[i]);
+  const DoubleVec spacing = length/npts;
 
-  // set face areas
-  std::vector<double> area(3,1.0);
-  area[0] = spacing[1]*spacing[2];
-  area[1] = spacing[0]*spacing[2];
-  area[2] = spacing[0]*spacing[1];
+  const Grid grid( npts, length );
 
   // build the spatial operators
   SpatialOps::OperatorDatabase sodb;
-  SpatialOps::build_stencils( npts[0],   npts[1],   npts[2],
-                                          length[0], length[1], length[2],
-                                          sodb );
+  SpatialOps::build_stencils( grid, sodb );
 
   // grab pointers to the operators
   const GradX* const gradx = sodb.retrieve_operator<GradX>();
@@ -122,7 +114,6 @@ int main( int iarg, char* carg[] )
   CellField zcoord     ( vwindow, cellBC, ghost, NULL );
   CellField rhs        ( vwindow, cellBC, ghost, NULL );
 
-  Grid grid( npts, length );
   grid.set_coord<SpatialOps::XDIR>( xcoord );
   grid.set_coord<SpatialOps::YDIR>( ycoord );
   grid.set_coord<SpatialOps::ZDIR>( zcoord );

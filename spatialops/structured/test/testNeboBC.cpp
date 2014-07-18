@@ -20,7 +20,6 @@
 #include <spatialops/structured/FVStaggeredBCTools.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 
-#include <spatialops/structured/Grid.h>
 #include <test/TestHelper.h>
 #include <spatialops/structured/FieldHelper.h>
 

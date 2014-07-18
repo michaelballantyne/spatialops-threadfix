@@ -219,7 +219,7 @@ double apply_stencil( const SpatialOps::IntVec& npts,
   SrcT   src(smw,sbc,sg,NULL), xs(smw,sbc,sg,NULL), ys(smw,sbc,sg,NULL), zs(smw,sbc,sg,NULL);
   DestT dest(dmw,dbc,dg,NULL), xd(dmw,dbc,dg,NULL), yd(dmw,dbc,dg,NULL), zd(dmw,dbc,dg,NULL), destExact(dmw,dbc,dg,NULL);
 
-  const Grid grid( npts, std::vector<double>(3,length) );
+  const Grid grid( npts, DoubleVec(length,length,length) );
 
   grid.set_coord<XDIR>( xs );  grid.set_coord<YDIR>( ys );  grid.set_coord<ZDIR>( zs );
   grid.set_coord<XDIR>( xd );  grid.set_coord<YDIR>( yd );  grid.set_coord<ZDIR>( zd );

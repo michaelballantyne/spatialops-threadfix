@@ -106,9 +106,8 @@ int main()
 
   //----------------------------------------------------------------------------
   // Define the domain size and number of points
-  std::vector<double> domainLength(3,1.0);  // a cube of unit length
-  // a 6 x 6 x 1 problem with a ghost cell on each edge
-  const IntVec fieldDim( 6, 6, 1 );
+  const DoubleVec domainLength(1,1,1);  // a cube of unit length
+  const IntVec fieldDim( 6, 6, 1 );     // 6 x 6 x 1 points
 
   //----------------------------------------------------------------------------
   // Create fields

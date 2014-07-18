@@ -44,8 +44,8 @@ int main()
 {
   //----------------------------------------------------------------------------
   // Define the domain size and number of points
-  std::vector<double> domainLength(3,5.0);  // a cube of length 5.0
-  const IntVec fieldDim( 5, 5, 1 );         // a 5 x 5 x 1 problem
+  const DoubleVec length( 5, 5, 5 ); // a cube of length 5.0
+  const IntVec fieldDim( 5, 5, 1 );  // a 5 x 5 x 1 problem
 
   //----------------------------------------------------------------------------
   // Create fields
@@ -59,7 +59,7 @@ int main()
 
   //----------------------------------------------------------------------------
   // Build a coordinates.
-  const Grid grid( fieldDim, domainLength );
+  const Grid grid( fieldDim, length );
   grid.set_coord<XDIR>(x);
   grid.set_coord<YDIR>(y);
 

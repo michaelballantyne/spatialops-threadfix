@@ -39,12 +39,11 @@ namespace SpatialOps{
 /**
  * \class Numeric3Vec
  * \author John Hutchins
- * \ingroup structured
  * \brief provides a template lightweight class for storing 3d vectors of numbers.
  */
 template<typename T>
 class Numeric3Vec
- {
+{
   T ijk[3];
 
  public:
@@ -86,52 +85,62 @@ class Numeric3Vec
      return ijk[i];
    }
 
-   Numeric3Vec& operator=(const Numeric3Vec& x){
-     for( size_t i=0; i<3; ++i ) ijk[i] = x.ijk[i];
+   template<typename T2>
+   Numeric3Vec& operator=(const Numeric3Vec<T2>& x){
+     ijk[0] = x[0];
+     ijk[1] = x[1];
+     ijk[2] = x[2];
      return *this;
    }
 
    inline bool operator==(const Numeric3Vec& v) const{
-     return (ijk[0]==v.ijk[0]) & (ijk[1]==v.ijk[1]) & (ijk[2]==v.ijk[2]);
+     return (ijk[0]==v[0]) & (ijk[1]==v[1]) & (ijk[2]==v[2]);
    }
    inline bool operator!=(const Numeric3Vec& v) const{
-     return (ijk[0]!=v.ijk[0]) | (ijk[1]!=v.ijk[1]) | (ijk[2]!=v.ijk[2]);
+     return (ijk[0]!=v[0]) | (ijk[1]!=v[1]) | (ijk[2]!=v[2]);
    }
 
-   inline bool operator<(const Numeric3Vec& v) const{
-     return (ijk[0]<v.ijk[0]) & (ijk[1]<v.ijk[1]) & (ijk[2]<v.ijk[2]);
+   template<typename T2>
+   inline bool operator<(const Numeric3Vec<T2>& v) const{
+     return (ijk[0]<v[0]) & (ijk[1]<v[1]) & (ijk[2]<v[2]);
    }
-   inline bool operator<=(const Numeric3Vec& v) const{
-     return (ijk[0]<=v.ijk[0]) & (ijk[1]<=v.ijk[1]) & (ijk[2]<=v.ijk[2]);
+   template<typename T2>
+   inline bool operator<=(const Numeric3Vec<T2>& v) const{
+     return (ijk[0]<=v[0]) & (ijk[1]<=v[1]) & (ijk[2]<=v[2]);
    }
-   inline bool operator>(const Numeric3Vec& v) const{
-     return (ijk[0]>v.ijk[0]) & (ijk[1]>v.ijk[1]) & (ijk[2]>v.ijk[2]);
+   template<typename T2>
+   inline bool operator>(const Numeric3Vec<T2>& v) const{
+     return (ijk[0]>v[0]) & (ijk[1]>v[1]) & (ijk[2]>v[2]);
    }
-   inline bool operator>=(const Numeric3Vec& v) const{
-     return (ijk[0]>=v.ijk[0]) & (ijk[1]>=v.ijk[1]) & (ijk[2]>=v.ijk[2]);
+   template<typename T2>
+   inline bool operator>=(const Numeric3Vec<T2>& v) const{
+     return (ijk[0]>=v[0]) & (ijk[1]>=v[1]) & (ijk[2]>=v[2]);
    }
 
 
-
-   inline Numeric3Vec operator+( const Numeric3Vec& v ) const{
-     return Numeric3Vec( ijk[0] + v.ijk[0],
-                    ijk[1] + v.ijk[1],
-                    ijk[2] + v.ijk[2] );
+   template<typename T2>
+   inline Numeric3Vec operator+( const Numeric3Vec<T2>& v ) const{
+     return Numeric3Vec( ijk[0] + v[0],
+                         ijk[1] + v[1],
+                         ijk[2] + v[2] );
    }
-   inline Numeric3Vec operator-( const Numeric3Vec& v ) const{
-     return Numeric3Vec( ijk[0] - v.ijk[0],
-                    ijk[1] - v.ijk[1],
-                    ijk[2] - v.ijk[2] );
+   template<typename T2>
+   inline Numeric3Vec operator-( const Numeric3Vec<T2>& v ) const{
+     return Numeric3Vec( ijk[0] - v[0],
+                         ijk[1] - v[1],
+                         ijk[2] - v[2] );
    }
-   inline Numeric3Vec operator*( const Numeric3Vec& v ) const{
-     return Numeric3Vec( ijk[0] * v.ijk[0],
-                    ijk[1] * v.ijk[1],
-                    ijk[2] * v.ijk[2] );
+   template<typename T2>
+   inline Numeric3Vec operator*( const Numeric3Vec<T2>& v ) const{
+     return Numeric3Vec( ijk[0] * v[0],
+                         ijk[1] * v[1],
+                         ijk[2] * v[2] );
    }
-   inline Numeric3Vec operator/( const Numeric3Vec& v ) const{
-     return Numeric3Vec( ijk[0] / v.ijk[0],
-                    ijk[1] / v.ijk[1],
-                    ijk[2] / v.ijk[2] );
+   template<typename T2>
+   inline Numeric3Vec operator/( const Numeric3Vec<T2>& v ) const{
+     return Numeric3Vec( ijk[0] / v[0],
+                         ijk[1] / v[1],
+                         ijk[2] / v[2] );
    }
    inline Numeric3Vec operator-() const{
      return Numeric3Vec( - ijk[0],
@@ -141,31 +150,33 @@ class Numeric3Vec
 
    template<typename T1>
    inline Numeric3Vec operator+( const T1 v ) const{
-     return Numeric3Vec(ijk[0] + v,
-                        ijk[1] + v,
-                        ijk[2] + v);
+     return Numeric3Vec( ijk[0] + v,
+                         ijk[1] + v,
+                         ijk[2] + v );
    }
    template<typename T1>
    inline Numeric3Vec operator*( const T1 v ) const{
-     return Numeric3Vec(ijk[0] * v,
-                   ijk[1] * v,
-                   ijk[2] * v);
+     return Numeric3Vec( ijk[0] * v,
+                         ijk[1] * v,
+                         ijk[2] * v );
    }
    template<typename T1>
    inline Numeric3Vec operator/( const T1 v) const{
-	   return Numeric3Vec(ijk[0]/v, ijk[1]/v, ijk[2]/v);
+     return Numeric3Vec(ijk[0]/v, ijk[1]/v, ijk[2]/v);
    }
 
-   inline Numeric3Vec& operator+=( const Numeric3Vec& v ){
-     ijk[0] += v.ijk[0];
-     ijk[1] += v.ijk[1];
-     ijk[2] += v.ijk[2];
+   template<typename T2>
+   inline Numeric3Vec& operator+=( const Numeric3Vec<T2>& v ){
+     ijk[0] += v[0];
+     ijk[1] += v[1];
+     ijk[2] += v[2];
      return *this;
    }
-   inline Numeric3Vec& operator-=( const Numeric3Vec& v ){
-     ijk[0] -= v.ijk[0];
-     ijk[1] -= v.ijk[1];
-     ijk[2] -= v.ijk[2];
+   template<typename T2>
+   inline Numeric3Vec& operator-=( const Numeric3Vec<T2>& v ){
+     ijk[0] -= v[0];
+     ijk[1] -= v[1];
+     ijk[2] -= v[2];
      return *this;
    }
 

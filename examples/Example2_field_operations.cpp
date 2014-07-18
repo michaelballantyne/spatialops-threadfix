@@ -44,8 +44,9 @@ using namespace SpatialOps;
 
 int main()
 {
-  // Define the size of the field (nx,ny,nz)
-  const IntVec fieldDim( 5, 5, 1 );
+  // Define the size of the domain
+  const IntVec fieldDim( 5, 5, 1 );         //  (nx,ny,nz)
+  const DoubleVec length( 1.0, 1.0, 1.0 );  // a cube of unit length
 
   //----------------------------------------------------------------------------
   // Create fields:
@@ -66,8 +67,7 @@ int main()
   //----------------------------------------------------------------------------
   // Build a grid. This is a convenient way to set coordinate values that will
   // be used below.
-  std::vector<double> domainLength(3,1.0);  // a cube of unit length
-  const Grid grid( fieldDim, domainLength );
+  const Grid grid( fieldDim, length );
   grid.set_coord<XDIR>(x);
   grid.set_coord<YDIR>(y);
   grid.set_coord<ZDIR>(z);

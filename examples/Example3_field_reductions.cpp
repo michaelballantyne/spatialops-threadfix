@@ -43,8 +43,8 @@ int main()
   typedef SVolField FieldT;
 
   // Define the size and number of points in the domain.
-  const IntVec fieldDim( 10, 10, 10 ); // 10 x 10 x 10 points
-  vector<double> domainLength(3,1.0);  // a cube of unit length
+  const IntVec fieldDim( 10, 10, 10 );            // 10 x 10 x 10 points
+  const DoubleVec length( 1.0, 1.0, 1.0 );  // a cube of unit length
 
   //----------------------------------------------------------------------------
   // Create fields of type FieldT.
@@ -62,7 +62,7 @@ int main()
 
   //----------------------------------------------------------------------------
   // Build coordinates.
-  const Grid grid( fieldDim, domainLength );
+  const Grid grid( fieldDim, length );
   grid.set_coord<XDIR>(x);
   grid.set_coord<YDIR>(y);
   grid.set_coord<ZDIR>(z);

@@ -4,17 +4,15 @@
 
 #include <test/TestHelper.h>
 
-#include <vector>
-
 using namespace SpatialOps;
 
 template<typename DirT>
-bool run_test( const IntVec& dim )
+bool run_test( const IntVec dim )
 {
   TestHelper status(false);
 
   const bool bc[3] = {false,false,false};
-  const std::vector<double> length(3,1.0);
+  const DoubleVec length(1,1,1);
 
   const GhostData ghost(1);
   const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<SVolField>(bc[0],bc[1],bc[2]);
@@ -23,7 +21,7 @@ bool run_test( const IntVec& dim )
   SVolField    f( mw, bcinfo, ghost, NULL );
   SVolField fbar( mw, bcinfo, ghost, NULL );
 
-  Grid grid(dim,length);
+  const Grid grid(dim,length);
   grid.set_coord<DirT>(f);
 
   if( dim[0]>1 && dim[1]>1 && dim[2]>1 ) {

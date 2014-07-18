@@ -1,4 +1,4 @@
-#include <vector>
+
 #include <set>
 #include <iostream>
 using std::cout;
@@ -19,9 +19,8 @@ using namespace SpatialOps;
 
 int main()
 {
-
-  IntVec dim(10,1,1);
-  std::vector<double> length(3,1.0); for( size_t i=0; i<3; ++i ) length[i]=dim[i];
+  const IntVec dim(10,1,1);
+  const DoubleVec length( 10,1,1 );
   const Grid grid( dim, length );
 
   const GhostData cg(3);

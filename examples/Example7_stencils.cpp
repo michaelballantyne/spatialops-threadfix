@@ -49,8 +49,8 @@ int main()
 {
   //----------------------------------------------------------------------------
   // Define the domain size and number of points
-  std::vector<double> domainLength(3,PI);  // a cube of length pi on each side
-  const IntVec fieldDim( 10, 1, 1 );       // a 1-D problem
+  const DoubleVec length(PI,PI,PI);  // a cube of length pi on each side
+  const IntVec fieldDim( 10, 1, 1 ); // a 1-D problem
 
 
   //----------------------------------------------------------------------------
@@ -70,7 +70,7 @@ int main()
   //----------------------------------------------------------------------------
   // Build a grid. This is a convenient way to set coordinate values that will
   // be used below.
-  const Grid grid( fieldDim, domainLength );
+  const Grid grid( fieldDim, length );
   grid.set_coord<XDIR>(x);
 
 

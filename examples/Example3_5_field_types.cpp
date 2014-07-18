@@ -48,8 +48,8 @@ void driver( const string tag )
   cout << tag << std::endl;
 
   // Define the size and number of points in the domain
-  const IntVec fieldDim( 5, 5, 1 ); // 5 x 5 x 1 points
-  vector<double> domainLength(3,5.0);  // a cube of length 5.0
+  const IntVec fieldDim( 5, 5, 1 );               // 5 x 5 x 1 points
+  const DoubleVec domainLength( 5.0, 5.0, 5.0 );  // a cube of length 5.0
 
   //----------------------------------------------------------------------------
   // Create coordinate fields of type FieldT.
