@@ -66,25 +66,25 @@ namespace SpatialOps{
  * (CPU set to active.)
  */
 template<typename Field>
-inline void internal_initialize_field(typename Field::iterator fi,
-                                      const MemoryWindow mw,
-                                      const double start,
-                                      const bool print,
-                                      const double range)
+inline void internal_initialize_field( typename Field::iterator fi,
+                                       const MemoryWindow mw,
+                                       const double start,
+                                       const bool print,
+                                       const double range )
 {
-  int xExtent = mw.extent(0);
-  int yExtent = mw.extent(1);
-  int zExtent = mw.extent(2);
+  const int xExtent = mw.extent(0);
+  const int yExtent = mw.extent(1);
+  const int zExtent = mw.extent(2);
 
-  for(int z = 1; z <= zExtent; z++) {
-    for(int y = 1; y <= yExtent; y++) {
-      for(int x = 1; x <= xExtent; x++, fi++) {
+  for( int z = 1; z <= zExtent; ++z ){
+    for( int y = 1; y <= yExtent; ++y ){
+      for( int x = 1; x <= xExtent; ++x, ++fi ){
         *fi = range * std::sin(start + x + y * xExtent + z * xExtent * yExtent);
-        if(print) std::cout << *fi << " ";
+        if( print ) std::cout << *fi << " ";
       }
-      if(print) std::cout << std::endl;
+      if( print ) std::cout << std::endl;
     }
-    if(print) std::cout << std::endl;
+    if( print ) std::cout << std::endl;
   }
 }
 
@@ -118,12 +118,12 @@ inline void internal_initialize_field(typename Field::iterator fi,
  * (CPU set to active.)
  */
 template<typename Field>
-inline void initialize_field(Field & f,
-                             const double start = 0.0,
-                             const bool print = false,
-                             const double range = 1.0)
+inline void initialize_field( Field & f,
+                              const double start = 0.0,
+                              const bool print = false,
+                              const double range = 1.0 )
 {
-  internal_initialize_field<Field>(f.begin(), f.window_with_ghost(), start, print, range);
+  internal_initialize_field<Field>( f.begin(), f.window_with_ghost(), start, print, range );
 }
 
 /**
@@ -156,12 +156,12 @@ inline void initialize_field(Field & f,
  * (CPU set to active.)
  */
 template<typename Field>
-inline void interior_initialize_field(Field & f,
-                                      const double start = 0.0,
-                                      const bool print = false,
-                                      const double range = 1.0)
+inline void interior_initialize_field( Field & f,
+                                       const double start = 0.0,
+                                       const bool print = false,
+                                       const double range = 1.0 )
 {
-  internal_initialize_field<Field>(f.interior_begin(), f.window_without_ghost(), start, print, range);
+  internal_initialize_field<Field>( f.interior_begin(), f.window_without_ghost(), start, print, range );
 }
 
 /**
@@ -173,7 +173,7 @@ inline void interior_initialize_field(Field & f,
  * \param fi field iterator to use to read values to print
  * \param mw memory window of fi (field iterator)
  * \param os output stream to write to
- * \param add_format boolean flag to either print with tight format or standard precision
+ * \param addFormat boolean flag to either print with tight format or standard precision
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -209,22 +209,20 @@ inline void interior_initialize_field(Field & f,
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline void internal_print_field(typename Field::const_iterator fi,
-                                 MemoryWindow const & mw,
-                                 std::ostream& os,
-                                 bool add_format)
+inline void internal_print_field( typename Field::const_iterator fi,
+                                  const MemoryWindow& mw,
+                                  std::ostream& os,
+                                  bool addFormat )
 {
-  int xExtent = mw.extent(0);
-  int yExtent = mw.extent(1);
-  int zExtent = mw.extent(2);
+  const int xExtent = mw.extent(0);
+  const int yExtent = mw.extent(1);
+  const int zExtent = mw.extent(2);
 
-  for(int z = 1; z <= zExtent; z++) {
-    for(int y = 1; y <= yExtent; y++) {
-      for(int x = 1; x <= xExtent; x++, fi++) {
-        if(!add_format)
-          os << *fi << " ";
-        else
-          os << std::setprecision(2) << *fi << "\t";
+  for( int z = 1; z <= zExtent; ++z ){
+    for( int y = 1; y <= yExtent; ++y ){
+      for( int x = 1; x <= xExtent; ++x, ++fi ){
+        if( !addFormat ) os << *fi << " ";
+        else             os << std::setprecision(2) << *fi << "\t";
       }
       os << std::endl;
     }
@@ -238,7 +236,7 @@ inline void internal_print_field(typename Field::const_iterator fi,
  *
  * \param f field to print
  * \param os output stream to write to
- * \param add_format boolean flag to either print with tight format or standard precision
+ * \param addFormat boolean flag to either print with tight format or standard precision
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -277,8 +275,9 @@ inline void internal_print_field(typename Field::const_iterator fi,
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline void print_field( const Field& f, std::ostream& os, bool add_format = false ){
-  internal_print_field<Field>(f.begin(), f.window_with_ghost(), os, add_format );
+inline void print_field( const Field& f, std::ostream& os, const bool addFormat = false )
+{
+  internal_print_field<Field>(f.begin(), f.window_with_ghost(), os, addFormat );
 };
 
 /**
@@ -287,7 +286,7 @@ inline void print_field( const Field& f, std::ostream& os, bool add_format = fal
  *
  * \param f field to print
  * \param os output stream to write to
- * \param add_format boolean flag to either print with tight format or standard precision
+ * \param addFormat boolean flag to either print with tight format or standard precision
  *
  * This function prints values starting with the lowest index first (0,0,0).
  * The first line contains the X-axis row of values (with Y and Z indicies
@@ -327,8 +326,9 @@ inline void print_field( const Field& f, std::ostream& os, bool add_format = fal
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline void interior_print_field( const Field& f, std::ostream& os, bool add_format = false ){
-  internal_print_field<Field>(f.interior_begin(), f.window_without_ghost(), os, add_format );
+inline void interior_print_field( const Field& f, std::ostream& os, const bool addFormat = false )
+{
+  internal_print_field<Field>( f.interior_begin(), f.window_without_ghost(), os, addFormat );
 };
 
 /**
@@ -396,11 +396,11 @@ inline void interior_print_field( const Field& f, std::ostream& os, bool add_for
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
-                                            typename Field::const_iterator fi2,
-                                            MemoryWindow const & mw,
-                                            bool display,
-                                            bool print)
+inline bool internal_display_fields_compare( typename Field::const_iterator fi1,
+                                             typename Field::const_iterator fi2,
+                                             const MemoryWindow& mw,
+                                             const bool display,
+                                             const bool print )
 {
   bool result = true;
   int xExtent = mw.extent(0);
@@ -415,26 +415,26 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
   //  this ends the loops early if and only if the result has been found to be false in some cell
   //                                       AND print   == false
   //                                       AND display == false
-  for(int z = 0; z < zExtent && (result || print || display); z++) {
-    for(int y = 0; y < yExtent && (result || print || display); y++) {
-      for(int x = 0; x < xExtent && (result || print || display); x++, fi1++, fi2++) {
-        bool compare = (*fi1 == *fi2);
+  for(int z = 0; z < zExtent && (result || print || display); ++z ){
+    for(int y = 0; y < yExtent && (result || print || display); ++y ){
+      for(int x = 0; x < xExtent && (result || print || display); ++x, ++fi1, ++fi2 ){
+        const bool compare = (*fi1 == *fi2);
         result = result && compare;
-        if(display) std::cout << compare << " ";
+        if( display ) std::cout << compare << " ";
       }
-      if(print) {
+      if( print ){
         std::cout << "\t\t";
-        for(int x = 0; x < xExtent; x++, cfi1++) {
+        for( int x = 0; x < xExtent; ++x, ++cfi1 ){
           std::cout << *cfi1 << " ";
         }
         std::cout << "\t\t";
-        for(int x = 0; x < xExtent; x++, cif2++) {
+        for( int x = 0; x < xExtent; ++x, ++cif2 ){
           std::cout << *cif2 << " ";
         }
       }
-      if(print || display) std::cout << std::endl;
+      if( print || display ) std::cout << std::endl;
     }
-    if(print || display) std::cout << std::endl;
+    if( print || display ) std::cout << std::endl;
   }
 
   return result;
@@ -451,7 +451,7 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
  * \return boolean value, if true fields are equal within given window
  *
  * This function prints values starting with the lowest index first (0,0,0).
- * The first line contains the X-axis row of values (with Y and Z indicies
+ * The first line contains the X-axis row of values (with Y and Z indices
  * fixed at 0). The second line contains the X-axis row of values (with Y
  * index of 1, and Z index of 0). A blank line represents the end of one XY
  * plane and the start of the next.
@@ -505,16 +505,16 @@ inline bool internal_display_fields_compare(typename Field::const_iterator fi1,
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline bool display_fields_compare(Field const & field1,
-                                   Field const & field2,
-                                   bool display = false,
-                                   bool print = false)
+inline bool display_fields_compare(const Field& field1,
+                                   const Field& field2,
+                                   const bool display = false,
+                                   const bool print = false)
 {
-  return internal_display_fields_compare<Field>(field1.begin(),
-                                                field2.begin(),
-                                                field1.window_with_ghost(),
-                                                display,
-                                                print);
+  return internal_display_fields_compare<Field>( field1.begin(),
+                                                 field2.begin(),
+                                                 field1.window_with_ghost(),
+                                                 display,
+                                                 print );
 }
 
 /**
@@ -583,16 +583,16 @@ inline bool display_fields_compare(Field const & field1,
  * (CPU is at least valid, if not active.)
  */
 template<typename Field>
-inline bool interior_display_fields_compare(Field const & field1,
-                                            Field const & field2,
-                                            bool display = false,
-                                            bool print = false)
+inline bool interior_display_fields_compare( const Field& field1,
+                                             const Field& field2,
+                                             const bool display = false,
+                                             const bool print = false )
 {
-  return internal_display_fields_compare<Field>(field1.interior_begin(),
-                                                field2.interior_begin(),
-                                                field1.window_without_ghost(),
-                                                display,
-                                                print);
+  return internal_display_fields_compare<Field>( field1.interior_begin(),
+                                                 field2.interior_begin(),
+                                                 field1.window_without_ghost(),
+                                                 display,
+                                                 print );
 }
 
 

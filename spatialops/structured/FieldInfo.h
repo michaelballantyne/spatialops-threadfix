@@ -153,38 +153,45 @@ namespace SpatialOps{
     GhostData totalValidGhosts_;    ///< The number of valid ghost cells on each face of this field
     short int activeDeviceIndex_;   ///< The device index of the active device
 
-#ifdef ENABLE_THREADS
+#   ifdef ENABLE_THREADS
     int partitionCount_; // Number of partitions Nebo uses in its thread-parallel backend when assigning to this field
-#endif
+#   endif
 
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     cudaStream_t cudaStream_;
-#endif
+#   endif
 
-#ifdef ENABLE_THREADS
+#   ifdef ENABLE_THREADS
     /**
      *  \class ExecMutex
      *  \brief Scoped lock.
      */
     class ExecMutex {
-#ifdef ENABLE_THREADS
       const boost::mutex::scoped_lock lock;
       inline boost::mutex& get_mutex() const {static boost::mutex m; return m;}
 
     public:
       ExecMutex() : lock( get_mutex() ) {}
       ~ExecMutex() {}
-#else
     public:
       ExecMutex() {}
       ~ExecMutex() {}
-#endif
     };
-#endif
+#   endif
 
   public:
     typedef T value_type;
 
+    /**
+     * \brief FieldInfo constructor
+     *
+     * \param window      MemoryWindow for the entire field (including ghost cells)
+     * \param bc          BoundaryConditionInfo for field
+     * \param ghost       GhostData for entire field (all possible ghosts)
+     * \param fieldValues pointer to memory for ExternalStorage mode (default: NULL)
+     * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
+     * \param devIdx      device index of originally active device (default: CPU_INDEX)
+     */
     FieldInfo(const MemoryWindow& window,
               const BoundaryCellInfo& bc,
               const GhostData& ghosts,
@@ -192,6 +199,12 @@ namespace SpatialOps{
               const StorageMode mode = InternalStorage,
               const short int devIdx = CPU_INDEX);
 
+    /**
+     * \brief FieldInfo destructor
+     *
+     * This functions free any memory allocated by the FieldInfo.
+     * Memory is allocated either in the constructor or when adding new devices.
+     */
     ~FieldInfo();
 
     /**
@@ -245,7 +258,7 @@ namespace SpatialOps{
      */
     unsigned int allocated_bytes() const { return sizeof(T) * (wholeWindow_.glob_npts()); }
 
-#ifdef ENABLE_THREADS
+#   ifdef ENABLE_THREADS
     /**
      * \brief set the number of partitions Nebo uses for thread-parallel execution
      *
@@ -256,10 +269,10 @@ namespace SpatialOps{
     /**
      * \brief return the number of partitions Nebo uses for thread-parallel execution
      */
-    int get_partition_count() { return partitionCount_; }
-#endif
+    int get_partition_count() const { return partitionCount_; }
+#   endif
 
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     /**
      * \brief set the CUDA stream to for Nebo assignment to this field and for async data transfer
      *
@@ -271,16 +284,16 @@ namespace SpatialOps{
      * \brief return the CUDA stream for this field
      */
     cudaStream_t const & get_stream() const { return cudaStream_; }
-#endif
+#   endif
 
     /**
      * \brief wait until the current stream is done with all work
      */
     inline void wait_for_synchronization() {
-#ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
       if( get_stream() != NULL ) CDI.sync_stream( get_stream() );
-#endif
+#     endif
     }
 
     /**
@@ -288,22 +301,125 @@ namespace SpatialOps{
      */
     short int active_device_index() const { return activeDeviceIndex_; }
 
+    /**
+     * \brief add device memory to this field for given device
+     *  and populate it with values from current active device *SYNCHRONOUS VERSION*
+     *
+     * \param deviceIndex the index of the device to add
+     *
+     * If device (deviceIndex) is already available for this field and
+     * valid, this fuction becomes a no op.
+     *
+     * If device (deviceIndex) is already available for this field but
+     * not valid, this fuction becomes identical to validate_device().
+     *
+     * Thus, regardless of the status of device (deviceIndex) for this
+     * field, this function does the bare minumum to make device available
+     * and valid for this field.
+     *
+     * Note: This operation is guaranteed to be synchronous: The host thread waits
+     * until the task is completed (on the GPU).
+     *
+     * Note: This operation is thread safe.
+     */
     void add_device(short int deviceIndex);
 
-    void add_device_async(short int deviceIndex);
+    /**
+     * \brief add device memory to this field for given device
+     *  and populate it with values from current active device *ASYNCHRONOUS VERSION*
+     *
+     * \param deviceIndex the index of the device to add
+     *
+     * If device (deviceIndex) is already available for this field and
+     * valid, this fuction becomes a no op.
+     *
+     * If device (deviceIndex) is already available for this field but
+     * not valid, this fuction becomes identical to validate_device_async().
+     *
+     * Thus, regardless of the status of device (deviceIndex) for this
+     * field, this function does the bare minumum to make device available
+     * and valid for this field.
+     *
+     * Note: This operation is asynchronous: The host thread returns immediately after
+     * it launches on the GPU.
+     *
+     * Note: This operation is thread safe.
+     */
+    void add_device_async( short int deviceIndex );
 
-    void validate_device(short int deviceIndex);
+    /**
+     * \brief popluate the memory of the given device (deviceIndex) with values
+     *  from the active device *SYNCHRONOUS VERSION*
+     *
+     * This function performs data-transfers when needed and only when needed.
+     *
+     * \param deviceIndex index for device to synchronize
+     *
+     * Note: This operation is guaranteed to be synchronous: The host thread waits
+     * until the task is completed (on the GPU).
+     */
+    void validate_device( short int deviceIndex );
 
-    void validate_device_async(short int deviceIndex);
+    /**
+     * \brief popluate the memory of the given device (deviceIndex) with values
+     *  from the active device *ASYNCHRONOUS VERSION*
+     *
+     * This function performs data-transfers when needed and only when needed.
+     *
+     * \param deviceIndex index for device to synchronize
+     *
+     * Note: This operation is asynchronous: The host thread returns immediately after
+     * it launches on the GPU.
+     */
+    void validate_device_async( short int deviceIndex );
 
-    void set_device_as_active(short int deviceIndex);
+    /**
+     * \brief set given device (deviceIndex) as active *SYNCHRONOUS VERSION*
+     *
+     * Given device must exist and be valid, otherwise an exception is thrown.
+     *
+     * \param deviceIndex index to device to be made active
+     *
+     * Note: This operation is guaranteed to be synchronous: The host thread waits
+     * until the task is completed (on the GPU).
+     */
+    void set_device_as_active( short int deviceIndex );
 
-    void set_device_as_active_async(short int deviceIndex);
 
+    /**
+     * \brief set given device (deviceIndex) as active *ASYNCHRONOUS VERSION*
+     *
+     * Given device must exist and be valid, otherwise an exception is thrown.
+     *
+     * \param deviceIndex index to device to be made active
+     *
+     * Note: This operation is asynchronous: The host thread returns immediately after
+     * it launches on the GPU.
+     */
+    void set_device_as_active_async( short int deviceIndex );
+
+    /**
+     * \brief check if the device (deviceIndex) is available and valid
+     *
+     * \param deviceIndex index ofdevice to check
+     */
     bool is_valid( const short int deviceIndex ) const;
 
+    /**
+     * \brief return a non-constant pointer to memory on the given device
+     *
+     * Note: This method will invalidate all the other devices apart from the deviceIndex.
+     *
+     * \param deviceIndex index of device for device memory to return (defaults to CPU_INDEX)
+     */
     inline       T*       field_values(const short int deviceIndex = CPU_INDEX);
-    inline const T* const_field_values(const short int deviceIndex = CPU_INDEX) const;
+
+    /**
+     * \brief return a constant pointer to memory on the given device
+     *
+     * \param deviceIndex device index for device memory to return (defaults to CPU_INDEX)
+     */
+    inline const T* const_field_values( const short int deviceIndex = CPU_INDEX ) const;
   }; // FieldInfo
 
 //==================================================================
@@ -312,16 +428,6 @@ namespace SpatialOps{
 //
 //==================================================================
 
-  /**
-   * \brief FieldInfo constructor
-   *
-   * \param window      MemoryWindow for the entire field (including ghost cells)
-   * \param bc          BoundaryConditionInfo for field
-   * \param ghost       GhostData for entire field (all possible ghosts)
-   * \param fieldValues pointer to memory for ExternalStorage mode (default: NULL)
-   * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
-   * \param devIdx      device index of originally active device (default: CPU_INDEX)
-   */
   template<typename T>
   FieldInfo<T>::FieldInfo(const MemoryWindow& window,
                           const BoundaryCellInfo& bc,
@@ -334,91 +440,68 @@ namespace SpatialOps{
       totalGhosts_( ghost.limit_by_extent(window.extent()) ),
       totalValidGhosts_( ghost.limit_by_extent(window.extent()) ),
       activeDeviceIndex_( devIdx )
-    //Determine raw byte count -- this is sometimes required for external device allocation.
-#ifdef ENABLE_THREADS
+      //Determine raw byte count -- this is sometimes required for external device allocation.
+#     ifdef ENABLE_THREADS
       , partitionCount_( NTHREADS )
-#endif
-#ifdef ENABLE_CUDA
+#     endif
+#     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
-#endif
+#     endif
     {
       //InternalStorage => we build a new field
       //ExternalStorage => we wrap T*
 
       //check if active device index is valid:
-      if(IS_CPU_INDEX(activeDeviceIndex_)
-#ifdef ENABLE_CUDA
-         || IS_GPU_INDEX(activeDeviceIndex_)
-#endif
-         ) {
+      if( IS_CPU_INDEX(activeDeviceIndex_)
+#         ifdef ENABLE_CUDA
+          || IS_GPU_INDEX(activeDeviceIndex_)
+#         endif
+      ){
         //set up active device in map:
-        if(mode == InternalStorage)
+        if( mode == InternalStorage ){
           deviceMap_[activeDeviceIndex_] = DeviceMemory(Pool<T>::self().get( activeDeviceIndex_, window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ),
                                                         true,
                                                         true);
-        else if(fieldValues != NULL)
+        }
+        else if( fieldValues != NULL ){
           deviceMap_[activeDeviceIndex_] = DeviceMemory(fieldValues, true, false);
-        else {
+        }
+        else{
           std::ostringstream msg;
           msg << "Attempting to use externally allocated memory in FieldInfo constructor, given NULL"
               << " \n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
           throw(std::runtime_error(msg.str()));
         }
-      } else {
+      }
+      else {
         //not valid device index
         std::ostringstream msg;
         msg << "Unsupported attempt to create field on device ( "
             << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
-            << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+        << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
     }
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief FieldInfo deconstructor
-   *
-   * This functions free any memory allocated by the FieldInfo.
-   * Memory is allocated either in the constructor or when adding new devices.
-   */
   template<typename T>
-  FieldInfo<T>::~FieldInfo() {
+  FieldInfo<T>::~FieldInfo()
+  {
     for( MapIter iter = deviceMap_.begin(); iter != deviceMap_.end(); ++iter )
       if( iter->second.builtField_ )
-        Pool<T>::self().put(iter->first,
-                            iter->second.field_);
+        Pool<T>::self().put(iter->first, iter->second.field_);
   }
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief add device memory to this field for given device
-   *  and populate it with values from current active device *SYNCHRONOUS VERSION*
-   *
-   * \param deviceIndex the index of the device to add
-   *
-   * If device (deviceIndex) is already available for this field and
-   * valid, this fuction becomes a no op.
-   *
-   * If device (deviceIndex) is already available for this field but
-   * not valid, this fuction becomes identical to validate_device().
-   *
-   * Thus, regardless of the status of device (deviceIndex) for this
-   * field, this function does the bare minumum to make device available
-   * and valid for this field.
-   *
-   * Note: This operation is guaranteed to be synchronous: The host thread waits
-   * until the task is completed (on the GPU).
-   *
-   * Note: This operation is thread safe.
-   */
   template<typename T>
-  void FieldInfo<T>::add_device( const short int deviceIndex ) {
-#ifdef DEBUG_SF_ALL
+  void FieldInfo<T>::add_device( const short int deviceIndex )
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to SpatialField::add_device() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
     add_device_async(deviceIndex);
     wait_for_synchronization();
@@ -426,37 +509,17 @@ namespace SpatialOps{
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief add device memory to this field for given device
-   *  and populate it with values from current active device *ASYNCHRONOUS VERSION*
-   *
-   * \param deviceIndex the index of the device to add
-   *
-   * If device (deviceIndex) is already available for this field and
-   * valid, this fuction becomes a no op.
-   *
-   * If device (deviceIndex) is already available for this field but
-   * not valid, this fuction becomes identical to validate_device_async().
-   *
-   * Thus, regardless of the status of device (deviceIndex) for this
-   * field, this function does the bare minumum to make device available
-   * and valid for this field.
-   *
-   * Note: This operation is asynchronous: The host thread returns immediately after
-   * it launches on the GPU.
-   *
-   * Note: This operation is thread safe.
-   */
   template<typename T>
-  void FieldInfo<T>::add_device_async( const short int deviceIndex ) {
-#ifdef DEBUG_SF_ALL
+  void FieldInfo<T>::add_device_async( const short int deviceIndex )
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to SpatialField::add_device_async() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
-#ifdef ENABLE_THREADS
+#   ifdef ENABLE_THREADS
     ExecMutex lock;
-#endif
+#   endif
 
     DeviceTypeTools::check_valid_index(deviceIndex, __FILE__, __LINE__);
 
@@ -467,32 +530,22 @@ namespace SpatialOps{
         validate_device_async( deviceIndex );
     }
     else {
-      deviceMap_[deviceIndex] = DeviceMemory(Pool<T>::self().get(deviceIndex, (allocated_bytes()/sizeof(T))),
+      deviceMap_[deviceIndex] = DeviceMemory(Pool<T>::self().get( deviceIndex, (allocated_bytes()/sizeof(T)) ),
                                              false,
                                              true);
-      validate_device_async(deviceIndex);
+      validate_device_async( deviceIndex );
     }
   }
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief popluate the memory of the given device (deviceIndex) with values
-   *  from the active device *SYNCHRONOUS VERSION*
-   *
-   * This function performs data-transfers when needed and only when needed.
-   *
-   * \param deviceIndex index for device to synchronize
-   *
-   * Note: This operation is guaranteed to be synchronous: The host thread waits
-   * until the task is completed (on the GPU).
-   */
   template<typename T>
-  void FieldInfo<T>::validate_device( const short int deviceIndex ) {
-#ifdef DEBUG_SF_ALL
+  void FieldInfo<T>::validate_device( const short int deviceIndex )
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to SpatialField::validate_device() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
     validate_device_async(deviceIndex);
     wait_for_synchronization();
@@ -500,29 +553,18 @@ namespace SpatialOps{
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief popluate the memory of the given device (deviceIndex) with values
-   *  from the active device *ASYNCHRONOUS VERSION*
-   *
-   * This function performs data-transfers when needed and only when needed.
-   *
-   * \param deviceIndex index for device to synchronize
-   *
-   * Note: This operation is asynchronous: The host thread returns immediately after
-   * it launches on the GPU.
-   */
   template<typename T>
-  void FieldInfo<T>::validate_device_async( const short int deviceIndex ) {
-#ifdef DEBUG_SF_ALL
+  void FieldInfo<T>::validate_device_async( const short int deviceIndex )
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to SpatialField::validate_device_async() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
-    //check deviceIndex
-    DeviceTypeTools::check_valid_index(deviceIndex, __FILE__, __LINE__);
+    DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
     //check if deviceIndex exists for field
-    MapIter iter = deviceMap_.find(deviceIndex);
+    MapIter iter = deviceMap_.find( deviceIndex );
     if(iter == deviceMap_.end()) {
       std::ostringstream msg;
       msg << "Error : sync_device() did not find a valid field entry in the map. \n"
@@ -531,32 +573,32 @@ namespace SpatialOps{
       throw(std::runtime_error(msg.str()));
     }
 
-    //check that deviceIndex is not already valid for field
+    // check that deviceIndex is not already valid for field
     if( deviceIndex != active_device_index() &&
-        !deviceMap_[deviceIndex].isValid_ ) {
+        !deviceMap_[deviceIndex].isValid_ ){
       T* validfieldValues_ = deviceMap_[active_device_index()].field_;
 
-#ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-#endif
+#     endif
 
       if( IS_CPU_INDEX(active_device_index()) &&
           IS_CPU_INDEX(deviceIndex) ) {
         // CPU->CPU
         // should not happen
         std::ostringstream msg;
-        msg << "Error : sync_device() cannot copy from CPU to CPUdid not find a valid field entry in the map. \n"
+        msg << "Error : sync_device() cannot copy from CPU to CPU did not find a valid field entry in the map. \n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-        throw(std::runtime_error(msg.str()));
+        throw( std::runtime_error(msg.str()) );
       }
 
-#ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       else if( IS_CPU_INDEX(active_device_index()) &&
-               IS_GPU_INDEX(deviceIndex) ) {
+               IS_GPU_INDEX(deviceIndex) ){
         // CPU->GPU
-#ifdef DEBUG_SF_ALL
+#       ifdef DEBUG_SF_ALL
         std::cout << "data transfer from CPU to GPU" << std::endl;
-#endif
+#       endif
         CDI.memcpy_to((void*)deviceMap_[deviceIndex].field_,
                       deviceMap_[active_device_index()].field_,
                       allocated_bytes(),
@@ -566,11 +608,11 @@ namespace SpatialOps{
       }
 
       else if( IS_GPU_INDEX(active_device_index()) &&
-               IS_CPU_INDEX(deviceIndex) ) {
+               IS_CPU_INDEX(deviceIndex) ){
         //GPU->CPU
-#ifdef DEBUG_SF_ALL
+#       ifdef DEBUG_SF_ALL
         std::cout << "data transfer from GPU to CPU" << std::endl;
-#endif
+#       endif
         CDI.memcpy_from((void*)deviceMap_[deviceIndex].field_,
                         deviceMap_[active_device_index()].field_,
                         allocated_bytes(),
@@ -580,11 +622,11 @@ namespace SpatialOps{
       }
 
       else if( IS_GPU_INDEX(active_device_index()) &&
-               IS_GPU_INDEX(deviceIndex) ) {
+               IS_GPU_INDEX(deviceIndex) ){
         //GPU->GPU
-#ifdef DEBUG_SF_ALL
+#       ifdef DEBUG_SF_ALL
         std::cout << "data transfer from GPU to GPU" << std::endl;
-#endif
+#       endif
         CDI.memcpy_peer((void*)deviceMap_[deviceIndex].field_,
                         deviceIndex,
                         deviceMap_[active_device_index()].field_,
@@ -592,9 +634,9 @@ namespace SpatialOps{
                         allocated_bytes());
         deviceMap_[deviceIndex].isValid_ = true;
       }
-#endif // ENABLE_CUDA
+#     endif // ENABLE_CUDA
 
-      else {
+      else{
         std::ostringstream msg;
         msg << "Error : sync_device() called on the field with: "
             << DeviceTypeTools::get_memory_type_description(deviceIndex)
@@ -606,114 +648,85 @@ namespace SpatialOps{
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief set given device (deviceIndex) as active *SYNCHRONOUS VERSION*
-   *
-   * Given device must exist and be valid, otherwise an exception is thrown.
-   *
-   * \param deviceIndex index to device to be made active
-   *
-   * Note: This operation is guaranteed to be synchronous: The host thread waits
-   * until the task is completed (on the GPU).
-   */
   template<typename T>
-    void FieldInfo<T>::set_device_as_active( const short int deviceIndex ) {
-#ifdef DEBUG_SF_ALL
+  void FieldInfo<T>::set_device_as_active( const short int deviceIndex )
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to SpatialField::set_device_as_active() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
-    set_device_as_active_async(deviceIndex);
+    set_device_as_active_async( deviceIndex );
     wait_for_synchronization();
   }
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief set given device (deviceIndex) as active *ASYNCHRONOUS VERSION*
-   *
-   * Given device must exist and be valid, otherwise an exception is thrown.
-   *
-   * \param deviceIndex index to device to be made active
-   *
-   * Note: This operation is asynchronous: The host thread returns immediately after
-   * it launches on the GPU.
-   */
   template<typename T>
-    void FieldInfo<T>::set_device_as_active_async( const short int deviceIndex ) {
-#ifdef DEBUG_SF_ALL
+  void FieldInfo<T>::set_device_as_active_async( const short int deviceIndex )
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to SpatialField::set_device_as_active() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
-    //check deviceIndex
-    DeviceTypeTools::check_valid_index(deviceIndex, __FILE__, __LINE__);
+    DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
-    //make device available and valid, if not already
+    // make device available and valid, if not already
     if( deviceMap_.find(deviceIndex) == deviceMap_.end() ||
-        !deviceMap_[deviceIndex].isValid_ )
-      add_device_async(deviceIndex);
-
+        !deviceMap_[deviceIndex].isValid_ ){
+      add_device_async( deviceIndex );
+    }
     activeDeviceIndex_ = deviceIndex;
   }
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief check if the device (deviceIndex) is available and valid
-   *
-   * \param deviceIndex index ofdevice to check
-   */
   template<typename T>
-  bool FieldInfo<T>::is_valid( const short int deviceIndex ) const {
-#ifdef DEBUG_SF_ALL
+  bool FieldInfo<T>::is_valid( const short int deviceIndex ) const
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to SpatialField::is_valid() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
-    //check deviceIndex
-    DeviceTypeTools::check_valid_index(deviceIndex, __FILE__, __LINE__);
+    DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
-#ifndef NDEBUG
+#   ifndef NDEBUG
     if( iter == deviceMap_.end() )
-      std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description(deviceIndex) << " is not allocated. " << std::endl;
+      std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description( deviceIndex )
+                << " is not allocated. " << std::endl;
     else if( !iter->second.isValid_ )
-      std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description(deviceIndex) << " is not valid. " << std::endl;
-#endif
-    return ( iter != deviceMap_.end() &&
-             iter->second.isValid_ );
+      std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description( deviceIndex )
+                << " is not valid. " << std::endl;
+#   endif
+    return ( iter != deviceMap_.end() && iter->second.isValid_ );
   }
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief return a nonconstant pointer to memory on the given device
-   *
-   * Note: This method will invalidate all the other devices apart from the deviceIndex.
-   *
-   * \param deviceIndex index of device for device memory to return (defaults to CPU_INDEX)
-   */
   template<typename T>
-  T* FieldInfo<T>::field_values(const short int deviceIndex) {
-#ifdef DEBUG_SF_ALL
+  T* FieldInfo<T>::field_values( const short int deviceIndex )
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to non-const SpatialField::field_values() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
-    //check deviceIndex
-    DeviceTypeTools::check_valid_index(deviceIndex, __FILE__, __LINE__);
+    DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
-    //check active
-    if(active_device_index() == deviceIndex) {
+    // check active
+    if( active_device_index() == deviceIndex ){
       MapIter iter = deviceMap_.find( deviceIndex );
 
-      //mark all the other devices except active device as invalid
-      for(MapIter iter2 = deviceMap_.begin(); iter2 != deviceMap_.end(); iter2++ )
+      // mark all the other devices except active device as invalid
+      for(MapIter iter2 = deviceMap_.begin(); iter2 != deviceMap_.end(); ++iter2 ){
         if( !(iter2->first == activeDeviceIndex_) ) iter2->second.isValid_ = false;
-
+      }
       return iter->second.field_;
-    } else {
+    }
+    else{
       std::ostringstream msg;
       msg << "Request for nonconst field pointer on a nonactive device: "
           << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl
@@ -721,41 +734,37 @@ namespace SpatialOps{
           << DeviceTypeTools::get_memory_type_description(active_device_index()) << std::endl
           << "Please check the arguments passed into the function."
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      throw(std::runtime_error(msg.str()));
+      throw( std::runtime_error(msg.str()) );
     }
   }
 
 //------------------------------------------------------------------
 
-  /**
-   * \brief return a constant pointer to memory on the given device
-   *
-   * \param deviceIndex device index for device memory to return (defaults to CPU_INDEX)
-   */
   template<typename T>
-  const T* FieldInfo<T>::const_field_values( const short int deviceIndex ) const {
-#ifdef DEBUG_SF_ALL
+  const T* FieldInfo<T>::const_field_values( const short int deviceIndex ) const
+  {
+#   ifdef DEBUG_SF_ALL
     std::cout << "Call to const SpatialField::field_values() for device : "
               << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
-#endif
+#   endif
 
-    //check deviceIndex
-    DeviceTypeTools::check_valid_index(deviceIndex, __FILE__, __LINE__);
+    DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
 
     //check device exists and is valid
-    if( iter != deviceMap_.end() &&
-        iter->second.isValid_ ) {
+    if( iter != deviceMap_.end() && iter->second.isValid_ ){
       return iter->second.field_;
-    } else if( iter == deviceMap_.end() ) {
+    }
+    else if( iter == deviceMap_.end() ) {
       //device is not available
       std::ostringstream msg;
       msg << "Request for const field pointer on a device for which it has not been allocated\n"
           << DeviceTypeTools::get_memory_type_description(deviceIndex)
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
-    } else {
+    }
+    else {
       //device is available but not valid
       std::ostringstream msg;
       msg << "Requested const field pointer on a device is not valid! \n"

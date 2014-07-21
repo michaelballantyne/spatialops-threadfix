@@ -88,11 +88,13 @@ namespace SpatialOps{
   template<>
   struct SingleValueCheck<SingleValue> {
     static inline void check( MemoryWindow const & window,
-                              GhostData const & ghosts ) {
-#ifndef NDEBUG
+                              GhostData const & ghosts )
+    {
+#     ifndef NDEBUG
       if( (window.extent(0) > 1) &&
           (window.extent(1) > 1) &&
-          (window.extent(2) > 1) ) {
+          (window.extent(2) > 1) )
+      {
         std::ostringstream msg;
         msg << "Single Value Field does not support window extents larger than 1\n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
@@ -102,15 +104,16 @@ namespace SpatialOps{
       if( (ghosts.get_minus(0) > 0) &&
           (ghosts.get_minus(1) > 0) &&
           (ghosts.get_minus(2) > 0) &&
-          (ghosts.get_plus(0) > 0) &&
-          (ghosts.get_plus(1) > 0) &&
-          (ghosts.get_plus(2) > 0) ) {
+          (ghosts.get_plus (0) > 0) &&
+          (ghosts.get_plus (1) > 0) &&
+          (ghosts.get_plus (2) > 0) )
+      {
         std::ostringstream msg;
         msg << "Single Value Field does not support non-zero ghosts\n"
             << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
-#endif
+#     endif
     }
   };
 
@@ -151,12 +154,12 @@ namespace SpatialOps{
     boost::shared_ptr<FieldInfo<T> > info_; ///< A shared pointer for FieldInfo for this field (all copies share the same FieldInfo)
 
   public:
-    typedef SpatialField<FieldLocation,T> field_type;
-    typedef FieldLocation Location;
-    typedef T value_type;
-    typedef MemoryWindow memory_window;
-    typedef FieldIterator<field_type> iterator;
-    typedef ConstFieldIterator<field_type> const_iterator;
+    typedef SpatialField<FieldLocation,T> field_type;      ///< this field's type
+    typedef FieldLocation Location;                        ///< this field's location
+    typedef T value_type;                                  ///< the underlying value type for this field (nominally double)
+    typedef MemoryWindow memory_window;                    ///< the window type for this field
+    typedef FieldIterator<field_type> iterator;            ///< the iterator type
+    typedef ConstFieldIterator<field_type> const_iterator; ///< const iterator type
 
     /**
      *  \brief SpatialField constructor
@@ -168,19 +171,19 @@ namespace SpatialOps{
      * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
      * \param devIdx      device index of originally active device (default: CPU_INDEX)
      */
-    inline SpatialField(const MemoryWindow window,
-                        const BoundaryCellInfo bc,
-                        const GhostData ghosts,
-                        T* const fieldValues = NULL,
-                        const StorageMode mode = InternalStorage,
-                        const short int devIdx = CPU_INDEX)
-    : matchGlobalWindow_(true),
-      localWindow_(window),
-      bcInfo_(bc),
-      localValidGhosts_(ghosts),
-      info_( new FieldInfo<T>(window, bc, ghosts, fieldValues, mode, devIdx) )
+    inline SpatialField( const MemoryWindow window,
+                         const BoundaryCellInfo bc,
+                         const GhostData ghosts,
+                         T* const fieldValues = NULL,
+                         const StorageMode mode = InternalStorage,
+                         const short int devIdx = CPU_INDEX )
+    : matchGlobalWindow_( true ),
+      localWindow_( window ),
+      bcInfo_( bc ),
+      localValidGhosts_( ghosts ),
+      info_( new FieldInfo<T>( window, bc, ghosts, fieldValues, mode, devIdx ) )
     {
-      SingleValueCheck<Location>::check(localWindow_, ghosts);
+      SingleValueCheck<Location>::check( localWindow_, ghosts );
       // this error trapping is disabled currently because of the way that Wasatch is
       // hijacking the SpatialOps interface for flux limiters.  Once that gets folded
       // into a real nebo interface using operators we will be able to reinstate
@@ -203,12 +206,12 @@ namespace SpatialOps{
      * This results in two fields that share the same underlying
      * memory and window information.
      */
-    inline SpatialField(const SpatialField& other)
-    : matchGlobalWindow_(other.matchGlobalWindow_),
-      localWindow_(other.localWindow_),
-      bcInfo_(other.bcInfo_),
-      localValidGhosts_(other.localValidGhosts_),
-      info_(other.info_)
+    inline SpatialField( const SpatialField& other )
+    : matchGlobalWindow_( other.matchGlobalWindow_ ),
+      localWindow_( other.localWindow_ ),
+      bcInfo_( other.bcInfo_ ),
+      localValidGhosts_( other.localValidGhosts_ ),
+      info_( other.info_ )
     {}
 
     /**
@@ -227,8 +230,8 @@ namespace SpatialOps{
      * change the number of valid ghost cells in other copies of this
      * same field that meet the same requirements.)
      */
-    inline SpatialField(const MemoryWindow window,
-                        const SpatialField& other)
+    inline SpatialField( const MemoryWindow window,
+                         const SpatialField& other )
     : matchGlobalWindow_( window.fits_between(other.info_->window_without_ghost(),
                                               other.info_->window_with_all_ghost()) ),
       localWindow_( window ),
@@ -241,15 +244,11 @@ namespace SpatialOps{
 
     ~SpatialField() {};
 
-    const MemoryWindow& window_with_ghost() const {
-      return localWindow_;
-    }
+    const MemoryWindow& window_with_ghost() const{ return localWindow_; }
 
     const MemoryWindow window_without_ghost() const {
-      if( matchGlobalWindow_ )
-        return info_->window_without_ghost();
-      else
-        return localWindow_.remove_ghosts(localValidGhosts_);
+      if( matchGlobalWindow_ ) return info_->window_without_ghost();
+      else                     return localWindow_.remove_ghosts(localValidGhosts_);
     }
 
     /**
@@ -278,11 +277,9 @@ namespace SpatialOps{
      * \param ghosts ghost cells to be made valid
      */
     inline void reset_valid_ghosts( const GhostData& ghosts ){
-      localWindow_ = localWindow_.reset_ghosts( localValidGhosts_,
-                                                ghosts );
+      localWindow_ = localWindow_.reset_ghosts( localValidGhosts_, ghosts );
       localValidGhosts_ = ghosts;
-      if( matchGlobalWindow_ )
-        info_->reset_valid_ghosts(ghosts);
+      if( matchGlobalWindow_ ) info_->reset_valid_ghosts(ghosts);
     }
 
     /**
@@ -290,7 +287,7 @@ namespace SpatialOps{
      */
     unsigned int allocated_bytes() const{ return info_->allocated_bytes(); }
 
-#ifdef ENABLE_THREADS
+#   ifdef ENABLE_THREADS
     /**
      * \brief set the number of partitions Nebo uses for thread-parallel execution
      *
@@ -301,10 +298,10 @@ namespace SpatialOps{
     /**
      * \brief return the number of partitions Nebo uses for thread-parallel execution
      */
-    int get_partition_count() { return info_->get_partition_count(); }
-#endif
+    int get_partition_count() const { return info_->get_partition_count(); }
+#   endif
 
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     /**
      * \brief set the CUDA stream to for Nebo assignment to this field and for async data transfer
      *
@@ -316,7 +313,7 @@ namespace SpatialOps{
      * \brief return the CUDA stream for this field
      */
     cudaStream_t const & get_stream() const { return info_->get_stream(); }
-#endif
+#   endif
 
     /**
      * \brief wait until the current stream is done with all work
@@ -335,13 +332,13 @@ namespace SpatialOps{
      * \param deviceIndex the index of the device to add
      *
      * If device (deviceIndex) is already available for this field and
-     * valid, this fuction becomes a no op.
+     * valid, this function becomes a no op.
      *
      * If device (deviceIndex) is already available for this field but
-     * not valid, this fuction becomes identical to sync_device().
+     * not valid, this function becomes identical to sync_device().
      *
      * Thus, regardless of the status of device (deviceIndex) for this
-     * field, this function does the bare minumum to make device available
+     * field, this function does the bare minimum to make device available
      * and valid for this field.
      *
      * Note: This operation is guaranteed to be synchronous: The host thread waits
@@ -349,7 +346,7 @@ namespace SpatialOps{
      *
      * Note: This operation is thread safe.
      */
-    inline void add_device(short int deviceIndex) { info_->add_device( deviceIndex ); }
+    inline void add_device( short int deviceIndex ) { info_->add_device( deviceIndex ); }
 
     /**
      * \Brief add device memory to this field for given device
@@ -358,13 +355,13 @@ namespace SpatialOps{
      * \param deviceIndex the index of the device to add
      *
      * If device (deviceIndex) is already available for this field and
-     * valid, this fuction becomes a no op.
+     * valid, this function becomes a no op.
      *
      * If device (deviceIndex) is already available for this field but
-     * not valid, this fuction becomes identical to sync_device().
+     * not valid, this function becomes identical to sync_device().
      *
      * Thus, regardless of the status of device (deviceIndex) for this
-     * field, this function does the bare minumum to make device available
+     * field, this function does the bare minimum to make device available
      * and valid for this field.
      *
      * Note: This operation is asynchronous: The host thread returns immediately after
@@ -372,7 +369,7 @@ namespace SpatialOps{
      *
      * Note: This operation is thread safe.
      */
-    inline void add_device_async(short int deviceIndex) { info_->add_device_async( deviceIndex ); }
+    inline void add_device_async( short int deviceIndex ) { info_->add_device_async( deviceIndex ); }
 
    /**
      * \brief populate memory on the given device (deviceIndex) with values
@@ -385,7 +382,9 @@ namespace SpatialOps{
      * Note: This operation is guaranteed to be synchronous: The host thread waits
      * until the task is completed (on the GPU).
      */
-    inline void validate_device(short int deviceIndex) { info_->validate_device( deviceIndex ); }
+    inline void validate_device( short int deviceIndex ){
+      info_->validate_device( deviceIndex );
+    }
 
    /**
      * \brief populate memory on the given device (deviceIndex) with values
@@ -398,7 +397,9 @@ namespace SpatialOps{
      * Note: This operation is asynchronous: The host thread returns immediately after
      * it launches on the GPU.
      */
-    inline void validate_device_async(short int deviceIndex) { info_->validate_device_async( deviceIndex ); }
+    inline void validate_device_async( short int deviceIndex ){
+      info_->validate_device_async( deviceIndex );
+    }
 
     /**
      * \brief set given device (deviceIndex) as active *SYNCHRONOUS VERSION*
@@ -410,7 +411,7 @@ namespace SpatialOps{
      * Note: This operation is guaranteed to be synchronous: The host thread waits
      * until the task is completed (on the GPU).
      */
-    inline void set_device_as_active(const short int deviceIndex) {
+    inline void set_device_as_active( const short int deviceIndex ){
       info_->set_device_as_active( deviceIndex );
     }
 
@@ -424,7 +425,7 @@ namespace SpatialOps{
      * Note: This operation is asynchronous: The host thread returns immediately
      * after it launches on the GPU.
      */
-    inline void set_device_as_active_async(const short int deviceIndex) {
+    inline void set_device_as_active_async( const short int deviceIndex ){
       info_->set_device_as_active_async( deviceIndex );
     }
 
@@ -433,18 +434,18 @@ namespace SpatialOps{
      *
      * \param deviceIndex index ofdevice to check
      */
-    bool is_valid( const short int deviceIndex ) const {
+    bool is_valid( const short int deviceIndex ) const{
       return info_->is_valid( deviceIndex );
     }
 
     /**
-     * \brief return a nonconstant pointer to memory on the given device
+     * \brief return a non-constant pointer to memory on the given device
      *
      * Note: This method will invalidate all the other devices apart from the deviceIndex.
      *
      * \param deviceIndex index of device for device memory to return (defaults to CPU_INDEX)
      */
-    inline T* field_values(const short int deviceIndex = CPU_INDEX) {
+    inline T* field_values( const short int deviceIndex = CPU_INDEX ){
       return info_->field_values( deviceIndex );
     }
 
@@ -453,80 +454,72 @@ namespace SpatialOps{
      *
      * \param deviceIndex device index for device memory to return (defaults to CPU_INDEX)
      */
-    inline const T* field_values(const short int deviceIndex = CPU_INDEX) const {
+    inline const T* field_values( const short int deviceIndex = CPU_INDEX ) const{
       return info_->const_field_values( deviceIndex );
     }
 
     /**
      * \brief return a constant iterator for CPU with valid ghost cells
      */
-    inline const_iterator begin() const {
-      return const_iterator( info_->const_field_values( CPU_INDEX ),
-                             window_with_ghost() );
+    inline const_iterator begin() const{
+      return const_iterator( info_->const_field_values( CPU_INDEX ), window_with_ghost() );
     }
 
     /**
-     * \brief return a nonconstant iterator for CPU with valid ghost cells
+     * \brief return a non-constant iterator for CPU with valid ghost cells
      */
-    inline iterator begin() {
-      return iterator( info_->field_values( CPU_INDEX ),
-                       window_with_ghost() );
+    inline iterator begin(){
+      return iterator( info_->field_values( CPU_INDEX ), window_with_ghost() );
     }
 
     /**
      * \brief return a constant iterator to end for CPU with valid ghost cells
      */
-    inline const_iterator end() const {
+    inline const_iterator end() const{
       const MemoryWindow & w = window_with_ghost();
-
       return begin() + w.extent(0) * w.extent(1) * w.extent(2);
     }
 
     /**
-     * \brief return a nonconstant iterator to end for CPU with valid ghost cells
+     * \brief return a non-constant iterator to end for CPU with valid ghost cells
      */
-    inline iterator end() {
+    inline iterator end(){
       const MemoryWindow & w = window_with_ghost();
-
       return begin() + w.extent(0) * w.extent(1) * w.extent(2);
     }
 
     /**
      * \brief return a constant iterator for CPU without ghost cells
      */
-    inline const_iterator interior_begin() const {
-      return const_iterator( info_->const_field_values( CPU_INDEX ),
-                             window_without_ghost() );
+    inline const_iterator interior_begin() const{
+      return const_iterator( info_->const_field_values( CPU_INDEX ), window_without_ghost() );
     }
 
     /**
-     * \brief return a nonconstant iterator for CPU without ghost cells
+     * \brief return a non-constant iterator for CPU without ghost cells
      */
-    inline iterator interior_begin() {
-      return iterator( info_->field_values( CPU_INDEX ),
-                       window_without_ghost() );
+    inline iterator interior_begin(){
+      return iterator( info_->field_values( CPU_INDEX ), window_without_ghost() );
     }
 
     /**
      * \brief return a constant iterator to end for CPU without ghost cells
      */
-    inline const_iterator interior_end() const {
+    inline const_iterator interior_end() const{
       const MemoryWindow & w = window_without_ghost();
-
       return interior_begin() + w.extent(0) * w.extent(1) * w.extent(2);
     }
 
     /**
-     * \brief return a nonconstant iterator to end for CPU without ghost cells
+     * \brief return a non-constant iterator to end for CPU without ghost cells
      */
-    inline iterator interior_end() {
+    inline iterator interior_end(){
       const MemoryWindow & w = window_without_ghost();
-
       return interior_begin() + w.extent(0) * w.extent(1) * w.extent(2);
     }
 
     /**
-     * \brief return constant refernce to cell at given flat index on CPU
+     * \brief return constant reference to cell at given flat index on CPU
      *
      * \param i flat index of cell to return a constant reference to
      *
@@ -541,7 +534,7 @@ namespace SpatialOps{
     }
 
     /**
-     * \brief return nonconstant refernce to cell at given flat index on CPU
+     * \brief return non-constant reference to cell at given flat index on CPU
      *
      * \param i flat index of cell to return a reference to
      *
@@ -556,7 +549,7 @@ namespace SpatialOps{
     }
 
     /**
-     * \brief return nonconstant refernce to cell at given index (ijk) on CPU
+     * \brief return non-constant reference to cell at given index (ijk) on CPU
      *
      * \param ijk IntVec coordinate (X,Y,Z) index
      *
@@ -571,7 +564,7 @@ namespace SpatialOps{
     }
 
     /**
-     * \brief return constant refernce to cell at given index (ijk) on CPU
+     * \brief return constant reference to cell at given index (ijk) on CPU
      *
      * \param ijk IntVec coordinate (X,Y,Z) index
      *
@@ -586,7 +579,7 @@ namespace SpatialOps{
     }
 
     /**
-     * \brief return nonconstant refernce to cell at given index (i,j,k) on CPU
+     * \brief return non-constant reference to cell at given index (i,j,k) on CPU
      *
      * \param i X-dimension index
      * \param j Y-dimension index
@@ -603,7 +596,7 @@ namespace SpatialOps{
     }
 
     /**
-     * \brief return constant refernce to cell at given index (i,j,k) on CPU
+     * \brief return constant reference to cell at given index (i,j,k) on CPU
      *
      * \param i X-dimension index
      * \param j Y-dimension index
@@ -639,7 +632,7 @@ namespace SpatialOps{
    * is in place for two reasons:
    *  1. Currently, assignment only happens on windows that take up all memory
    *     (or nearly all).
-   *  2. This limitaion simplifies the implementation (which is easier to
+   *  2. This limitation simplifies the implementation (which is easier to
    *     maintain) to use standard libraries (which should be more efficient).
    */
   template<typename Location, typename T>
@@ -656,9 +649,9 @@ namespace SpatialOps{
     short int thisIdx = active_device_index();
     short int otherIdx = other.active_device_index();
 
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-#endif
+#   endif
 
     if( IS_CPU_INDEX(thisIdx) ) {
       if( IS_CPU_INDEX(otherIdx) ){
@@ -669,7 +662,7 @@ namespace SpatialOps{
                      other.field_values(CPU_INDEX) + other.info_->window_with_ghost().glob_npts(),
                      field_values(CPU_INDEX) );
       }
-#ifdef ENABLE_CUDA
+#     ifdef ENABLE_CUDA
       else if( IS_GPU_INDEX(otherIdx) ) {
         // GPU -> CPU
         CDI.memcpy_from( field_values(CPU_INDEX),
@@ -678,7 +671,7 @@ namespace SpatialOps{
                          otherIdx,
                          get_stream() );
       }
-#endif
+#     endif
       else {
         // ??? -> CPU
         std::ostringstream msg;
@@ -690,7 +683,7 @@ namespace SpatialOps{
         throw(std::runtime_error(msg.str()));
       }
     }
-#ifdef ENABLE_CUDA
+#   ifdef ENABLE_CUDA
     else if( IS_GPU_INDEX(thisIdx) ) {
       if( IS_CPU_INDEX(otherIdx) ) {
         // CPU -> GPU
@@ -722,7 +715,7 @@ namespace SpatialOps{
         throw( std::runtime_error ( msg.str() ));
       }
     }
-#endif // ENABLE_CUDA
+#   endif // ENABLE_CUDA
     else{
       // ??? -> ___
       std::ostringstream msg;
