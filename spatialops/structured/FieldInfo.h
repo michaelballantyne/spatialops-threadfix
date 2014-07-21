@@ -563,7 +563,6 @@ namespace SpatialOps{
     // check that deviceIndex is not already valid for field
     if( deviceIndex != active_device_index() &&
         !deviceMap_[deviceIndex].isValid_ ){
-      T* validfieldValues_ = deviceMap_[active_device_index()].field_;
 
 #     ifdef ENABLE_CUDA
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
@@ -580,6 +579,7 @@ namespace SpatialOps{
       }
 
 #     ifdef ENABLE_CUDA
+
       else if( IS_CPU_INDEX(active_device_index()) &&
                IS_GPU_INDEX(deviceIndex) ){
         // CPU->GPU
