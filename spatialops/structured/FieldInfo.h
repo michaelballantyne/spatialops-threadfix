@@ -441,27 +441,29 @@ namespace SpatialOps{
 #         endif
       ){
         //set up active device in map:
-        if( mode == InternalStorage ){
-          deviceMap_[activeDeviceIndex_] = DeviceMemory(Pool<T>::get( activeDeviceIndex_, window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ),
-                                                        true,
-                                                        true);
-        }
-        else if( fieldValues != NULL ){
-          deviceMap_[activeDeviceIndex_] = DeviceMemory(fieldValues, true, false);
-        }
-        else if( window.local_npts() > 0 ){
-          // allow NULL pointers so long as the window is
-          // empty so that we never dereference the pointer.
-          std::ostringstream msg;
-          msg << "Attempting to use externally allocated memory in FieldInfo constructor, given NULL"
-              << " \n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-          throw(std::runtime_error(msg.str()));
-        }
+        switch( mode ){
+          case InternalStorage:
+            deviceMap_[activeDeviceIndex_] = DeviceMemory( Pool<T>::get( activeDeviceIndex_, window.glob_npts() ), true, true );
+            break;
+          case ExternalStorage:
+            if( fieldValues != NULL || window.local_npts() == 0 ){
+              // allow NULL pointers so long as the window is
+              // empty so that we never dereference the pointer.
+              deviceMap_[activeDeviceIndex_] = DeviceMemory( fieldValues, true, false );
+            }
+            else if( window.local_npts() > 0 ){
+              std::ostringstream msg;
+              msg << "Attempting to use externally allocated memory in FieldInfo constructor, given NULL"
+                  << " \n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+              throw(std::runtime_error(msg.str()));
+            }
+            break;
+        } // switch(mode)
       }
       else {
         //not valid device index
         std::ostringstream msg;
-        msg << "Unsupported attempt to create field on device ( "
+        msg << "Attempt to create field on unsupported device ( "
             << DeviceTypeTools::get_memory_type_description(activeDeviceIndex_)
         << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
