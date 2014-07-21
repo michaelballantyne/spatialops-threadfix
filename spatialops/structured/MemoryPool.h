@@ -52,14 +52,16 @@ class Pool{
   Pool(const Pool&);
   Pool& operator=(const Pool&);
 
+  static Pool& self();
+
+  const unsigned short int deviceIndex_;
+
  public:
 
-  static Pool& self();
-  T* get( const short int deviceLocation, const size_t n );
-  void put( const short int deviceLocation, T* );
-  size_t active() const;
-  size_t total() const{ return cpuhighWater_; }
-  const unsigned short int deviceIndex_;
+  static T* get( const short int deviceLocation, const size_t n );
+  static void put( const short int deviceLocation, T* );
+  static size_t active();
+  static size_t total();
 };
 
 template<typename T> bool Pool<T>::destroyed_ = false;

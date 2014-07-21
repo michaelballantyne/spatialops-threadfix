@@ -353,7 +353,7 @@ namespace SpatialOps{
         ghosts_(ghosts),
         size_(NEBO_ROUND_TO_INT(window.glob_npts())),
         bytes_(NEBO_ROUND_TO_INT(window.glob_npts()) * NEBO_INT_BYTE),
-        bitValues_(Pool<unsigned int>::self().get(CPU_INDEX, size_)),
+        bitValues_(Pool<unsigned int>::get(CPU_INDEX, size_)),
         builtMask_(true),
         hasgpuConsumer_(false),
         deviceIndex_(CPU_INDEX)
@@ -394,7 +394,7 @@ namespace SpatialOps{
 
       if ( builtMask_ && !hasgpuConsumer_ ) {
         if( deviceIndex_ == CPU_INDEX ){
-          Pool<unsigned int>::self().put( CPU_INDEX, bitValues_ );
+          Pool<unsigned int>::put( CPU_INDEX, bitValues_ );
           bitValues_ = NULL;
         }
         else{

@@ -442,7 +442,7 @@ namespace SpatialOps{
       ){
         //set up active device in map:
         if( mode == InternalStorage ){
-          deviceMap_[activeDeviceIndex_] = DeviceMemory(Pool<T>::self().get( activeDeviceIndex_, window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ),
+          deviceMap_[activeDeviceIndex_] = DeviceMemory(Pool<T>::get( activeDeviceIndex_, window.glob_dim(0) * window.glob_dim(1) * window.glob_dim(2) ),
                                                         true,
                                                         true);
         }
@@ -473,7 +473,7 @@ namespace SpatialOps{
   {
     for( MapIter iter = deviceMap_.begin(); iter != deviceMap_.end(); ++iter )
       if( iter->second.builtField_ )
-        Pool<T>::self().put(iter->first, iter->second.field_);
+        Pool<T>::put(iter->first, iter->second.field_);
   }
 
 //------------------------------------------------------------------

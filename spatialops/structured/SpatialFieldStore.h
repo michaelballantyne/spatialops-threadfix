@@ -461,7 +461,7 @@ get_from_window( const MemoryWindow& window,
 
     // Allocate from a store
     if( deviceIndex == CPU_INDEX ) {
-      ValT* fnew = Pool<ValT>::self().get(deviceIndex,npts);
+      ValT* fnew = Pool<ValT>::get(deviceIndex,npts);
       return SpatFldPtr<FieldT>( new FieldT( mw,bc,ghost,fnew,
                                              ExternalStorage),
                                  true );
@@ -505,7 +505,7 @@ void SpatialFieldStore::restore_field( const short int deviceIndex, FieldT& fiel
     throw( std::runtime_error(msg.str()));
   }
 # endif
-  Pool<ValT>::self().put( deviceIndex, values );
+  Pool<ValT>::put( deviceIndex, values );
 }
 
 } // namespace SpatialOps
