@@ -156,12 +156,8 @@ namespace SpatialOps{
     class ExecMutex {
       const boost::mutex::scoped_lock lock;
       inline boost::mutex& get_mutex() const {static boost::mutex m; return m;}
-
     public:
       ExecMutex() : lock( get_mutex() ) {}
-      ~ExecMutex() {}
-    public:
-      ExecMutex() {}
       ~ExecMutex() {}
     };
 #   endif
