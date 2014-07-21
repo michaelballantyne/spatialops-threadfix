@@ -449,7 +449,9 @@ namespace SpatialOps{
         else if( fieldValues != NULL ){
           deviceMap_[activeDeviceIndex_] = DeviceMemory(fieldValues, true, false);
         }
-        else{
+        else if( window.local_npts() > 0 ){
+          // allow NULL pointers so long as the window is
+          // empty so that we never dereference the pointer.
           std::ostringstream msg;
           msg << "Attempting to use externally allocated memory in FieldInfo constructor, given NULL"
               << " \n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
