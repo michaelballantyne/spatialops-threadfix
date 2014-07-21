@@ -36,7 +36,7 @@
 #include <spatialops/structured/GhostData.h>
 #include <spatialops/structured/MemoryPool.h>
 
-#include <limits>  // for CHAR_BIT below.
+#include <climits>  // for CHAR_BIT below.
 
 #define NEBO_INT_BIT ((signed int)(sizeof(unsigned int) * CHAR_BIT))
 #define NEBO_INT_BYTE ((signed int)(sizeof(unsigned int)))
