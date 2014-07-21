@@ -468,7 +468,7 @@ get_from_window( const MemoryWindow& window,
     }
 # ifdef ENABLE_CUDA
     else if( IS_GPU_INDEX(deviceIndex) ){
-      ValT* fnew = Pool<ValT>::self().get(deviceIndex, npts);
+      ValT* fnew = Pool<ValT>::get(deviceIndex, npts);
       return SpatFldPtr<FieldT>( new FieldT( mw, bc, ghost, fnew,
                                              ExternalStorage,
                                              deviceIndex ),

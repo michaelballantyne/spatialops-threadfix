@@ -197,7 +197,7 @@ Pool<T>::put( const short int deviceLocation, T* t )
   }
 # ifdef ENABLE_CUDA
   else if( IS_GPU_INDEX(deviceLocation) ) {
-    const size_t n = fsm_[t];
+    const size_t n = pool.fsm_[t];
     const typename FQSizeMap::iterator ifq = pool.gpufqm_.lower_bound( n );
     assert( ifq != pool.gpufqm_.end() );
     ifq->second.push(t);
