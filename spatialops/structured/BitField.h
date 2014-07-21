@@ -384,7 +384,7 @@ namespace SpatialOps{
       //Release any masks allocated for consumer use
       if( hasgpuConsumer_ ){
         for( ConsumerMap::iterator i = myConsumerBitValues_.begin(); i != myConsumerBitValues_.end(); ++i ){
-          Pool<unsigned int>::self().put( i->first, i->second );
+          Pool<unsigned int>::put( i->first, i->second );
         }
       }
       consumerBitValues_.clear();
@@ -474,7 +474,7 @@ namespace SpatialOps{
 
         //Check to see if GPU mask memory exists
         if(consumerBitValues_.find(consumerDeviceIndex) == consumerBitValues_.end()) {
-          consumerBitValues_[consumerDeviceIndex] = Pool<unsigned int>::self().get(consumerDeviceIndex, size_);
+          consumerBitValues_[consumerDeviceIndex] = Pool<unsigned int>::get(consumerDeviceIndex, size_);
           myConsumerBitValues_[consumerDeviceIndex] = consumerBitValues_[consumerDeviceIndex];
         };
 

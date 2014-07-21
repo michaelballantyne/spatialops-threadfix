@@ -513,7 +513,7 @@ namespace SpatialOps{
         validate_device_async( deviceIndex );
     }
     else {
-      deviceMap_[deviceIndex] = DeviceMemory(Pool<T>::self().get( deviceIndex, (allocated_bytes()/sizeof(T)) ),
+      deviceMap_[deviceIndex] = DeviceMemory(Pool<T>::get( deviceIndex, (allocated_bytes()/sizeof(T)) ),
                                              false,
                                              true);
       validate_device_async( deviceIndex );
