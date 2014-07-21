@@ -29,10 +29,6 @@
 #ifndef SpatialOps_IntVec_h
 #define SpatialOps_IntVec_h
 
-#include <ostream>
-#include <vector>
-#include <cassert>
-
 #include <spatialops/structured/Numeric3Vec.h>
 
 namespace SpatialOps{

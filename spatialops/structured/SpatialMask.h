@@ -28,12 +28,8 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/structured/MemoryWindow.h>
-#include <spatialops/structured/GhostData.h>
-#include <spatialops/structured/BoundaryCellInfo.h>
-#include <spatialops/structured/IntVec.h>
-#include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/BitField.h>
+#include <spatialops/structured/SpatialField.h>
 
 namespace SpatialOps{
 

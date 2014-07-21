@@ -35,9 +35,7 @@
 #include <spatialops/SpatialOpsDefs.h>
 
 #include <spatialops/structured/IntVec.h>
-#include <spatialops/structured/IndexTriplet.h>
 
-#include <iomanip>
 #include <string>
 #include <sstream>
 #include <stdexcept>

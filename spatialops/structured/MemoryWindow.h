@@ -34,7 +34,6 @@
 #include <spatialops/structured/IntVec.h>
 #include <spatialops/structured/GhostData.h>
 #include <spatialops/structured/BoundaryCellInfo.h>
-#include <spatialops/structured/IndexTriplet.h> // jcs remove...
 
 #ifndef NDEBUG
 # include <cassert>

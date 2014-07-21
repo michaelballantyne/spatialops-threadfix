@@ -24,12 +24,8 @@
 #define UT_SpatialFieldStore_h
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/MemoryTypes.h>
 #include <spatialops/structured/SpatialField.h>
-#include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/IndexTriplet.h>
-#include <spatialops/structured/MemoryPool.h>
-#include <spatialops/structured/GhostData.h>
 
 #include <stack>
 #include <map>

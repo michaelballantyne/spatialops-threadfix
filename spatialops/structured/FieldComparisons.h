@@ -26,6 +26,9 @@
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <sstream>
 
+// Boost includes //
+#include <boost/math/special_functions/next.hpp>
+
 #define FIELDCOMPARISONS_ABS_ERROR_CONST .000001
 
 /**

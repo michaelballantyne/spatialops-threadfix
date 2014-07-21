@@ -30,23 +30,11 @@
 #define SPATIALOPS_FIELDINFO_H
 
 #include <iostream>
-#include <cassert>
 #include <stdexcept>
 #include <sstream>
 #include <map>
-#include <algorithm>
-#include <cmath>
-#include <limits>
-
-// Boost includes //
-#include <boost/math/special_functions/next.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/enable_shared_from_this.hpp>
-
-#include <string.h> // for memcmp below...
 
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/FVStaggeredLocationTypes.h>
 
 #include <spatialops/structured/ExternalAllocators.h>
 #include <spatialops/structured/MemoryTypes.h>
@@ -54,7 +42,6 @@
 #include <spatialops/structured/GhostData.h>
 #include <spatialops/structured/BoundaryCellInfo.h>
 #include <spatialops/structured/MemoryPool.h>
-#include <boost/static_assert.hpp>
 
 #ifdef ENABLE_THREADS
 #include <boost/thread/mutex.hpp>
