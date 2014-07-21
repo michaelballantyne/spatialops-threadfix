@@ -36,7 +36,7 @@
                                             int const yHigh,
                                             int const zLow,
                                             int const zHigh) {
-             lhs.assign(rhs, xLow, xHigh, yLow, yHigh, zLow, zHigh);
+             lhs.gpuwalk_assign(rhs, xLow, xHigh, yLow, yHigh, zLow, zHigh);
           }
       #endif
       /* __CUDACC__ */;
@@ -307,7 +307,7 @@
               #endif
               /* NEBO_REPORT_BACKEND */;
 
-              init().assign(rhs.init(extents, ghosts, hasBC), limits);
+              init().seqwalk_assign(rhs.init(extents, ghosts, hasBC), limits);
 
               #ifdef NEBO_REPORT_BACKEND
                  std::cout << "Finished Nebo sequential" << std::endl
@@ -355,7 +355,8 @@
                     nebo_set_up_extents(location, split, localLimits, limits);
 
                     ThreadPoolFIFO::self().schedule(boost::bind(&ResizeType::
-                                                                template assign<RhsResizeType>,
+                                                                template
+                                                                resize_assign<RhsResizeType>,
                                                                 new_lhs,
                                                                 new_rhs,
                                                                 extents,
@@ -553,13 +554,14 @@
 
              #ifdef ENABLE_THREADS
                 template<typename RhsType>
-                 inline void assign(RhsType const & rhs,
-                                    IntVec const & extents,
-                                    GhostData const & ghosts,
-                                    IntVec const & hasBC,
-                                    GhostData const limits,
-                                    Semaphore * semaphore) {
-                    init().assign(rhs.init(extents, ghosts, hasBC), limits);
+                 inline void resize_assign(RhsType const & rhs,
+                                           IntVec const & extents,
+                                           GhostData const & ghosts,
+                                           IntVec const & hasBC,
+                                           GhostData const limits,
+                                           Semaphore * semaphore) {
+                    init().seqwalk_assign(rhs.init(extents, ghosts, hasBC),
+                                          limits);
 
                     semaphore->post();
                  }
@@ -593,7 +595,7 @@
           {}
 
           template<typename RhsType>
-           inline void assign(RhsType rhs, GhostData const limits) {
+           inline void seqwalk_assign(RhsType rhs, GhostData const limits) {
               for(int z = limits.get_minus(2); z < limits.get_plus(2); z++) {
                  for(int y = limits.get_minus(1); y < limits.get_plus(1); y++) {
                     for(int x = limits.get_minus(0); x < limits.get_plus(0); x++)
@@ -635,13 +637,13 @@
              {}
 
              template<typename RhsType>
-              __device__ inline void assign(RhsType rhs,
-                                            int const xLow,
-                                            int const xHigh,
-                                            int const yLow,
-                                            int const yHigh,
-                                            int const zLow,
-                                            int const zHigh) {
+              __device__ inline void gpuwalk_assign(RhsType rhs,
+                                                    int const xLow,
+                                                    int const xHigh,
+                                                    int const yLow,
+                                                    int const yHigh,
+                                                    int const zLow,
+                                                    int const zHigh) {
                  const int ii = blockIdx.x * blockDim.x + threadIdx.x;
 
                  const int jj = blockIdx.y * blockDim.y + threadIdx.y;

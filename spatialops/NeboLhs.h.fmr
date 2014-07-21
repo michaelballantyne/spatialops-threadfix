@@ -200,7 +200,7 @@
                         constructor
                         (list (pp-threads-only
                                (def-template (typename 'RhsType)
-                                 (def-void-function 'assign
+                                 (def-void-function 'resize_assign
                                    (list (function-pmtr (ref (const 'RhsType)) 'rhs)
                                          init-pmtr
                                          low-high-pmtr
@@ -231,7 +231,7 @@
                          typedefs
                          constructor
                          (list (def-template (typename 'RhsType)
-                                 (def-void-function 'assign
+                                 (def-void-function 'seqwalk_assign
                                    (list (function-pmtr 'RhsType 'rhs)
                                          low-high-pmtr)
                                    assign-body))
@@ -262,7 +262,7 @@
                      typedefs
                      constructor
                      (list (def-template (typename 'RhsType)
-                             (device-only (def-void-function 'assign
+                             (device-only (def-void-function 'gpuwalk_assign
                                             (list (function-pmtr 'RhsType 'rhs)
                                                   gpu-low-high-pmtr)
                                             (val-typed-const-assign 'int 'ii (val-add (val-multiply 'blockIdx.x 'blockDim.x) 'threadIdx.x))
@@ -304,7 +304,7 @@
                                                                       (list (function-pmtr 'LhsType 'lhs)
                                                                             (function-pmtr 'RhsType 'rhs)
                                                                             gpu-low-high-pmtr))
-                                (val-member-call 'lhs 'assign 'rhs gpu-low-high-arg)))))
+                                (val-member-call 'lhs 'gpuwalk_assign 'rhs gpu-low-high-arg)))))
 
   (build-struct NF-chunk
                 std-FT
@@ -317,7 +317,7 @@
                                                 null)
                                 null
                                 (list (val-member-call (val-call 'init)
-                                                       'assign
+                                                       'seqwalk_assign
                                                        (val-member-call 'rhs 'init init-arg)
                                                        low-high-arg))
                                 (let* ([Points (scope 'std (type-template 'vector IntVec))]
@@ -368,7 +368,8 @@
                                                 (val-member-call (val-call (scope 'ThreadPoolFIFO 'self))
                                                                  'schedule
                                                                  (val-call (scope 'boost 'bind)
-                                                                           (take-ptr (scope 'ResizeType (type-template-function 'assign 'RhsResizeType)))
+                                                                           (take-ptr (scope 'ResizeType (type-template-function 'resize_assign
+                                                                                                                                'RhsResizeType)))
                                                                            'new_lhs
                                                                            'new_rhs
                                                                            init-arg
@@ -467,7 +468,7 @@
                                                (val-construct 'field_ 'f)
                                                null)
                                (val-member-call (val-call 'init)
-                                                'assign
+                                                'seqwalk_assign
                                                 (val-member-call 'rhs 'init init-arg)
                                                 low-high-arg)
                                null
