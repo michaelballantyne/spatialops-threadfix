@@ -2,7 +2,7 @@ nebo_cuda_prep_dir()
 
 nebo_add_executable( field_creation field_creation.cpp )
 target_link_libraries( field_creation spatialops )
-add_test( field_creation example1_field_creation )
+add_test( field_creation field_creation )
 install( TARGETS field_creation RUNTIME DESTINATION bin/spatialops )
 
 nebo_add_executable( field_operations field_operations.cpp )
