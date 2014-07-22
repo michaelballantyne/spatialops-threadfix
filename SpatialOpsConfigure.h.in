@@ -29,13 +29,16 @@
 
 #cmakedefine ENABLE_THREADS
 #ifdef ENABLE_THREADS
-#define NTHREADS @NTHREADS@
+# define NTHREADS @NTHREADS@
 #else
-#define NTHREADS 1
+# define NTHREADS 1
 #endif
+
 #cmakedefine ENABLE_CUDA
 #cmakedefine NEBO_REPORT_BACKEND
 #cmakedefine NEBO_GPU_TEST
+
+#cmakedefine CUDA_ARCHITECTURE @CUDA_ARCHITECTURE@
 
 #define SOPS_REPO_DATE @SOPS_REPO_DATE@
 #define SOPS_REPO_HASH @SOPS_REPO_HASH@
