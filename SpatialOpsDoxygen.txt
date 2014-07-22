@@ -4,6 +4,12 @@
   
   The SpatialOps library provides support for operations on fields primarily
   on structured meshes.
+  
+  A number of students have contributed to development of SpatialOps over the past few years,
+  including: Chris Earl, Abhishek Bagusetty, and Michael Ballentyne.
+  
+  ### Questions/problems/suggestions?
+   Please contact Professor [James Sutherland](http://www.che.utah.edu/~sutherland)
  
  \section start Getting started
   - For instructions on building the library, see \ref building
@@ -53,11 +59,21 @@
  
  
  \section prereqs Prerequisites
- 
+  - [git](http://git-scm.com/)
   - [CMake](cmake.org), which SpatialOps uses for its build system
   - The [Boost libraries](boost.org)
   - For the GPU backends, a functioning CUDA nvcc installation with an nVidia GPU card
  
+ \section download Downloading the source code
+ The source may be obtained via git:
+ \verbatim
+ git clone git://software.crsim.utah.edu/SpatialOps.git [destination path]
+ \endverbatim
+ Alternatively, if you have proper access, you can check out via https which
+ will allow you to push changes back to the origin:
+ \verbatim
+ git clone ssh://[yourUNID]@software.crsim.utah.edu/uufs/crsim.utah.edu/host/home/git_repos/SpatialOps.git [destination]
+ \endverbatim
  
  \section config Configuring 
  The following table summarizes the available build options
@@ -71,9 +87,22 @@
  `ENABLE_TESTS        ` | `ON`        | `[ON` \| `OFF]` Enable/Disable tests
  `ENABLE_THREADS      ` | `OFF`       | `[ON` \| `OFF]` Enable/Disable tests
  `NTHREADS            ` | `1`         | Maximum number of active threads in the threadpool (only relevant if `ENABLE_THREADS` is `ON`)
+ `NEBO_GPU_TEST       ` | `OFF`       | Used for testing. If `ON` then fields will be automatically pushed from host to device to force GPU execution.
+ `NEBO_REPORT_BACKEND ` | `OFF`       | Used for testing. If `ON` then nebo assignment operations will print information to std::cout about where they are executed. 
  
  
  \subsection samplebuilds Sample Configuration Scripts
+ Note that SpatialOps relies on heavily templated code and can use substantial
+ memory when compiling.  Therefore, parallel builds should be done only on systems
+ with adequate memory resources.  1GB per parallel build process is more than
+ adequate.
+ 
+   - Build an optimized version and install it in the local build directory 
+     \verbatim
+     cmake [path to src] -DCMAKE_BUILD_TYPE=Release
+     make -j4 install
+     \endverbatim
+
    - Build an optimized version and install it in `/usr/local` 
      \verbatim
      cmake [path to src]                 \
@@ -94,14 +123,23 @@
       -DCMAKE_BUILD_TYPE=Debug            
      \endverbatim
      
-   - Build a project that can be imported into the XCode IDE.
+   - Build a project with debug flags that can be imported into the XCode IDE.
      \verbatim
      cmake [path to src]                  \
-      -G "Xcode"  \
+      -G "Xcode"                          \
       -DCMAKE_ECLIPSE_MAKE_ARGUMENTS=-j8  \
       -DCMAKE_BUILD_TYPE=Debug            
      \endverbatim
  
+   - Build a version on a system with a 3.0 compute capability GPU and the CUDA SDK installed:
+     \verbatim
+     cmake [path to src]            \
+      -DCMAKE_BUILD_TYPE=Release    \
+      -DENABLE_CUDA=ON              \
+      -DCUDA_ARCHITECTURE=3.0     
+     make -j4          
+     \endverbatim
+   
  
  \subsection install Installation and Downstream Usage
  
