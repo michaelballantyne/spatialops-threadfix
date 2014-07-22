@@ -1,32 +1,65 @@
 /**
- *  \file   Example6_3D_Laplacian.h
- *  \date   Jul 10, 2014
- *  \author "James C. Sutherland"
- *
- *
- * The MIT License
- *
- * Copyright (c) 2014 The University of Utah
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- */
+The MIT License
+
+Copyright (c) 2014 The University of Utah
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+
+
+\file   3D_Laplacian.h
+\date   Jul 10, 2014
+\author James C. Sutherland
+
+\page example-3d-laplacian The 3D Laplacian in action
+
+Using the laplacian operator,
+\f$
+\frac{\partial^2}{\partial x} +
+\frac{\partial^2}{\partial y} +
+\frac{\partial^2}{\partial z}
+\f$,
+as an case-study, this example shows how to create a function template to compute
+the 3D laplacian on compatible field types.
+
+# Goals
+ - Illustrate how to use stencil operators
+ - Illustrate type inference from fields to operators
+
+# Key Concepts
+ -# There are a number of predefined operators/stencils in SpatialOps.  The
+    simplest way to obtain these is via the \link SpatialOps::BasicOpTypes
+    BasicOpTypes\endlink struct.
+ -# Stencils can be stored and retrieved in the \link SpatialOps::OperatorDatabase
+    OperatorDatabase\endlink which provides simple storage and retrieval of
+    operators by type.
+ -# Using type inference, highly generic code can be written that is also very
+    robust.
+
+\sa \ref example-field-types
+\sa \ref example-stencil-type-inference
+\sa \ref example-stencils
+
+# Example Code
+\include 3D_Laplacian.h
+
+*/
 
 #include <spatialops/structured/FVStaggered.h>
 

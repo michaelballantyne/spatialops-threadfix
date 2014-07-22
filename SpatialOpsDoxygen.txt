@@ -14,7 +14,7 @@
  \section start Getting started
   - For instructions on building the library, see \ref building
   - The best way to become acquainted with basic usage of SpatialOps is to
-    start with the <a href="examples.html">Examples</a>.
+    start with the \ref exs.
  
  
  \section license License

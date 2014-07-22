@@ -1,32 +1,61 @@
 /**
- *  \file   Example2_field_operations.cpp
- *  \date   Jul 6, 2014
- *  \author "James C. Sutherland"
- *
- *
- * The MIT License
- *
- * Copyright (c) 2014 The University of Utah
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- */
+The MIT License
+
+Copyright (c) 2014 The University of Utah
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+
+\file   field_operations.cpp
+\date   Jul 6, 2014
+\author "James C. Sutherland"
+
+\page example-field-operations  Operations using fields
+
+# Goal of this example
+This example will show how to use SpatialFields in SpatialOps to perform a
+variety of field operations.
+
+# Key Concepts
+
+ -# Most mathematical operations/functions are supported in Nebo's
+    \link NeboOperators field operations \endlink.  They are lifted over fields.
+    This includes standard mathematical
+    operations such as \c sin \c cos \c exp, etc.
+
+ -# Nebo supports conditional operations that unroll to the equivalent of point-wise
+    \c if statements.  These are achieved via the \link NeboCond nebo cond \endlink
+    construct.
+
+ -# For fields with CPU-allocated memory, \link SpatialOps::print_field print_field \endlink will
+    write the field with some formatting to the given output stream. Note that print_field
+    prints the lowest index first and ends with the highest index.
+
+# Try This
+ -# Create a function `sin(x)` and then clip its values to be within [-0.1,0.2].
+
+\sa \ref example-field-creation
+
+# Example Code
+\include field_operations.cpp
+
+*/
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/Grid.h>        // a convenient way to define coordinates

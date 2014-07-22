@@ -1,32 +1,47 @@
 /**
- *  \file   Example3_field_reductions.cpp
- *  \date   Jul 10, 2014
- *  \author "James C. Sutherland"
- *
- *
- * The MIT License
- *
- * Copyright (c) 2014 The University of Utah
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- */
+The MIT License
+
+Copyright (c) 2014 The University of Utah
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+
+\file   field_types.cpp
+\date   Jul 10, 2014
+\author James C. Sutherland
+
+
+\page example-field-types  Some natively supported field types
+
+# Goal of this example
+This example will show all 16 Field types and illustrate how they are different.
+
+# Key Concepts
+
+ -# This example also illustrates the different layouts of fields.
+
+\sa \ref example-field-creation
+\sa \ref example-field-type-inference
+
+# Example Code
+\include field_types.cpp
+*/
 
 
 #include <spatialops/structured/FVStaggered.h>
@@ -80,22 +95,22 @@ void driver( const string tag )
 
 int main()
 {
-  driver<  SVolField>( "SVolField - volume field on the scalar volume" );
+  driver<  SVolField>( "SVolField   - volume field on the scalar volume" );
   driver<SSurfXField>( "SSurfXField - x-surface field on the scalar volume" );
   driver<SSurfYField>( "SSurfYField - y-surface field on the scalar volume" );
   driver<SSurfZField>( "SSurfZField - z-surface field on the scalar volume" );
 
-  driver<  XVolField>( "XVolField - volume field on the x-staggered volume" );
+  driver<  XVolField>( "XVolField   - volume field on the x-staggered volume" );
   driver<XSurfXField>( "XSurfXField - x-surface field on the x-staggered volume" );
   driver<XSurfYField>( "XSurfYField - y-surface field on the x-staggered volume" );
   driver<XSurfZField>( "XSurfZField - z-surface field on the x-staggered volume" );
 
-  driver<  YVolField>( "YVolField - volume field on the y-staggered volume" );
+  driver<  YVolField>( "YVolField   - volume field on the y-staggered volume" );
   driver<YSurfXField>( "YSurfXField - x-surface field on the y-staggered volume" );
   driver<YSurfYField>( "YSurfYField - y-surface field on the y-staggered volume" );
   driver<YSurfZField>( "YSurfZField - z-surface field on the y-staggered volume" );
 
-  driver<  ZVolField>( "ZVolField - volume field on the z-staggered volume" );
+  driver<  ZVolField>( "ZVolField   - volume field on the z-staggered volume" );
   driver<ZSurfXField>( "ZSurfXField - x-surface field on the z-staggered volume" );
   driver<ZSurfYField>( "ZSurfYField - y-surface field on the z-staggered volume" );
   driver<ZSurfZField>( "ZSurfZField - z-surface field on the z-staggered volume" );

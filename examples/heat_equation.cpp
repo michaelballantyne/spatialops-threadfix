@@ -1,29 +1,55 @@
 /**
- *  \file   Example8_masks.cpp
- *
- * The MIT License
- *
- * Copyright (c) 2014 The University of Utah
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
- *
- */
+The MIT License
+
+Copyright (c) 2014 The University of Utah
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to
+deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+IN THE SOFTWARE.
+
+
+
+\file heat_equation.cpp
+
+\page example-heat-equation Example: Solving a Heat Equation
+
+# Goal
+Illustrate how to use Nebo to implement a simple two-dimensional heat transfer simulation:
+\f[
+\frac{\partial \phi}{\partial t}
+ = \frac{\partial}{\partial x}\left(\alpha\frac{\partial \phi}{\partial x}\right)
+ + \frac{\partial}{\partial y}\left(\alpha\frac{\partial \phi}{\partial y}\right)
+\f]
+
+# Key Concepts
+ -# Use Nebo assignment, reductions, stencils, masks, and `cond` to create a simple heat transfer equation.
+ -# Show a very simple way to implement Dirichlet boundary conditions.
+ -# Use ghost fields in conjunction with operators.
+
+\sa \ref example-stencil-type-inference
+\sa \ref example-stencils
+\sa \ref example-masks
+
+# Example Code
+
+\include heat_equation.cpp
+
+*/
+
 
 #include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/Grid.h>
