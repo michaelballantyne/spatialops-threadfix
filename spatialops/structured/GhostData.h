@@ -122,7 +122,7 @@ namespace SpatialOps{
        isInf_ = rhs.isInf_;
      }
 
-    GhostData& operator=( const GhostData& rhs )
+    inline GhostData& operator=( const GhostData& rhs )
     {
       minus_ = rhs.minus_;
       plus_  = rhs.plus_;

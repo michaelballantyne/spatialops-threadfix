@@ -56,6 +56,10 @@ namespace SpatialOps{
    *
    *  Note that we only provide fully specialized versions of this template
    *  so that unsupported operator types cannot be inadvertently formed.
+   *
+   *  \sa BasicOpTypes
+   *  \sa \ref example-stencil-type-inference
+   *  \sa \ref example-stencils
    */
   template<typename OpT, typename SrcT, typename DestT>
   struct OperatorTypeBuilder;
@@ -101,6 +105,10 @@ namespace SpatialOps{
    *  typedef BasicOpTypes<SVolField>::GradY      MyGradYType;
    *  typedef BasicOpTypes<SVolField>::InterpC2FX InterpSVolSSurfX;
    *  \endcode
+   *
+   *  \sa OperatorTypeBuilder
+   *  \sa \ref example-stencil-type-inference
+   *  \sa \ref example-stencils
    */
   template< typename CellT > struct BasicOpTypes;
 

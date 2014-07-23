@@ -38,6 +38,8 @@ This example will show all 16 Field types and illustrate how they are different.
 
 \sa \ref example-field-creation
 \sa \ref example-field-type-inference
+\sa The \ref fieldtypes module, which documents the field types and type
+ inference tools in SpatialOps.
 
 # Example Code
 \c examples/field_types.cpp

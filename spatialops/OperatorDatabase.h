@@ -20,6 +20,11 @@
  * IN THE SOFTWARE.
  */
 
+/**
+ *  \file   OperatorDatabase.h
+ *  \author James C. Sutherland
+ */
+
 #ifndef SpatialOpDatabase_h
 #define SpatialOpDatabase_h
 
@@ -40,6 +45,13 @@ namespace SpatialOps{
  *  @author James C. Sutherland
  *  @date  July, 2008
  *  @brief Provides a database to hold operators of any type.
+ *
+ *  \par Example Usage
+ *   - \ref example-stencils
+ *   - \ref example-3d-laplacian
+ *
+ *  The OperatorDatabase can be easily pre-populated with most of the natively
+ *  supported operator types in SpatialOps by using the build_stencils() function.
  */
 class OperatorDatabase
 {
@@ -72,8 +84,7 @@ public:
    *  \param op The operator to register.  Ownership is transfered.
    *         This should be heap-allocated via "new".
    *
-   *  Example: <code>opDB.register_new_operator( new MyOpType(...) );</code>
-   *
+   *  Example: \code opDB.register_new_operator( new MyOpType(...) ); \endcode
    */
   template<typename OpT>
   int register_new_operator( OpT* const op );

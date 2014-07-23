@@ -33,6 +33,8 @@ namespace SpatialOps{
   class Grid;             // forward declaration
 
   /**
+   *  \ingroup optypes
+   *
    *  \fn void build_stencils( const unsigned int,
    *                           const unsigned int,
    *                           const unsigned int,
@@ -60,6 +62,8 @@ namespace SpatialOps{
                        OperatorDatabase& opdb );
 
   /**
+   * \ingroup optypes
+   *
    * \fn void build_stencils( const Grid&, OperatorDatabase& )
    *
    * \brief builds commonly used stencil operators

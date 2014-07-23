@@ -55,6 +55,8 @@ IN THE SOFTWARE.
    \endcode
 
 \sa \ref example-field-types
+\sa The \ref fieldtypes module, which documents the field types and type
+ inference tools in SpatialOps.
 
 # Example Code
 \c examples/field_type_inference.cpp

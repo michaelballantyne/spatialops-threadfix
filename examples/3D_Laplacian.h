@@ -85,10 +85,12 @@ the 3D laplacian on compatible field types.
 //
 template< typename FieldT >
 void
-calculate_laplacian_3D( const OperatorDatabase& opDB,
+calculate_laplacian_3D( const SpatialOps::OperatorDatabase& opDB,
                         const FieldT& src,
                         FieldT& dest )
 {
+  using namespace SpatialOps;
+
   //---------------------------------------------------------------------------
   // Infer operator types for the 3D laplacian
   // If this function is used with a field type that is not a volume field

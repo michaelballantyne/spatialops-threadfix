@@ -38,9 +38,12 @@ Illustrate how to obtain stencil operator types.
  -# There are a number of predefined operators/stencils in SpatialOps. They
     can be obtained via two simple ways:
     - The simplest way to obtain these is via the \link SpatialOps::BasicOpTypes
-      BasicOpTypes\endlink struct.
+      BasicOpTypes\endlink struct.  This requires the volume field type and
+      provides the types of all operators associated with that field.
     - Alternatively, one can use the \link SpatialOps::OperatorTypeBuilder
-      OperatorTypeBuilder \endlink struct.
+      OperatorTypeBuilder \endlink struct, which provides a bit more flexibility
+      but requires more type knowledge.
+
     These approaches are both illustrated in the example below.
 
  -# Each stencil defines the type of field that it consumes (the source field)
@@ -55,6 +58,8 @@ Illustrate how to obtain stencil operator types.
 
 \sa \ref example-3d-laplacian, which uses the concepts shown here to
     create a very generic 3D Laplacian function.
+
+\sa The \ref optypes module, which provides additional documentation on operator type inference.
 
 # Example Code
 \c examples/stencil_type_inference.cpp

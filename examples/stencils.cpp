@@ -70,7 +70,6 @@ Modify \c stencils.cpp to do the following:
     when using it in nebo statements.
 
 \sa \ref example-stencil-type-inference
-
 */
 
 #include <spatialops/structured/FVStaggered.h>
