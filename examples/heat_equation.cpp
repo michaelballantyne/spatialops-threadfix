@@ -22,7 +22,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 IN THE SOFTWARE.
 
 
-
 \file heat_equation.cpp
 
 \page example-heat-equation Example: Solving a Heat Equation
@@ -45,7 +44,7 @@ Illustrate how to use Nebo to implement a simple two-dimensional heat transfer s
 \sa \ref example-masks
 
 # Example Code
-
+\c examples/heat_equation.cpp
 \include heat_equation.cpp
 
 */

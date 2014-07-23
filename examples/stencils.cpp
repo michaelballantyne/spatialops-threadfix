@@ -34,7 +34,7 @@ Illustrate how to use stencil operators within SpatialOps/Nebo
 # Key Concepts
  -# There are a number of predefined operators/stencils in SpatialOps.  The
     simplest way to obtain these is via the \link SpatialOps::BasicOpTypes
-    BasicOpTypes\endlink struct. Much of this was covered in \ref Example5_stencil_type_inference.cpp
+    BasicOpTypes\endlink struct. Much of this was covered in \ref example-stencil-type-inference
  -# Stencils can be stored and retrieved in the \link SpatialOps::OperatorDatabase
     OperatorDatabase\endlink which provides simple storage and retrieval of
     operators by type.
@@ -42,7 +42,13 @@ Illustrate how to use stencil operators within SpatialOps/Nebo
     The `build_stencils` function can be used to easily populate an OperatorDatabase
     with the predefined operators in SpatialOps.
 
+
+# Example Code
+\c examples/stencils.cpp
+\include stencils.cpp
+
 # Try this
+Modify \c stencils.cpp to do the following:
  -# Use two interpolants to calculate `f` at faces and then interpolate back to cell centers:
     \code{.cpp}
     f2 <<= interpf2c( interpc2f( f ) );
@@ -56,7 +62,7 @@ Illustrate how to use stencil operators within SpatialOps/Nebo
     - Build the `f2` field (use `dfdx` and `fface` as examples).
 
  -# Instead of building `dfdx` and `fface` as shown in the example, use the `SpatialFieldStore`
-    as shown in \ref Example1_field_creation.cpp
+    as shown in \ref example-field-creation
     \code{.cpp}
     SpatFldPtr<SSurfXField> dfdxPtr = SpatFldPtr::get<SSurfXField>( x );
     \endcode
@@ -64,9 +70,6 @@ Illustrate how to use stencil operators within SpatialOps/Nebo
     when using it in nebo statements.
 
 \sa \ref example-stencil-type-inference
-
-# Example Code
-\include stencils.cpp
 
 */
 

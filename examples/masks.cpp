@@ -36,9 +36,11 @@ Illustrate how to use Nebo masks.
  -# A mask is used in a `cond` expression in Nebo, and can be used on CPU or GPU.
 
 # Example Code
+\c examples/masks.cpp
   \include masks.cpp
 
 # Try this:
+Modify \c masks.cpp to do the following:
  - Modify the number of ghost cells (try 1 or 2) and notice what happens to the output.
    Note that you can also specify different number of ghost cells per face via
    \code{.cpp} GhostData nghost( nxMinus, nxPlux, nyMinus, nyPlus, nzMinus, nzPlus ) \endcode

@@ -55,7 +55,7 @@ comprised of a few things:
     We will explore this more later.
 
   - A pointer to the raw block of memory for the field and its
-    \link SpatialOps::StorageMode StorageMode \endlink.
+    StorageMode (ExternalStorage or InternalStorage)
     This can either be supplied (for externally managed memory) or it will be
     created internally.  For internally created fields, the supplied memory
     block will be ignored and can be NULL.
@@ -78,6 +78,7 @@ comprised of a few things:
     semantics and are reference-counted.
 
 # Example Code
+\c examples/field_creation.cpp
 \include field_creation.cpp
 
 */

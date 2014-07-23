@@ -57,6 +57,7 @@ Illustrate how to obtain stencil operator types.
     create a very generic 3D Laplacian function.
 
 # Example Code
+\c examples/stencil_type_inference.cpp
 \include stencil_type_inference.cpp
 
 

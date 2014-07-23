@@ -127,11 +127,10 @@ namespace SpatialOps{
    *  \brief Define Face field types in terms of a cell field type.
    *
    *  Class template specializations exist for the following field types:
-   *   - Link to SpatialOps::SVolField
-   *   - \link SpatialOps::SVolField  SVolField \endlink
-   *   - \link SpatialOps::XVolField  XVolField \endlink
-   *   - \link SpatialOps::YVolField  YVolField \endlink
-   *   - \link SpatialOps::ZVolField  ZVolField \endlink
+   *   - SVolField
+   *   - XVolField
+   *   - YVolField
+   *   - ZVolField
    *
    *  Specializations of this struct define the following typedefs:
    *   - \c XFace - the type of the field on the x-face
@@ -183,18 +182,18 @@ namespace SpatialOps{
    *  \brief Define face field types in terms of a volume field type.
    *
    *  Class template specializations exist for the following field types:
-   *   - \link SpatialOps::SSurfXField SSurfXField \endlink
-   *   - \link SpatialOps::SSurfYField SSurfYField \endlink
-   *   - \link SpatialOps::SSurfZField SSurfZField \endlink
-   *   - \link SpatialOps::XSurfXField XSurfXField \endlink
-   *   - \link SpatialOps::XSurfYField XSurfYField \endlink
-   *   - \link SpatialOps::XSurfZField XSurfZField \endlink
-   *   - \link SpatialOps::YSurfXField YSurfXField \endlink
-   *   - \link SpatialOps::YSurfYField YSurfYField \endlink
-   *   - \link SpatialOps::YSurfZField YSurfZField \endlink
-   *   - \link SpatialOps::ZSurfXField ZSurfXField \endlink
-   *   - \link SpatialOps::ZSurfYField ZSurfYField \endlink
-   *   - \link SpatialOps::ZSurfZField ZSurfZField \endlink
+   *   - SSurfXField
+   *   - SSurfYField
+   *   - SSurfZField
+   *   - XSurfXField
+   *   - XSurfYField
+   *   - XSurfZField
+   *   - YSurfXField
+   *   - YSurfYField
+   *   - YSurfZField
+   *   - ZSurfXField
+   *   - ZSurfYField
+   *   - ZSurfZField
    *
    *  Example usage:
    *  \code{.cpp}

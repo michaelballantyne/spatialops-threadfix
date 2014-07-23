@@ -43,17 +43,20 @@ variety of field operations.
     \c if statements.  These are achieved via the \link NeboCond nebo cond \endlink
     construct.
 
- -# For fields with CPU-allocated memory, \link SpatialOps::print_field print_field \endlink will
-    write the field with some formatting to the given output stream. Note that print_field
+ -# For fields with CPU-allocated memory, \c print_field will write the field with
+    some formatting to the given output stream. Note that \c print_field
     prints the lowest index first and ends with the highest index.
 
-# Try This
- -# Create a function `sin(x)` and then clip its values to be within [-0.1,0.2].
 
 \sa \ref example-field-creation
 
 # Example Code
+\c examples/field_operations.cpp
 \include field_operations.cpp
+
+# Try This
+Modify \c field_operations.cpp to do the following:
+ -# Create a function `sin(x)` and then clip its values to be within [-0.1,0.2].
 
 */
 

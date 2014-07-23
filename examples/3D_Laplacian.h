@@ -57,6 +57,7 @@ the 3D laplacian on compatible field types.
 \sa \ref example-stencils
 
 # Example Code
+\c examples/3D_Laplacian.h
 \include 3D_Laplacian.h
 
 */

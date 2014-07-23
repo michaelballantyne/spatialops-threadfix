@@ -42,6 +42,7 @@ reduction operations (norm, max, min) on field
 \sa \ref example-field-operations
 
 # Example Code
+\c examples/field_reductions.cpp
 \include field_reductions.cpp
 */
 

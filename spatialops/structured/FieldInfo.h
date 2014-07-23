@@ -170,7 +170,7 @@ namespace SpatialOps{
      *
      * \param window      MemoryWindow for the entire field (including ghost cells)
      * \param bc          BoundaryConditionInfo for field
-     * \param ghost       GhostData for entire field (all possible ghosts)
+     * \param ghosts      GhostData for entire field (all possible ghosts)
      * \param fieldValues pointer to memory for ExternalStorage mode (default: NULL)
      * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
      * \param devIdx      device index of originally active device (default: CPU_INDEX)

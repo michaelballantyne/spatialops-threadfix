@@ -147,7 +147,7 @@ namespace SpatialOps{
      *
      * \param window      MemoryWindow for the entire field (including ghost cells)
      * \param bc          BoundaryConditionInfo for field
-     * \param ghost       GhostData for entire field (all possible ghosts)
+     * \param ghosts      GhostData for entire field (all possible ghosts)
      * \param fieldValues pointer to memory for ExternalStorage mode (default: NULL)
      * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
      * \param devIdx      device index of originally active device (default: CPU_INDEX)
@@ -307,7 +307,7 @@ namespace SpatialOps{
     short int active_device_index() const { return info_->active_device_index(); }
 
     /**
-     * \Brief add device memory to this field for given device
+     * \brief add device memory to this field for given device
      *  and populate it with values from current active device *SYNCHRONOUS VERSION*
      *
      * \param deviceIndex the index of the device to add
@@ -330,7 +330,7 @@ namespace SpatialOps{
     inline void add_device( short int deviceIndex ) { info_->add_device( deviceIndex ); }
 
     /**
-     * \Brief add device memory to this field for given device
+     * \brief add device memory to this field for given device
      *  and populate it with values from current active device *ASYNCHRONOUS VERSION*
      *
      * \param deviceIndex the index of the device to add

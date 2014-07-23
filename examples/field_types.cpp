@@ -40,6 +40,7 @@ This example will show all 16 Field types and illustrate how they are different.
 \sa \ref example-field-type-inference
 
 # Example Code
+\c examples/field_types.cpp
 \include field_types.cpp
 */
 

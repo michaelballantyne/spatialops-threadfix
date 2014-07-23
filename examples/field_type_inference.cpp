@@ -57,6 +57,7 @@ IN THE SOFTWARE.
 \sa \ref example-field-types
 
 # Example Code
+\c examples/field_type_inference.cpp
 \include field_type_inference.cpp
 
 */
