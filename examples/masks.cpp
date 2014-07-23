@@ -100,8 +100,9 @@ int main()
   // Indexing for masks has the origin at the first interior point.
   // (Ghost points are negative indices.)
   vector<IntVec> maskSet;
-  for( int i=0; i<7; ++i )
+  for( int i=0; i<fieldDim[1]; ++i ){
     maskSet.push_back( IntVec(0, i, 0) );
+  }
 
   // Creating a mask requires a prototype field and a vector of indices.
   SpatialMask<SVolField> mask( f, maskSet );
