@@ -37,8 +37,8 @@ install( TARGETS stencils RUNTIME DESTINATION bin/spatialops )
 
 nebo_add_executable( masks masks.cpp )
 target_link_libraries( masks spatialops )
-#add_test( masks masks )
-#install( TARGETS masks RUNTIME DESTINATION bin/spatialops )
+add_test( masks masks )
+install( TARGETS masks RUNTIME DESTINATION bin/spatialops )
 
 nebo_add_executable( heat_equation heat_equation.cpp )
 target_link_libraries( heat_equation spatialops )
