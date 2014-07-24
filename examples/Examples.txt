@@ -1,6 +1,6 @@
 /**
 
-\page exs Examples
+\page examples Examples
 
 Field Creation & Manipulation
 --------------
