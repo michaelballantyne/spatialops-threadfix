@@ -35,7 +35,7 @@ variety of field operations.
 # Key Concepts
 
  -# Most mathematical operations/functions are supported in Nebo's
-    \link NeboOperators field operations \endlink.  They are lifted over fields.
+    \link NeboOperations field operations \endlink.  They are lifted over fields.
     This includes standard mathematical
     operations such as \c sin \c cos \c exp, etc.
 
@@ -49,6 +49,7 @@ variety of field operations.
 
 
 \sa \ref example-field-creation
+\sa \ref NeboOperations
 
 # Example Code
 \c examples/field_operations.cpp

@@ -44,6 +44,9 @@ Modify \c masks.cpp to do the following:
  - Modify the number of ghost cells (try 1 or 2) and notice what happens to the output.
    Note that you can also specify different number of ghost cells per face via
    \code{.cpp} GhostData nghost( nxMinus, nxPlux, nyMinus, nyPlus, nzMinus, nzPlus ) \endcode
+   or the same number of ghosts on each face via
+   \code{.cpp} GhostData nghost( n ); \endcode
+   as in the example.
  - Modify the mask points
  - Modify the `cond` statement to obtain different values on the masked points.
    For example, try this:

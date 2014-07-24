@@ -56,7 +56,8 @@ IN THE SOFTWARE.
 
 \sa \ref example-field-types
 \sa The \ref fieldtypes module, which documents the field types and type
- inference tools in SpatialOps.
+    inference tools in SpatialOps.
+\sa \ref fields-meshes and \ref field-type-inference
 
 # Example Code
 \c examples/field_type_inference.cpp

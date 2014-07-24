@@ -1,5 +1,5 @@
 /**
-\page NeboOperators Supported Nebo Field Operators
+\page NeboOperations Supported Nebo Field Operations
 
 \tableofcontents 
 
@@ -14,9 +14,9 @@ To access any of these operators, please use:
 \endcode
 
 All of the operations defined below function with the following argument types:
- - scalar: examples include `1.3`, `2` etc.
- - \link SpatialOps::SpatialField SpatialField \endlink
- - any valid Nebo expression
+ - A scalar: examples include `1.3`, `2` etc.
+ - A \link SpatialOps::SpatialField SpatialField \endlink
+ - Any valid Nebo expression
  
  _______________________ 
 
