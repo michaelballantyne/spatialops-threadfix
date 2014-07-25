@@ -35,7 +35,7 @@ Using the laplacian operator,
 \frac{\partial^2}{\partial y} +
 \frac{\partial^2}{\partial z}
 \f$,
-as an case-study, this example shows how to create a function template to compute
+as a case-study, this example shows how to create a function template to compute
 the 3D laplacian on compatible field types.
 
 # Goals

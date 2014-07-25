@@ -54,9 +54,10 @@ Modify \c stencils.cpp to do the following:
     f2 <<= interpf2c( interpc2f( f ) );
     \endcode
     To do this:
-    - Obtain the interpolant types.  Note that `interpc2f` is already there, and you can use
+    - Obtain the interpolant types.  Note that `interpc2f` is already there, and
+      you can use \link SpatialOps::BasicOpTypes BasicOpTypes \endlink
       \code{.cpp}
-      BasicOpTypes<SVolField>::InterpF2C
+      BasicOpTypes<SVolField>::InterpF2CX
       \endcode
       to get the operator type for face to cell interpolation.
     - Build the `f2` field (use `dfdx` and `fface` as examples).
@@ -64,7 +65,7 @@ Modify \c stencils.cpp to do the following:
  -# Instead of building `dfdx` and `fface` as shown in the example, use the `SpatialFieldStore`
     as shown in \ref example-field-creation
     \code{.cpp}
-    SpatFldPtr<SSurfXField> dfdxPtr = SpatFldPtr::get<SSurfXField>( x );
+    SpatFldPtr<SSurfXField> dfdxPtr = SpatialFieldStore::get<SSurfXField>( x );
     \endcode
     Note that you will have a pointer now, so will need to de-reference it as appropriate
     when using it in nebo statements.

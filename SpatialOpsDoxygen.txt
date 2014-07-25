@@ -62,8 +62,11 @@
  
  \section prereqs Prerequisites
   - [git](http://git-scm.com/)
-  - [CMake](cmake.org), which SpatialOps uses for its build system
-  - The [Boost libraries](boost.org)
+  - [CMake](cmake.org) version 2.8.4 or newer.
+  - The [Boost libraries](boost.org) version 1.49 or newer.
+  - A relatively recent C++ compiler (g++ 4.4 or newer should be adequate).  
+    Clang (Mac OSX) also works fine.  If you run into trouble with recent compilers,
+    I would love to hear about it (contact [Prof. Sutherland](http://www.che.utah.edu/~sutherland)).
   - For the GPU backends, a functioning CUDA nvcc installation with an nVidia GPU card
  
  \section download Downloading the source code
