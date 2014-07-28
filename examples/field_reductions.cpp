@@ -44,6 +44,11 @@ reduction operations (norm, max, min) on field
 # Example Code
 \c examples/field_reductions.cpp
 \include field_reductions.cpp
+
+# Try This
+Modify \c field_operations.cpp to do the following:
+ -# Create a function `sin(x)` and then clip its values to be within [-0.1,0.2].
+
 */
 
 

@@ -55,10 +55,6 @@ variety of field operations.
 \c examples/field_operations.cpp
 \include field_operations.cpp
 
-# Try This
-Modify \c field_operations.cpp to do the following:
- -# Create a function `sin(x)` and then clip its values to be within [-0.1,0.2].
-
 */
 
 #include <spatialops/structured/FVStaggered.h>
