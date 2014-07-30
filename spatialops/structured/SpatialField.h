@@ -160,8 +160,8 @@ namespace SpatialOps{
                          const short int devIdx = CPU_INDEX )
     : matchGlobalWindow_( true ),
       localWindow_( window ),
-      bcInfo_( bc ),
-      localValidGhosts_( ghosts ),
+      bcInfo_( bc.limit_by_extent(window.extent()) ),
+      localValidGhosts_( ghosts.limit_by_extent(window.extent()) ),
       info_( new FieldInfo<T>( window, bc, ghosts, fieldValues, mode, devIdx ) )
     {
       SingleValueCheck<Location>::check( localWindow_, ghosts );
@@ -257,7 +257,8 @@ namespace SpatialOps{
      *
      * \param ghosts ghost cells to be made valid
      */
-    inline void reset_valid_ghosts( const GhostData& ghosts ){
+    inline void reset_valid_ghosts( const GhostData& input ){
+      GhostData const & ghosts = input.limit_by_extent(localWindow_.extent());
       localWindow_ = localWindow_.reset_ghosts( localValidGhosts_, ghosts );
       localValidGhosts_ = ghosts;
       if( matchGlobalWindow_ ) info_->reset_valid_ghosts(ghosts);
