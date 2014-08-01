@@ -160,12 +160,12 @@ private:
   bool builtFromStore_;
   short int deviceIndex_;
 
-#ifdef ENABLE_THREADS
+# ifdef ENABLE_THREADS
   /**
    *  Used to lock threads to prevent simultaneous access.
    */
   inline static boost::mutex& get_mutex() {static boost::mutex m; return m;}
-#endif
+# endif
 };
 
 /**
@@ -327,6 +327,7 @@ SpatFldPtr<FieldT>::SpatFldPtr()
     builtFromStore_( false ),
     deviceIndex_( CPU_INDEX )
 {}
+
 //------------------------------------------------------------------
 
 template<typename FieldT>
@@ -345,10 +346,8 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
       if (builtFromStore_) {
 	SpatialFieldStore::restore_field(deviceIndex_, *f_);
       }
-
       delete f_;     f_ = NULL;
       delete count_; count_ = NULL;
-
     }
   }
   // reassign
@@ -361,7 +360,9 @@ SpatFldPtr<FieldT>::operator=(const SpatFldPtr& p)
 
   return *this;
 }
+
 //------------------------------------------------------------------
+
 template<typename FieldT>
 SpatFldPtr<FieldT>&
 SpatFldPtr<FieldT>::operator=(FieldT* const f) {
@@ -377,10 +378,8 @@ SpatFldPtr<FieldT>::operator=(FieldT* const f) {
       if (builtFromStore_) {
 	SpatialFieldStore::restore_field(deviceIndex_, *f_);
       }
-
       delete f_;     f_ = NULL;
       delete count_; count_ = NULL;
-
     }
   }
   // reassign
@@ -449,40 +448,40 @@ get_from_window( const MemoryWindow& window,
 # ifdef ENABLE_THREADS
   boost::mutex::scoped_lock lock( get_mutex() );
 # endif
-    const MemoryWindow mw( window.extent(),
-                                       IntVec(0,0,0),
-                                       window.extent() );
-    const size_t npts = mw.glob_npts();
+  const MemoryWindow mw( window.extent(),
+                         IntVec(0,0,0),
+                         window.extent() );
+  const size_t npts = mw.glob_npts();
 
-#   ifndef NDEBUG
-    assert( window.sanity_check() );
-    assert(     mw.sanity_check() );
-#   endif
-
-    // Allocate from a store
-    if( deviceIndex == CPU_INDEX ) {
-      ValT* fnew = Pool<ValT>::get(deviceIndex,npts);
-      return SpatFldPtr<FieldT>( new FieldT( mw,bc,ghost,fnew,
-                                             ExternalStorage),
-                                 true );
-    }
-# ifdef ENABLE_CUDA
-    else if( IS_GPU_INDEX(deviceIndex) ){
-      ValT* fnew = Pool<ValT>::get(deviceIndex, npts);
-      return SpatFldPtr<FieldT>( new FieldT( mw, bc, ghost, fnew,
-                                             ExternalStorage,
-                                             deviceIndex ),
-                                 true );
-    }
+# ifndef NDEBUG
+  assert( window.sanity_check() );
+  assert(     mw.sanity_check() );
 # endif
-    else {
-      std::ostringstream msg;
-      msg << "Attempt to create Spatial Field Pointer wrapping ( "
-          << DeviceTypeTools::get_memory_type_description(deviceIndex)
-          << " ) field type, without supporting libraries included\n";
-      msg << "\t " << __FILE__ << " : " << __LINE__;
-      throw(std::runtime_error(msg.str()));
-    }
+
+  // Allocate from a store
+  if( deviceIndex == CPU_INDEX ) {
+    ValT* fnew = Pool<ValT>::get(deviceIndex,npts);
+    return SpatFldPtr<FieldT>( new FieldT( mw,bc,ghost,fnew,
+                                           ExternalStorage),
+                               true );
+  }
+# ifdef ENABLE_CUDA
+  else if( IS_GPU_INDEX(deviceIndex) ){
+    ValT* fnew = Pool<ValT>::get(deviceIndex, npts);
+    return SpatFldPtr<FieldT>( new FieldT( mw, bc, ghost, fnew,
+                                           ExternalStorage,
+                                           deviceIndex ),
+                               true );
+  }
+# endif
+  else {
+    std::ostringstream msg;
+    msg << "Attempt to create Spatial Field Pointer wrapping ( "
+        << DeviceTypeTools::get_memory_type_description(deviceIndex)
+    << " ) field type, without supporting libraries included\n";
+    msg << "\t " << __FILE__ << " : " << __LINE__;
+    throw(std::runtime_error(msg.str()));
+  }
 }
 
 //------------------------------------------------------------------
