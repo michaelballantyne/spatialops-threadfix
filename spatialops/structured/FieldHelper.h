@@ -277,6 +277,7 @@ inline void internal_print_field( typename Field::const_iterator fi,
 template<typename Field>
 inline void print_field( const Field& f, std::ostream& os, const bool addFormat = false )
 {
+  if( IS_GPU_INDEX(const_cast<Field&>(f).active_device_index()) ) const_cast<Field&>(f).add_device(CPU_INDEX);
   internal_print_field<Field>(f.begin(), f.window_with_ghost(), os, addFormat );
 };
 
