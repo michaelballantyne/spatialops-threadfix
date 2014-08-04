@@ -2,7 +2,6 @@
 
 //--- SpatialOps includes ---//
 #include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/Nebo.h>
 
@@ -13,15 +12,14 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-namespace SS = SpatialOps::structured;
 
 int main( int iarg, char* carg[] )
 {
-  typedef SpatialOps::structured::SVolField Field;
+  typedef SpatialOps::SVolField Field;
 
   std::vector<int> npts(3,1);
   int number_of_runs;
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
   int thread_count;
 #endif
 
@@ -33,7 +31,7 @@ int main( int iarg, char* carg[] )
       ( "nx", po::value<int>(&npts[0])->default_value(10), "Grid in x" )
       ( "ny", po::value<int>(&npts[1])->default_value(10), "Grid in y" )
       ( "nz", po::value<int>(&npts[2])->default_value(10), "Grid in z" )
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
       ( "tc", po::value<int>(&thread_count)->default_value(NTHREADS), "Number of threads for Nebo")
 #endif
       ( "runs", po::value<int>(&number_of_runs)->default_value(1), "Number of iterations of each test");
@@ -47,14 +45,14 @@ int main( int iarg, char* carg[] )
       return 1;
     }
 
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
     set_hard_thread_count(thread_count);
 #endif
   }
 
-  const SS::GhostData ghost(1);
-  const SS::BoundaryCellInfo bc = SS::BoundaryCellInfo::build<Field>(true,true,true);
-  const SS::MemoryWindow window( SpatialOps::structured::get_window_with_ghost(npts,ghost,bc) );
+  const GhostData ghost(1);
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<Field>(true,true,true);
+  const MemoryWindow window( SpatialOps::get_window_with_ghost(npts,ghost,bc) );
 
   // build fields
   Field f01  ( window, bc, ghost, NULL );

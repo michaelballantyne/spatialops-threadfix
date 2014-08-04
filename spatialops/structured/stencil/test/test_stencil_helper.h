@@ -199,12 +199,11 @@ bool check_convergence( const std::vector<double>& spacings,
 //===================================================================
 
 template< typename OpT, typename DirT >
-double apply_stencil( const SpatialOps::structured::IntVec& npts,
+double apply_stencil( const SpatialOps::IntVec& npts,
                       const double length,
                       const bool bcPlus[3] )
 {
   using namespace SpatialOps;
-  using namespace structured;
   typedef typename OpT::type           OpType;
   typedef typename OpT::SrcFieldType   SrcT;
   typedef typename OpT::DestFieldType  DestT;
@@ -220,7 +219,7 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
   SrcT   src(smw,sbc,sg,NULL), xs(smw,sbc,sg,NULL), ys(smw,sbc,sg,NULL), zs(smw,sbc,sg,NULL);
   DestT dest(dmw,dbc,dg,NULL), xd(dmw,dbc,dg,NULL), yd(dmw,dbc,dg,NULL), zd(dmw,dbc,dg,NULL), destExact(dmw,dbc,dg,NULL);
 
-  const Grid grid( npts, std::vector<double>(3,length) );
+  const Grid grid( npts, DoubleVec(length,length,length) );
 
   grid.set_coord<XDIR>( xs );  grid.set_coord<YDIR>( ys );  grid.set_coord<ZDIR>( zs );
   grid.set_coord<XDIR>( xd );  grid.set_coord<YDIR>( yd );  grid.set_coord<ZDIR>( zd );
@@ -240,10 +239,10 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
   #endif
 
   #ifdef ENABLE_CUDA
-    src.add_field_loc( GPU_INDEX );
-    src.set_field_loc_active( GPU_INDEX );
+    src.add_device( GPU_INDEX );
+    src.set_device_as_active( GPU_INDEX );
     op->apply_to_field( src, gpuDest );
-    gpuDest.add_field_loc( CPU_INDEX );
+    gpuDest.add_device( CPU_INDEX );
     return interior_norm( gpuDest, destExact );
   #else
     op->apply_to_field( src, dest );
@@ -255,13 +254,13 @@ double apply_stencil( const SpatialOps::structured::IntVec& npts,
 
 template< typename OpT, typename SrcT, typename DestT, typename DirT >
 bool
-run_convergence( SpatialOps::structured::IntVec npts,
+run_convergence( SpatialOps::IntVec npts,
                  const bool bcPlus[3],
                  const double length,
                  const double expectedOrder )
 {
   using namespace SpatialOps;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
 
   const size_t nrefine = 5;
 
@@ -283,13 +282,13 @@ run_convergence( SpatialOps::structured::IntVec npts,
 
 template< typename OpT, typename SrcT, typename DestT, typename Dir1T, typename Dir2T >
 bool
-run_convergence( SpatialOps::structured::IntVec npts,
+run_convergence( SpatialOps::IntVec npts,
                  const bool bcPlus[3],
                  const double length,
                  const double expectedOrder )
 {
   using namespace SpatialOps;
-  typedef typename SpatialOps::structured::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
+  typedef typename SpatialOps::OperatorTypeBuilder<OpT,SrcT,DestT>::type  Op;
 
   const size_t nrefine = 5;
 

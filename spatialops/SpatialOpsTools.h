@@ -25,7 +25,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#ifdef FIELD_EXPRESSION_THREADS
+#ifdef ENABLE_THREADS
 # include <spatialops/ThreadPool.h>
 #endif
 
@@ -40,13 +40,22 @@ namespace SpatialOps{
    * \brief Compares two types for equality
    *
    * Examples:
-   * \code assert( IsSameType<int,double>::result == 0 ); \endcode
-   * \code assert( IsSameType<int,int>::result == 1 ); \endcode
+   * \code{.cpp} assert( IsSameType<int,double>::result == 0 ); \endcode
+   * \code{.cpp} assert( IsSameType<int,int>::result == 1 ); \endcode
    */
   template< typename T1, typename T2> struct IsSameType       { enum{ result=0 }; };
   template< typename T1             > struct IsSameType<T1,T1>{ enum{ result=1 }; };
 
-#ifdef FIELD_EXPRESSION_THREADS
+  /**
+   * \fn template<typename T1,typename T2> bool is_same_type();
+   * \brief convenience function to obtain at runtime whether two types are equivalent or not
+   */
+  template< typename T1, typename T2 >
+  inline bool is_same_type(){
+    return bool( IsSameType<T1,T2>::result );
+  }
+
+#ifdef ENABLE_THREADS
 
   /* used within nebo to determine if thread parallelism should be used */
   inline bool is_thread_parallel(){
@@ -71,7 +80,7 @@ namespace SpatialOps{
     return ThreadPoolFIFO::set_pool_capacity( threadCount );
   }
 
-#endif // FIELD_EXPRESSION_THREADS
+#endif // ENABLE_THREADS
 
 }
 

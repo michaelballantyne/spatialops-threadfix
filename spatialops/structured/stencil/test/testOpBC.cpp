@@ -12,7 +12,6 @@ using std::endl;
 
 #include <spatialops/Nebo.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/structured/stencil/FVStaggeredBCOp.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
@@ -23,7 +22,6 @@ using std::endl;
 #include <test/TestHelper.h>
 
 using namespace SpatialOps;
-using namespace structured;
 
 //--------------------------------------------------------------------
 
@@ -36,7 +34,6 @@ bool test_bc_helper( const OperatorDatabase& opDB,
                      const double bcVal )
 {
   using namespace SpatialOps;
-  using namespace structured;
 
   typedef typename OpT::SrcFieldType  SrcFieldT;
   typedef typename OpT::DestFieldType DestFieldT;
@@ -141,7 +138,6 @@ bool test_bc( const OperatorDatabase& opDB,
               const std::vector<bool>& bcFlag )
 {
   using namespace SpatialOps;
-  using namespace structured;
 
   typedef BasicOpTypes<VolT> Ops;
 
@@ -222,7 +218,7 @@ bool test_bc( const OperatorDatabase& opDB,
 
 bool test_driver( const IntVec& dim )
 {
-  std::vector<double> length(3,1);
+  const DoubleVec length(1,1,1);
   std::vector<bool> bcFlag(3,true);
 
   OperatorDatabase opDB;

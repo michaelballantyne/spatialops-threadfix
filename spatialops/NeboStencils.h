@@ -53,7 +53,7 @@
                 msg << "given negative value for coefficient index";
                 msg << "\n";
                 msg << "\t - " << __FILE__ << " : " << __LINE__;
-                throw(std::runtime_error(msg.str()));;
+                throw(std::runtime_error(msg.str()));
              };
 
              if(index >= Length) {
@@ -63,7 +63,7 @@
                 msg << "trying to access a coefficient that does not exist";
                 msg << "\n";
                 msg << "\t - " << __FILE__ << " : " << __LINE__;
-                throw(std::runtime_error(msg.str()));;
+                throw(std::runtime_error(msg.str()));
              };
 
              return (index == Length - 1 ? coef() : others().get_coef(index));
@@ -116,7 +116,7 @@
                 msg << "given negative value for coefficient index";
                 msg << "\n";
                 msg << "\t - " << __FILE__ << " : " << __LINE__;
-                throw(std::runtime_error(msg.str()));;
+                throw(std::runtime_error(msg.str()));
              };
 
              if(index > 1) {
@@ -126,7 +126,7 @@
                 msg << "trying to access a coefficient that does not exist";
                 msg << "\n";
                 msg << "\t - " << __FILE__ << " : " << __LINE__;
-                throw(std::runtime_error(msg.str()));;
+                throw(std::runtime_error(msg.str()));
              };
 
              return coef();
@@ -219,26 +219,22 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          static inline structured::GhostData possible_ghosts(void) {
+          static inline GhostData possible_ghosts(void) {
              return min(additive_reductive_point_to_ghost(Point::int_vec()),
                         Collection::possible_ghosts());
           }
 
-          static inline structured::GhostData possible_ghosts(structured::
-                                                              GhostData const &
-                                                              ghosts) {
+          static inline GhostData possible_ghosts(GhostData const & ghosts) {
              return ghosts + possible_ghosts();
           }
 
-          static inline structured::GhostData possible_additive_ghosts(void) {
+          static inline GhostData possible_additive_ghosts(void) {
              return min(addative_point_to_ghost(Point::int_vec()),
                         Collection::possible_ghosts());
           }
 
-          static inline structured::GhostData possible_additive_ghosts(structured::
-                                                                       GhostData
-                                                                       const &
-                                                                       ghosts) {
+          static inline GhostData possible_additive_ghosts(GhostData const &
+                                                           ghosts) {
              return ghosts + possible_additive_ghosts();
           }
       };
@@ -263,24 +259,20 @@
              NeboStencilPointCollection<NewPoint, MyType> typedef Result;
           };
 
-          static inline structured::GhostData possible_ghosts(void) {
+          static inline GhostData possible_ghosts(void) {
              return additive_reductive_point_to_ghost(Point::int_vec());
           }
 
-          static inline structured::GhostData possible_ghosts(structured::
-                                                              GhostData const &
-                                                              ghosts) {
+          static inline GhostData possible_ghosts(GhostData const & ghosts) {
              return ghosts + possible_ghosts();
           }
 
-          static inline structured::GhostData possible_additive_ghosts(void) {
+          static inline GhostData possible_additive_ghosts(void) {
              return additive_point_to_ghost(Point::int_vec());
           }
 
-          static inline structured::GhostData possible_additive_ghosts(structured::
-                                                                       GhostData
-                                                                       const &
-                                                                       ghosts) {
+          static inline GhostData possible_additive_ghosts(GhostData const &
+                                                           ghosts) {
              return ghosts + possible_additive_ghosts();
           }
       };
@@ -300,11 +292,11 @@
           NeboStencil<SeqWalk, Pts, typename Arg::SeqWalkType, FieldType>
           typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboStencil<Resize, Pts, typename Arg::ResizeType, FieldType>
              typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboStencil<GPUWalk, Pts, typename Arg::GPUWalkType, FieldType>
@@ -316,28 +308,32 @@
           : arg_(a), coefs_(coefs)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return Pts::possible_ghosts(arg_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return Pts::possible_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(possible_ghosts(), arg_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return Pts::possible_ghosts(arg_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const { return arg_.has_extent(); }
+          inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline int extent(int const dir) const { return arg_.extent(dir); }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(arg_.init(), coefs_);
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(arg_.init(extents, ghosts, hasBC), coefs_);
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize(), coefs_);
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -346,8 +342,15 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(arg_.gpu_init(deviceIndex), coefs_);
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(arg_.gpu_init(extents,
+                                                 ghosts,
+                                                 hasBC,
+                                                 deviceIndex),
+                                   coefs_);
              }
 
              #ifdef NEBO_GPU_TEST
@@ -364,7 +367,7 @@
 
           Coefs const coefs_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Pts, typename Arg, typename FieldType>
           struct NeboStencil<Resize, Pts, Arg, FieldType> {
             public:
@@ -379,8 +382,10 @@
              : arg_(arg), coefs_(coefs)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(arg_.init(), coefs_);
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(arg_.init(extents, ghosts, hasBC), coefs_);
              }
 
             private:
@@ -389,7 +394,7 @@
              Coefs const coefs_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboStencil<SeqWalk, Pts, Arg, FieldType> {
          public:
@@ -533,13 +538,13 @@
           NeboEdgelessStencil<SeqWalk, Pts, typename Arg::SeqWalkType, FieldType>
           typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboEdgelessStencil<Resize,
                                  Pts,
                                  typename Arg::ResizeType,
                                  FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboEdgelessStencil<GPUWalk,
@@ -553,26 +558,30 @@
           : arg_(a), coefs_(coefs)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return Pts::possible_additive_ghosts(arg_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return Pts::possible_additive_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return arg_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return Pts::possible_additive_ghosts(arg_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const { return arg_.has_extent(); }
+          inline bool has_extents(void) const { return arg_.has_extent(); }
 
-          inline int extent(int const dir) const { return arg_.extent(dir); }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(arg_.init(),
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(arg_.init(extents, ghosts, hasBC),
                                 coefs_,
                                 lowest_indicies(),
                                 highest_indicies());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize(),
                                   coefs_,
@@ -580,7 +589,7 @@
                                   highest_indicies());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -589,8 +598,15 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(arg_.gpu_init(deviceIndex), coefs_);
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(arg_.gpu_init(extents,
+                                                 ghosts,
+                                                 hasBC,
+                                                 deviceIndex),
+                                   coefs_);
              }
 
              #ifdef NEBO_GPU_TEST
@@ -602,18 +618,16 @@
           #endif
           /* __CUDACC__ */
 
-          inline structured::GhostData actual_ghosts(void) const {
-             return Pts::possible_ghosts(arg_.possible_ghosts());
+          inline GhostData actual_ghosts(void) const {
+             return Pts::possible_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::IntVec lowest_indicies(void) const {
+          inline IntVec lowest_indicies(void) const {
              return -(actual_ghosts().get_minus());
           }
 
-          inline structured::IntVec highest_indicies(void) const {
-             return actual_ghosts().get_plus() + structured::IntVec(extent(0),
-                                                                    extent(1),
-                                                                    extent(2));
+          inline IntVec highest_indicies(void) const {
+             return actual_ghosts().get_plus() + extents();
           }
 
          private:
@@ -621,7 +635,7 @@
 
           Coefs const coefs_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Pts, typename Arg, typename FieldType>
           struct NeboEdgelessStencil<Resize, Pts, Arg, FieldType> {
             public:
@@ -636,13 +650,18 @@
 
              NeboEdgelessStencil(Arg const & arg,
                                  Coefs const & coefs,
-                                 structured::IntVec const & low,
-                                 structured::IntVec const & high)
+                                 IntVec const & low,
+                                 IntVec const & high)
              : arg_(arg), coefs_(coefs), low_(low), high_(high)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(arg_.init(), coefs_, low_, high_);
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(arg_.init(extents, ghosts, hasBC),
+                                   coefs_,
+                                   low_,
+                                   high_);
              }
 
             private:
@@ -650,12 +669,12 @@
 
              Coefs const coefs_;
 
-             structured::IntVec const low_;
+             IntVec const low_;
 
-             structured::IntVec const high_;
+             IntVec const high_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboEdgelessStencil<SeqWalk, Pts, Arg, FieldType> {
          public:
@@ -702,14 +721,14 @@
 
           NeboEdgelessStencil(Arg const & arg,
                               Coefs const & coefs,
-                              structured::IntVec const & low,
-                              structured::IntVec const & high)
+                              IntVec const & low,
+                              IntVec const & high)
           : arg_(arg), coefs_(coefs), low_(low), high_(high)
           {}
 
           inline value_type eval(int const x, int const y, int const z) const {
              #ifndef NDEBUG
-                structured::IntVec index = structured::IntVec(x, y, z);
+                IntVec index = IntVec(x, y, z);
                 if(index < low_ || index >= high_) {
                    std::ostringstream msg;
                    msg << "Nebo error in " << "Nebo Edgeless Stencil" << ":\n";
@@ -729,9 +748,9 @@
 
           Coefs const coefs_;
 
-          structured::IntVec const low_;
+          IntVec const low_;
 
-          structured::IntVec const high_;
+          IntVec const high_;
       };
       #ifdef __CUDACC__
          template<typename Pts, typename Arg, typename FieldType>
@@ -817,11 +836,11 @@
           NeboSumStencil<SeqWalk, Pts, typename Arg::SeqWalkType, FieldType>
           typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboSumStencil<Resize, Pts, typename Arg::ResizeType, FieldType>
              typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboSumStencil<GPUWalk, Pts, typename Arg::GPUWalkType, FieldType>
@@ -833,28 +852,32 @@
           : arg_(a)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return Pts::possible_ghosts(arg_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return Pts::possible_ghosts(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(possible_ghosts(), arg_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return Pts::possible_ghosts(arg_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const { return arg_.has_extent(); }
+          inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline int extent(int const dir) const { return arg_.extent(dir); }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(arg_.init());
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(arg_.init(extents, ghosts, hasBC));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -863,8 +886,14 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(arg_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(arg_.gpu_init(extents,
+                                                 ghosts,
+                                                 hasBC,
+                                                 deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -879,7 +908,7 @@
          private:
           Arg const arg_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Pts, typename Arg, typename FieldType>
           struct NeboSumStencil<Resize, Pts, Arg, FieldType> {
             public:
@@ -892,15 +921,17 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(arg_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(arg_.init(extents, ghosts, hasBC));
              }
 
             private:
              Arg const arg_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Pts, typename Arg, typename FieldType>
        struct NeboSumStencil<SeqWalk, Pts, Arg, FieldType> {
          public:
@@ -1015,9 +1046,7 @@
       /* __CUDACC__ */;
 
       template<typename Point>
-       static inline structured::GhostData point_possible_ghosts(structured::
-                                                                 GhostData const
-                                                                 & ghosts) {
+       static inline GhostData point_possible_ghosts(GhostData const & ghosts) {
           return ghosts + additive_reductive_point_to_ghost(Point::int_vec());
        };
 
@@ -1041,11 +1070,11 @@
           NeboMaskShift<SeqWalk, Point, ArgSeqWalkType, FieldType> typedef
           SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboMaskShift<Resize, Point, typename Arg::ResizeType, FieldType>
              typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboMaskShift<GPUWalk, Point, ArgGPUWalkType, FieldType> typedef
@@ -1057,28 +1086,32 @@
           : arg_(a)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return point_possible_ghosts<Point>(arg_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return point_possible_ghosts<Point>(arg_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(possible_ghosts(), arg_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return point_possible_ghosts<Point>(arg_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const { return arg_.has_extent(); }
+          inline bool has_extents(void) const { return arg_.has_extents(); }
 
-          inline int extent(int const dir) const { return arg_.extent(dir); }
+          inline IntVec extents(void) const { return arg_.extents(); }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(arg_.init());
+          inline IntVec has_bc(void) const { return arg_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(arg_.init(extents, ghosts, hasBC));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(arg_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return arg_.cpu_ready(); }
@@ -1087,8 +1120,14 @@
                 return arg_.gpu_ready(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(arg_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(arg_.gpu_init(extents,
+                                                 ghosts,
+                                                 hasBC,
+                                                 deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -1103,7 +1142,7 @@
          private:
           Arg const arg_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Point, typename Arg, typename FieldType>
           struct NeboMaskShift<Resize, Point, Arg, FieldType> {
             public:
@@ -1118,15 +1157,17 @@
              : arg_(arg)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(arg_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(arg_.init(extents, ghosts, hasBC));
              }
 
             private:
              Arg const arg_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Point, typename Arg, typename FieldType>
        struct NeboMaskShift<SeqWalk, Point, Arg, FieldType> {
          public:

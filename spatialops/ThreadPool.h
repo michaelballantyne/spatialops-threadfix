@@ -31,26 +31,6 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 
-#ifdef  FIELD_EXPRESSION_THREADS
-#define USE_THREADS_FLAG
-#endif
-
-#ifdef  TILL_THREADS
-#define USE_THREADS_FLAG
-#endif
-
-#ifdef  STENCIL_THREADS
-#define USE_THREADS_FLAG
-#endif
-
-#ifndef USE_THREADS_FLAG
-#  error Must define FIELD_EXPRESSION_THREADS, TILL_THREADS, or STENCIL_THREADS flag.
-#endif
-
-#ifndef NTHREADS
-#  error Must define NTHREADS flag.
-#endif
-
 namespace SpatialOps{
 
   /**

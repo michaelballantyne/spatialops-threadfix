@@ -1,5 +1,4 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialFieldStore.h>
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
@@ -17,7 +16,6 @@
 #include <fstream>
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 
@@ -36,7 +34,8 @@ bool test_iterator( const IntVec npts,
   TestHelper status(verboseOutput);
 
   const GhostData ghost(1);
-  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>(true,true,true);
+  // Boundary present if a dir is active
+  const BoundaryCellInfo bc = BoundaryCellInfo::build<FieldT>( npts[0]>1, npts[1]>1, npts[2]>1 );
   const MemoryWindow window( get_window_with_ghost(npts,ghost,bc) );
   FieldT f1( window, bc, ghost, NULL );
   FieldT f2( window, bc, ghost, NULL );
@@ -164,12 +163,12 @@ bool test_interior( const IntVec npts,
 
   TestHelper status(verbose);
 
-  typename FieldT::interior_iterator if2=f2.interior_begin();
-  const typename FieldT::interior_iterator if2e=f2.interior_end();
-  typename FieldT::const_interior_iterator if1=f1.interior_begin();
-  const typename FieldT::interior_iterator if1e=f1.interior_end();
-  typename FieldT::const_interior_iterator if3=f3.interior_begin();
-  const typename FieldT::const_interior_iterator if3e=f3.interior_end();
+  typename FieldT::iterator if2=f2.interior_begin();
+  const typename FieldT::iterator if2e=f2.interior_end();
+  typename FieldT::const_iterator if1=f1.interior_begin();
+  const typename FieldT::iterator if1e=f1.interior_end();
+  typename FieldT::const_iterator if3=f3.interior_begin();
+  const typename FieldT::const_iterator if3e=f3.interior_end();
   for( int k=lo[2]; k<hi[2]; ++k ){
     for( int j=lo[1]; j<hi[1]; ++j ){
       for( int i=lo[0]; i<hi[0]; ++i ){

@@ -23,9 +23,6 @@
 #ifndef SpatialOps_BitField_h
 #define SpatialOps_BitField_h
 
-#define NEBO_INT_BIT ((signed int)(sizeof(unsigned int) * CHAR_BIT))
-#define NEBO_INT_BYTE ((signed int)(sizeof(unsigned int)))
-#define NEBO_ROUND_TO_INT(size) ((signed int)((size + NEBO_INT_BIT - 1) / NEBO_INT_BIT))
 
 #include <iostream>
 #include <cassert>
@@ -39,8 +36,13 @@
 #include <spatialops/structured/GhostData.h>
 #include <spatialops/structured/MemoryPool.h>
 
+#include <climits>  // for CHAR_BIT below.
+
+#define NEBO_INT_BIT ((signed int)(sizeof(unsigned int) * CHAR_BIT))
+#define NEBO_INT_BYTE ((signed int)(sizeof(unsigned int)))
+#define NEBO_ROUND_TO_INT(size) ((signed int)((size + NEBO_INT_BIT - 1) / NEBO_INT_BIT))
+
 namespace SpatialOps{
-namespace structured{
 
   class ConstMaskIterator : public std::iterator<std::random_access_iterator_tag, bool> {
     typedef ConstMaskIterator MyType;
@@ -230,7 +232,7 @@ namespace structured{
 
   /**
    *  \class BitField
-   *  \ingroup structured
+   *  \ingroup fields
    *
    *  \brief Implements a mask as a bitfield.
    *
@@ -342,7 +344,7 @@ namespace structured{
      *  \brief Construct a BitField
      *  \param points - the points in the mask
      *  \param window - the window to build
-     *  \param interiorWindow - the interior window
+     *  \param ghosts - the ghost information
      */
     BitField(const std::vector<IntVec> & points,
              const MemoryWindow & window,
@@ -351,7 +353,7 @@ namespace structured{
         ghosts_(ghosts),
         size_(NEBO_ROUND_TO_INT(window.glob_npts())),
         bytes_(NEBO_ROUND_TO_INT(window.glob_npts()) * NEBO_INT_BYTE),
-        bitValues_(Pool<unsigned int>::self().get(CPU_INDEX, size_)),
+        bitValues_(Pool<unsigned int>::get(CPU_INDEX, size_)),
         builtMask_(true),
         hasgpuConsumer_(false),
         deviceIndex_(CPU_INDEX)
@@ -382,7 +384,7 @@ namespace structured{
       //Release any masks allocated for consumer use
       if( hasgpuConsumer_ ){
         for( ConsumerMap::iterator i = myConsumerBitValues_.begin(); i != myConsumerBitValues_.end(); ++i ){
-          Pool<unsigned int>::self().put( i->first, i->second );
+          Pool<unsigned int>::put( i->first, i->second );
         }
       }
       consumerBitValues_.clear();
@@ -392,7 +394,7 @@ namespace structured{
 
       if ( builtMask_ && !hasgpuConsumer_ ) {
         if( deviceIndex_ == CPU_INDEX ){
-          Pool<unsigned int>::self().put( CPU_INDEX, bitValues_ );
+          Pool<unsigned int>::put( CPU_INDEX, bitValues_ );
           bitValues_ = NULL;
         }
         else{
@@ -472,7 +474,7 @@ namespace structured{
 
         //Check to see if GPU mask memory exists
         if(consumerBitValues_.find(consumerDeviceIndex) == consumerBitValues_.end()) {
-          consumerBitValues_[consumerDeviceIndex] = Pool<unsigned int>::self().get(consumerDeviceIndex, size_);
+          consumerBitValues_[consumerDeviceIndex] = Pool<unsigned int>::get(consumerDeviceIndex, size_);
           myConsumerBitValues_[consumerDeviceIndex] = consumerBitValues_[consumerDeviceIndex];
         };
 
@@ -514,7 +516,7 @@ namespace structured{
       return consumerBitValues_.size() > 0;
     }
 
-    inline short int device_index() const { return deviceIndex_; };
+    inline short int active_device_index() const { return deviceIndex_; };
 
     inline const unsigned int * mask_values( const short int consumerDeviceIndex = CPU_INDEX ) const
     {
@@ -552,10 +554,9 @@ namespace structured{
         throw(std::runtime_error(msg.str()));
       }
       return NULL;   // should never get here.  This line is just to eliminate compiler warnings.
-    };
+    }
   };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_BitField_h

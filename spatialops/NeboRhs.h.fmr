@@ -43,7 +43,9 @@
                                 (val-call GhostData 'GHOST_MAX)
                                 'false
                                 null
-                                0
+                                (val-call IntVec 0 0 0)
+                                null
+                                (val-call IntVec 0 0 0)
                                 'value_
                                 'value_
                                 'true
@@ -88,13 +90,14 @@
                                                 null)
                                 (val-add (val-member-call 'field_ 'get_valid_ghost_data)
                                          (val-call 'point_to_ghost (val-member-call (val-member-call 'field_ 'boundary_info) 'has_extra)))
-                                (val-call 'point_to_ghost (val-member-call (val-member-call 'field_ 'boundary_info) 'has_extra))
+                                (val-member-call 'field_ 'get_valid_ghost_data)
                                 'true
                                 null
-                                (val-subtract (val-subtract (val-subtract (val-member-call (val-member-call 'field_ 'window_with_ghost) 'extent 'dir)
-                                                                          (val-member-call (val-member-call 'field_ 'boundary_info) 'has_extra 'dir))
-                                                            (val-member-call (val-member-call 'field_ 'get_valid_ghost_data) 'get_minus 'dir))
-                                              (val-member-call (val-member-call 'field_ 'get_valid_ghost_data) 'get_plus 'dir))
+                                (val-subtract (val-subtract (val-member-call (val-member-call 'field_ 'window_with_ghost) 'extent)
+                                                            (val-member-call (val-member-call 'field_ 'get_valid_ghost_data) 'get_minus))
+                                              (val-member-call (val-member-call 'field_ 'get_valid_ghost_data) 'get_plus))
+                                null
+                                (val-member-call (val-member-call 'field_ 'boundary_info) 'has_bc)
                                 'field_
                                 'field_
                                 (val-member-call 'field_ 'is_valid 'CPU_INDEX)
@@ -103,7 +106,7 @@
                                 (concat (val-call (type-template 'const_cast (ptr FT-chunk))
                                                   (take-ptr 'field_))
                                         '->
-                                        (val-call 'add_field_loc DI-chunk))
+                                        (val-call 'add_device DI-chunk))
                                 null
                                 (stmt-dcl-variable (const FT-chunk) 'field_))
                 (bs-Resize-rhs null
@@ -164,16 +167,18 @@
                                 (val-call GhostData 'GHOST_MAX)
                                 'false
                                 null
-                                0
+                                (val-call IntVec 0 0 0)
+                                null
+                                (val-call IntVec 0 0 0)
                                 (add-spaces '* (val-member-call 'field_ 'field_values 'CPU_INDEX))
                                 (add-spaces '* (val-member-call 'field_ 'field_values 'CPU_INDEX))
                                 (val-member-call 'field_ 'is_valid 'CPU_INDEX)
-                                (val-member-call 'field_ 'is_valid  DI-chunk)
+                                (val-member-call 'field_ 'is_valid DI-chunk)
                                 (list DI-chunk 'field_)
                                 (concat (val-call (type-template 'const_cast (ptr SVFT-chunk))
                                                   (take-ptr 'field_))
                                         '->
-                                        (val-call 'add_field_loc DI-chunk))
+                                        (val-call 'add_device DI-chunk))
                                 null
                                 (stmt-dcl-variable (const SVFT-chunk) 'field_))
                 (bs-Resize-rhs null

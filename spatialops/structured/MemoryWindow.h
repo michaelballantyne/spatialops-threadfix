@@ -27,12 +27,13 @@
 #include <vector>
 #include <iterator>
 # include <sstream>
+# include <iostream>
 
 #include <spatialops/SpatialOpsConfigure.h>
 
 #include <spatialops/structured/IntVec.h>
 #include <spatialops/structured/GhostData.h>
-#include <spatialops/structured/IndexTriplet.h> // jcs remove...
+#include <spatialops/structured/BoundaryCellInfo.h>
 
 #ifndef NDEBUG
 # include <cassert>
@@ -41,20 +42,17 @@
 
 /**
  * \file MemoryWindow.h
- * \addtogroup structured
- * @{
- *
  */
 
 namespace SpatialOps{
-namespace structured{
 
   /**
+   *  \ingroup fields
    *  \class MemoryWindow
    *  \author James C. Sutherland
    *  \date September 2010
    *
-   *  \ingroup structured
+   *  \ingroup fields
    *  \brief Provides tools to index into a sub-block of memory.
    *
    *  Given a block of memory, [Nx,Ny,Nz], assume that we want to deal
@@ -77,9 +75,6 @@ namespace structured{
      *  \param npts the total (global) number of points in each direction
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
-     *  \param bcx true if a physical boundary is present in the (+x) direction
-     *  \param bcy true if a physical boundary is present in the (+y) direction
-     *  \param bcz true if a physical boundary is present in the (+z) direction
      */
     MemoryWindow( const int npts[3],
                   const int offset[3],
@@ -87,29 +82,23 @@ namespace structured{
 
     /**
      *  \brief construct a MemoryWindow object
-     *
      *  \param npts the total (global) number of points in each direction
      *  \param offset the offset into the memory
      *  \param extent the size of the block that we are considering
      */
-    MemoryWindow( const IntVec& npts,
-                  const IntVec& offset,
-                  const IntVec& extent );
+    MemoryWindow( const IntVec npts,
+                  const IntVec offset,
+                  const IntVec extent );
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"
-     *
      *  \param npts the total (global) number of points in each direction
      */
     MemoryWindow( const int npts[3] );
 
     /**
      *  \brief construct a MemoryWindow object where there is no "window"
-     *
      *  \param npts the total (global) number of points in each direction
-     *  \param bcx (optional - default false) true if a physical boundary is present in the (+x) direction
-     *  \param bcy (optional - default false) true if a physical boundary is present in the (+y) direction
-     *  \param bcz (optional - default false) true if a physical boundary is present in the (+z) direction
      */
     MemoryWindow( const IntVec& npts );
 
@@ -195,6 +184,68 @@ namespace structured{
     }
 
     /**
+     * \brief return the current memory window with oldGhosts removed and newGhosts added
+     *
+     * \param oldGhosts number of ghost cells to remove from window
+     * \param newGhosts number of ghost cells to add to window
+     */
+    MemoryWindow reset_ghosts( GhostData const & oldGhosts,
+                               GhostData const & newGhosts ) const {
+      IntVec oldTotal = oldGhosts.get_minus() + oldGhosts.get_plus();
+      IntVec newTotal = newGhosts.get_minus() + newGhosts.get_plus();
+
+      return MemoryWindow( glob_dim(),
+                           offset() + oldGhosts.get_minus() - newGhosts.get_minus(),
+                           extent() - oldTotal + newTotal );
+    }
+
+    /**
+     * \brief return the current memory window with given ghosts removed
+     *
+     * \param ghosts number of ghost cells to remove from window
+     */
+    MemoryWindow remove_ghosts( GhostData const & ghosts ) const {
+      return (*this).reset_ghosts( ghosts, GhostData(0,0,0,0,0,0) );
+    }
+
+    /**
+     * \brief return if the current window fits in given window
+     *
+     * \param outer window into which current window fits
+     *
+     * If current and outer are equal, returns true.
+     *
+     * If global dimensions are different, returns false.
+     */
+    bool fits_in( MemoryWindow const & outer ) const {
+      return ( glob_dim() == outer.glob_dim() &&
+               offset()   >= outer.offset()   &&
+               extent()   <= outer.extent()   );
+    }
+
+    /**
+     * \brief return if current window fits between the
+     *  two given windows
+     *
+     * \param inner window to fit in checked
+     * \param outer window into which checked fits
+     *
+     * If current, inner, and outer are equal, returns true.
+     *
+     * If global dimensions are different, returns false.
+     *
+     * Debug mode asserts that inner fits in outer.
+     */
+    bool fits_between( MemoryWindow const & inner,
+                       MemoryWindow const & outer ) const {
+#ifndef NDEBUG
+      assert( inner.fits_in(outer) );
+#endif
+      return ( inner.fits_in(*this)   &&
+               (*this).fits_in(outer) );
+    }
+
+    /**
      * \brief Writes the internals of MemoryWindow to a string
      * \return a string value representing the internals of MemoryWindow.
      */
@@ -212,9 +263,66 @@ namespace structured{
 
   };
 
+  //============================================================================
+
+  /**
+   *  \ingroup fields
+   *  \fn int get_dim_with_ghost( const int, const int, const int, const int )
+   *
+   *  \brief obtain the number of points in the x direction
+   *
+   *  \param nNoGhost number of points in the current direction excluding
+   *    ghost cells
+   *  \param minusGhost the number of ghost cells on the negative face
+   *  \param plusGhost the number of ghost cells on the positive face
+   *  \param bc the number of boundary cells on the positive face
+   *
+   *  \return the number of points in the current direction, including ghost cells
+   *    and boundary cells
+   */
+  inline int get_dim_with_ghost( const int nNoGhost,
+                                 const int minusGhost,
+                                 const int plusGhost,
+                                 const int bc )
+  {
+    return ( nNoGhost > 1 ? ( nNoGhost + minusGhost + plusGhost + bc ) : 1 );
+  }
+
+  //------------------------------------------------------------------
+
+  /**
+   *  \ingroup fields
+   *  \fn MemoryWindow get_window_with_ghost( const IntVec&, const GhostData&, const BoundaryCellInfo& )
+   *  \brief Obtain the memory window for a field on a patch that is a single, contiguous memory block
+   *
+   *  \param localDim number of points in each direction excluding ghost cells
+   *  \param ghost the GhostData information
+   *  \param bc BoundaryCellInfo describing the behavior of a field when a (+) side
+   *   boundary is present.  Note that a MemoryWindow obtained here is paired for
+   *   use specifically with fields that share common BoundaryCellInfo.
+   *
+   *  \return the total number of points in the field, including ghost cells.
+   */
+  MemoryWindow
+  inline get_window_with_ghost( const IntVec& localDim,
+                                const GhostData& ghost,
+                                const BoundaryCellInfo& bc )
+  {
+    return MemoryWindow( IntVec( get_dim_with_ghost( localDim[0], ghost.get_minus(0), ghost.get_plus(0), bc.has_extra(0) ),
+                                 get_dim_with_ghost( localDim[1], ghost.get_minus(1), ghost.get_plus(1), bc.has_extra(1) ),
+                                 get_dim_with_ghost( localDim[2], ghost.get_minus(2), ghost.get_plus(2), bc.has_extra(2) ) ) );
+  }
+
+  //============================================================================
+
   template<typename FieldType>
   class ConstFieldIterator;  // forward
 
+  /**
+   * \class FieldIterator
+   * \brief provides iterator support for SpatialField.  Only works for CPU.
+   * \ingroup fields
+   */
   template<typename FieldType>
   class FieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
     friend class ConstFieldIterator<FieldType>;
@@ -223,13 +331,13 @@ namespace structured{
 
   public:
     FieldIterator()
-    : current_(NULL),
-      count_(0),
-      xIndex_(0), yIndex_(0), zIndex_(0),
-      yStep_(0), zStep_(0),
-      xExtent_(0), yExtent_(0), zExtent_(0),
-      xyExtent_(0)
-    {}
+  : current_(NULL),
+    count_(0),
+    xIndex_(0), yIndex_(0), zIndex_(0),
+    yStep_(0), zStep_(0),
+    xExtent_(0), yExtent_(0), zExtent_(0),
+    xyExtent_(0)
+  {}
 
     FieldIterator( AtomicType * field_values,
                    const MemoryWindow & w )
@@ -237,14 +345,14 @@ namespace structured{
                w.offset(0) +
                w.offset(1) * w.glob_dim(0) +
                w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
-      count_(0),
-      xIndex_(0), yIndex_(0), zIndex_(0),
-      yStep_(w.glob_dim(0) - w.extent(0)),
-      zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
-      xExtent_(w.extent(0)),
-      yExtent_(w.extent(1)),
-      zExtent_(w.extent(2)),
-      xyExtent_(w.extent(0) * w.extent(1))
+               count_(0),
+               xIndex_(0), yIndex_(0), zIndex_(0),
+               yStep_(w.glob_dim(0) - w.extent(0)),
+               zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
+               xExtent_(w.extent(0)),
+               yExtent_(w.extent(1)),
+               zExtent_(w.extent(2)),
+               xyExtent_(w.extent(0) * w.extent(1))
     {}
 
     //mutable dereference
@@ -340,10 +448,11 @@ namespace structured{
     //compound assignment
     inline Self & operator+=(int change) {
       //small change (only changes xIndex_)
-      if( (change > 0 && //positive change
-           change < xExtent_ - xIndex_) ||
-          (change < 0 && //negative change
-           -change < xIndex_) ){
+      if( (change == 0) || //no change
+          (change > 0 && //positive change
+              change < xExtent_ - xIndex_) ||
+              (change < 0 && //negative change
+                  -change < xIndex_) ){
         current_ += change;
         xIndex_ += change;
         count_ += change;
@@ -390,6 +499,11 @@ namespace structured{
     int xExtent_, yExtent_, zExtent_, xyExtent_;
   };
 
+  /**
+   * \class ConstFieldIterator
+   * \brief provides iterator support for SpatialField.  Only works for CPU.
+   * \ingroup fields
+   */
   template<typename FieldType>
   class ConstFieldIterator : public std::iterator<std::random_access_iterator_tag, typename FieldType::value_type> {
     typedef ConstFieldIterator<FieldType> Self;
@@ -397,28 +511,28 @@ namespace structured{
 
   public:
     ConstFieldIterator()
-    : current_(NULL),
-      count_(0),
-      xIndex_(0), yIndex_(0), zIndex_(0),
-      yStep_(0), zStep_(0),
-      xExtent_(0), yExtent_(0), zExtent_(0),
-      xyExtent_(0)
+  : current_(NULL),
+    count_(0),
+    xIndex_(0), yIndex_(0), zIndex_(0),
+    yStep_(0), zStep_(0),
+    xExtent_(0), yExtent_(0), zExtent_(0),
+    xyExtent_(0)
   {}
 
-    ConstFieldIterator(AtomicType * field_values,
+    ConstFieldIterator(const AtomicType * const field_values,
                        const MemoryWindow & w)
     : current_(field_values +
                w.offset(0) * 1 +
                w.offset(1) * w.glob_dim(0) +
                w.offset(2) * w.glob_dim(0) * w.glob_dim(1)),
-      count_(0),
-      xIndex_(0), yIndex_(0), zIndex_(0),
-      yStep_(w.glob_dim(0) - w.extent(0)),
-      zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
-      xExtent_(w.extent(0)),
-      yExtent_(w.extent(1)),
-      zExtent_(w.extent(2)),
-      xyExtent_(w.extent(0) * w.extent(1))
+               count_(0),
+               xIndex_(0), yIndex_(0), zIndex_(0),
+               yStep_(w.glob_dim(0) - w.extent(0)),
+               zStep_((w.glob_dim(1) - w.extent(1)) * w.glob_dim(0)),
+               xExtent_(w.extent(0)),
+               yExtent_(w.extent(1)),
+               zExtent_(w.extent(2)),
+               xyExtent_(w.extent(0) * w.extent(1))
     {}
 
     ConstFieldIterator(const FieldIterator<FieldType> it)
@@ -503,10 +617,11 @@ namespace structured{
     //compound assignment
     inline Self & operator+=(int change) {
       //small change (only changes xIndex_)
-      if( (change > 0 && //positive change
-           change < xExtent_ - xIndex_) ||
-          (change < 0 && //negative change
-              - change < xIndex_) ){
+      if( (change == 0) || //no change
+          (change > 0 && //positive change
+              change < xExtent_ - xIndex_) ||
+              (change < 0 && //negative change
+                  - change < xIndex_) ){
         current_ += change;
         xIndex_  += change;
         count_   += change;
@@ -548,18 +663,13 @@ namespace structured{
     inline bool operator>=(Self const & other) const { return current_ >= other.current_; }
 
   private:
-    AtomicType * current_;
+    const AtomicType * current_;
     int count_;
     int xIndex_, yIndex_, zIndex_;
     int yStep_, zStep_;
     int xExtent_, yExtent_, zExtent_, xyExtent_;
   };
 
-} // namespace structured
 } // namespace SpatialOps
-
-/**
- * @}
- */
 
 #endif // SpatialOps_MemoryWindow_h

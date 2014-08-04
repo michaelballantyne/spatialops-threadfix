@@ -28,19 +28,13 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/structured/MemoryWindow.h>
-#include <spatialops/structured/GhostData.h>
-#include <spatialops/structured/BoundaryCellInfo.h>
-#include <spatialops/structured/IntVec.h>
-#include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/BitField.h>
+#include <spatialops/structured/SpatialField.h>
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    *  \class SpatialMask
-   *  \ingroup structured
    *
    *  \brief Abstracts a mask.
    *
@@ -79,7 +73,6 @@ namespace structured{
     typedef SpatialMask<FieldType> mask_type;
     typedef MemoryWindow memory_window;
     typedef ConstMaskIterator const_iterator;
-    typedef ConstMaskIterator const_interior_iterator;
 
   private:
 
@@ -223,12 +216,12 @@ namespace structured{
 
     inline const_iterator end() const { return bitField_.end(maskWindow_); };
 
-    inline const_interior_iterator interior_begin() const
+    inline const_iterator interior_begin() const
     {
       return bitField_.begin(interiorMaskWindow_);
     };
 
-    inline const_interior_iterator interior_end() const
+    inline const_iterator interior_end() const
     {
       return bitField_.end(interiorMaskWindow_);
     };
@@ -251,7 +244,7 @@ namespace structured{
 
     inline const MemoryWindow& window_with_ghost() const { return maskWindow_; };
 
-    inline short int device_index() const { return bitField_.device_index(); };
+    inline short int active_device_index() const { return bitField_.active_device_index(); };
 
     inline const unsigned int * mask_values(const short int consumerDeviceIndex = 0) const
     {
@@ -282,7 +275,6 @@ namespace structured{
     };
   };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_SpatialMask_h

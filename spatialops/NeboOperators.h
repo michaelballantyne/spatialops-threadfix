@@ -35,12 +35,12 @@
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              SumOp<Resize,
                    typename Operand1::ResizeType,
                    typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              SumOp<GPUWalk,
@@ -53,50 +53,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -107,8 +114,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -125,7 +142,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct SumOp<Resize, Operand1, Operand2> {
             public:
@@ -137,8 +154,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -147,7 +167,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct SumOp<SeqWalk, Operand1, Operand2> {
          public:
@@ -244,17 +264,14 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
                                         T> operator +(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::structured::
                                                       SpatialField<SpatialOps::
-                                                                   structured::
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           SumOp<Initial,
                 NeboScalar<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -271,10 +288,9 @@
                                               NeboScalar<Initial, T>,
                                               SubExpr2>,
                                         T> operator +(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -375,13 +391,11 @@
                                                              typename FieldType::
                                                              value_type> >,
                              FieldType> operator +(FieldType const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           SumOp<Initial,
                 NeboConstField<Initial, FieldType>,
@@ -491,13 +505,11 @@
                              FieldType> operator +(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           SumOp<Initial,
                 SubExpr1,
@@ -534,17 +546,14 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               NeboScalar<Initial, T> >,
-                                        T> operator +(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
+                                        T> operator +(SpatialOps::SpatialField<SpatialOps::
                                                                                SingleValue,
-                                                                               T>::
+                                                                               T>
+                                                      const & arg1,
+                                                      typename SpatialOps::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           SumOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
@@ -568,13 +577,11 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result> >,
-                             FieldType> operator +(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           SumOp<Initial,
@@ -598,13 +605,11 @@
                                                              typename FieldType::
                                                              value_type>,
                                    SubExpr2>,
-                             FieldType> operator +(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -630,18 +635,14 @@
                                                                         T>,
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
-                                        T> operator +(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           SumOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -658,12 +659,10 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               SubExpr2>,
-                                        T> operator +(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator +(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -685,10 +684,9 @@
                                                                                 T>
                                                       const & arg1,
                                                       typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           SumOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -745,12 +743,10 @@
                                         T> operator +(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           SumOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -781,12 +777,12 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              DiffOp<Resize,
                     typename Operand1::ResizeType,
                     typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              DiffOp<GPUWalk,
@@ -799,50 +795,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -853,8 +856,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -871,7 +884,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct DiffOp<Resize, Operand1, Operand2> {
             public:
@@ -883,8 +896,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -893,7 +909,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct DiffOp<SeqWalk, Operand1, Operand2> {
          public:
@@ -990,17 +1006,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
                                         T> operator -(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::structured::
                                                       SpatialField<SpatialOps::
-                                                                   structured::
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DiffOp<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -1017,10 +1030,9 @@
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
                                         T> operator -(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -1121,13 +1133,11 @@
                                                               typename FieldType::
                                                               value_type> >,
                              FieldType> operator -(FieldType const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DiffOp<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -1237,13 +1247,11 @@
                              FieldType> operator -(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DiffOp<Initial,
                  SubExpr1,
@@ -1280,17 +1288,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> operator -(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
                                                                                SingleValue,
-                                                                               T>::
+                                                                               T>
+                                                      const & arg1,
+                                                      typename SpatialOps::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DiffOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
@@ -1314,13 +1319,11 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                             FieldType> operator -(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           DiffOp<Initial,
@@ -1344,13 +1347,11 @@
                                                               typename FieldType::
                                                               value_type>,
                                     SubExpr2>,
-                             FieldType> operator -(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -1376,18 +1377,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator -(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DiffOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -1404,12 +1401,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> operator -(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -1431,10 +1426,9 @@
                                                                                 T>
                                                       const & arg1,
                                                       typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DiffOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -1491,12 +1485,10 @@
                                         T> operator -(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DiffOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -1527,12 +1519,12 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ProdOp<Resize,
                     typename Operand1::ResizeType,
                     typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ProdOp<GPUWalk,
@@ -1545,50 +1537,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -1599,8 +1598,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -1617,7 +1626,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct ProdOp<Resize, Operand1, Operand2> {
             public:
@@ -1629,8 +1638,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -1639,7 +1651,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct ProdOp<SeqWalk, Operand1, Operand2> {
          public:
@@ -1736,17 +1748,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
                                         T> operator *(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::structured::
                                                       SpatialField<SpatialOps::
-                                                                   structured::
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           ProdOp<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -1763,10 +1772,9 @@
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
                                         T> operator *(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -1867,13 +1875,11 @@
                                                               typename FieldType::
                                                               value_type> >,
                              FieldType> operator *(FieldType const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           ProdOp<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -1983,13 +1989,11 @@
                              FieldType> operator *(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           ProdOp<Initial,
                  SubExpr1,
@@ -2026,17 +2030,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> operator *(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
+                                        T> operator *(SpatialOps::SpatialField<SpatialOps::
                                                                                SingleValue,
-                                                                               T>::
+                                                                               T>
+                                                      const & arg1,
+                                                      typename SpatialOps::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           ProdOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
@@ -2060,13 +2061,11 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                             FieldType> operator *(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           ProdOp<Initial,
@@ -2090,13 +2089,11 @@
                                                               typename FieldType::
                                                               value_type>,
                                     SubExpr2>,
-                             FieldType> operator *(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -2122,18 +2119,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator *(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           ProdOp<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -2150,12 +2143,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> operator *(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator *(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -2177,10 +2168,9 @@
                                                                                 T>
                                                       const & arg1,
                                                       typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           ProdOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -2237,12 +2227,10 @@
                                         T> operator *(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           ProdOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -2273,12 +2261,12 @@
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              DivOp<Resize,
                    typename Operand1::ResizeType,
                    typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              DivOp<GPUWalk,
@@ -2291,50 +2279,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -2345,8 +2340,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -2363,7 +2368,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct DivOp<Resize, Operand1, Operand2> {
             public:
@@ -2375,8 +2380,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -2385,7 +2393,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct DivOp<SeqWalk, Operand1, Operand2> {
          public:
@@ -2482,17 +2490,14 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
                                         T> operator /(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
-                                                      value_type const & arg1,
-                                                      SpatialOps::structured::
                                                       SpatialField<SpatialOps::
-                                                                   structured::
                                                                    SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                                   T>::
+                                                      value_type const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DivOp<Initial,
                 NeboScalar<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -2509,10 +2514,9 @@
                                               NeboScalar<Initial, T>,
                                               SubExpr2>,
                                         T> operator /(typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
@@ -2613,13 +2617,11 @@
                                                              typename FieldType::
                                                              value_type> >,
                              FieldType> operator /(FieldType const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DivOp<Initial,
                 NeboConstField<Initial, FieldType>,
@@ -2729,13 +2731,11 @@
                              FieldType> operator /(NeboExpression<SubExpr1,
                                                                   FieldType>
                                                    const & arg1,
-                                                   SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                                                   SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg2) {
           DivOp<Initial,
                 SubExpr1,
@@ -2772,17 +2772,14 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               NeboScalar<Initial, T> >,
-                                        T> operator /(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
+                                        T> operator /(SpatialOps::SpatialField<SpatialOps::
                                                                                SingleValue,
-                                                                               T>::
+                                                                               T>
+                                                      const & arg1,
+                                                      typename SpatialOps::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DivOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
@@ -2806,13 +2803,11 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result> >,
-                             FieldType> operator /(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    FieldType const & arg2) {
           DivOp<Initial,
@@ -2836,13 +2831,11 @@
                                                              typename FieldType::
                                                              value_type>,
                                    SubExpr2>,
-                             FieldType> operator /(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                typename
-                                                                FieldType::
-                                                                value_type>
+                             FieldType> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            typename
+                                                                            FieldType::
+                                                                            value_type>
                                                    const & arg1,
                                                    NeboExpression<SubExpr2,
                                                                   FieldType>
@@ -2868,18 +2861,14 @@
                                                                         T>,
                                               NeboConstSingleValueField<Initial,
                                                                         T> >,
-                                        T> operator /(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                        T> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DivOp<Initial,
                 NeboConstSingleValueField<Initial, T>,
                 NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -2896,12 +2885,10 @@
                                               NeboConstSingleValueField<Initial,
                                                                         T>,
                                               SubExpr2>,
-                                        T> operator /(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg1,
+                                        T> operator /(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg1,
                                                       NeboSingleValueExpression<SubExpr2,
                                                                                 T>
                                                       const & arg2) {
@@ -2923,10 +2910,9 @@
                                                                                 T>
                                                       const & arg1,
                                                       typename SpatialOps::
-                                                      structured::SpatialField<SpatialOps::
-                                                                               structured::
-                                                                               SingleValue,
-                                                                               T>::
+                                                      SpatialField<SpatialOps::
+                                                                   SingleValue,
+                                                                   T>::
                                                       value_type const & arg2) {
           DivOp<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
@@ -2983,12 +2969,10 @@
                                         T> operator /(NeboSingleValueExpression<SubExpr1,
                                                                                 T>
                                                       const & arg1,
-                                                      SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg2) {
+                                                      SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg2) {
           DivOp<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -3017,10 +3001,10 @@
          public:
           SinFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              SinFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              SinFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -3031,28 +3015,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -3061,8 +3051,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3077,7 +3073,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct SinFcn<Resize, Operand> {
             public:
@@ -3087,15 +3083,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct SinFcn<SeqWalk, Operand> {
          public:
@@ -3170,11 +3168,10 @@
        inline NeboSingleValueExpression<SinFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> sin(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> sin(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           SinFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3203,10 +3200,10 @@
          public:
           CosFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              CosFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              CosFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -3217,28 +3214,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -3247,8 +3250,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3263,7 +3272,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct CosFcn<Resize, Operand> {
             public:
@@ -3273,15 +3282,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct CosFcn<SeqWalk, Operand> {
          public:
@@ -3356,11 +3367,10 @@
        inline NeboSingleValueExpression<CosFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> cos(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> cos(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           CosFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3389,10 +3399,10 @@
          public:
           TanFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              TanFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              TanFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -3403,28 +3413,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -3433,8 +3449,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3449,7 +3471,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct TanFcn<Resize, Operand> {
             public:
@@ -3459,15 +3481,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct TanFcn<SeqWalk, Operand> {
          public:
@@ -3542,11 +3566,10 @@
        inline NeboSingleValueExpression<TanFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> tan(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> tan(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           TanFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3575,10 +3598,10 @@
          public:
           ExpFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ExpFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ExpFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -3589,28 +3612,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -3619,8 +3648,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3635,7 +3670,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct ExpFcn<Resize, Operand> {
             public:
@@ -3645,15 +3680,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct ExpFcn<SeqWalk, Operand> {
          public:
@@ -3728,11 +3765,10 @@
        inline NeboSingleValueExpression<ExpFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> exp(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> exp(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           ExpFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3761,10 +3797,10 @@
          public:
           TanhFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              TanhFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              TanhFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType
@@ -3776,28 +3812,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -3806,8 +3848,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3822,7 +3870,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct TanhFcn<Resize, Operand> {
             public:
@@ -3833,15 +3881,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct TanhFcn<SeqWalk, Operand> {
          public:
@@ -3916,11 +3966,10 @@
        inline NeboSingleValueExpression<TanhFcn<Initial,
                                                 NeboConstSingleValueField<Initial,
                                                                           T> >,
-                                        T> tanh(SpatialOps::structured::
-                                                SpatialField<SpatialOps::
-                                                             structured::
-                                                             SingleValue,
-                                                             T> const & arg) {
+                                        T> tanh(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
           TanhFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -3949,10 +3998,10 @@
          public:
           AbsFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              AbsFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              AbsFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -3963,28 +4012,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -3993,8 +4048,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -4009,7 +4070,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct AbsFcn<Resize, Operand> {
             public:
@@ -4019,15 +4080,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct AbsFcn<SeqWalk, Operand> {
          public:
@@ -4102,11 +4165,10 @@
        inline NeboSingleValueExpression<AbsFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> abs(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> abs(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           AbsFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -4135,10 +4197,10 @@
          public:
           NegFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NegFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NegFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -4149,28 +4211,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -4179,8 +4247,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -4195,7 +4269,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct NegFcn<Resize, Operand> {
             public:
@@ -4205,15 +4279,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct NegFcn<SeqWalk, Operand> {
          public:
@@ -4289,12 +4365,10 @@
        inline NeboSingleValueExpression<NegFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> operator -(SpatialOps::structured::
-                                                      SpatialField<SpatialOps::
-                                                                   structured::
-                                                                   SingleValue,
-                                                                   T> const &
-                                                      arg) {
+                                        T> operator -(SpatialOps::SpatialField<SpatialOps::
+                                                                               SingleValue,
+                                                                               T>
+                                                      const & arg) {
           NegFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -4326,12 +4400,12 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              PowFcn<Resize,
                     typename Operand1::ResizeType,
                     typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              PowFcn<GPUWalk,
@@ -4344,50 +4418,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -4398,8 +4479,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -4416,7 +4507,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct PowFcn<Resize, Operand1, Operand2> {
             public:
@@ -4428,8 +4519,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -4438,7 +4532,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct PowFcn<SeqWalk, Operand1, Operand2> {
          public:
@@ -4533,17 +4627,14 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> pow(typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> pow(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           PowFcn<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -4559,12 +4650,10 @@
        inline NeboSingleValueExpression<PowFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> pow(typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
+                                        T> pow(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -4663,12 +4752,11 @@
                                                               typename FieldType::
                                                               value_type> >,
                              FieldType> pow(FieldType const & arg1,
-                                            SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                            SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           PowFcn<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -4782,12 +4870,11 @@
                                                               value_type> >,
                              FieldType> pow(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
-                                            SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                            SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           PowFcn<Initial,
                  SubExpr1,
@@ -4831,17 +4918,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> pow(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                        T> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           PowFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -4864,12 +4948,11 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                             FieldType> pow(SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                             FieldType> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             FieldType const & arg2) {
           PowFcn<Initial,
@@ -4893,12 +4976,11 @@
                                                               typename FieldType::
                                                               value_type>,
                                     SubExpr2>,
-                             FieldType> pow(SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                             FieldType> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
@@ -4923,16 +5005,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> pow(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           PowFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -4949,11 +5029,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> pow(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
+                                        T> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -4974,12 +5053,10 @@
                                         T> pow(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           PowFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -5042,11 +5119,10 @@
                                         T> pow(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           PowFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -5075,10 +5151,10 @@
          public:
           SqrtFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              SqrtFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              SqrtFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType
@@ -5090,28 +5166,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -5120,8 +5202,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5136,7 +5224,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct SqrtFcn<Resize, Operand> {
             public:
@@ -5147,15 +5235,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct SqrtFcn<SeqWalk, Operand> {
          public:
@@ -5230,11 +5320,10 @@
        inline NeboSingleValueExpression<SqrtFcn<Initial,
                                                 NeboConstSingleValueField<Initial,
                                                                           T> >,
-                                        T> sqrt(SpatialOps::structured::
-                                                SpatialField<SpatialOps::
-                                                             structured::
-                                                             SingleValue,
-                                                             T> const & arg) {
+                                        T> sqrt(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
           SqrtFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -5263,10 +5352,10 @@
          public:
           LogFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              LogFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              LogFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -5277,28 +5366,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -5307,8 +5402,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5323,7 +5424,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct LogFcn<Resize, Operand> {
             public:
@@ -5333,15 +5434,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct LogFcn<SeqWalk, Operand> {
          public:
@@ -5416,11 +5519,10 @@
        inline NeboSingleValueExpression<LogFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> log(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> log(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           LogFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -5449,10 +5551,10 @@
          public:
           Log10Fcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              Log10Fcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              Log10Fcn<GPUWalk, typename Operand::GPUWalkType> typedef
@@ -5464,28 +5566,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -5494,8 +5602,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5510,7 +5624,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct Log10Fcn<Resize, Operand> {
             public:
@@ -5521,15 +5635,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct Log10Fcn<SeqWalk, Operand> {
          public:
@@ -5604,11 +5720,10 @@
        inline NeboSingleValueExpression<Log10Fcn<Initial,
                                                  NeboConstSingleValueField<Initial,
                                                                            T> >,
-                                        T> log10(SpatialOps::structured::
-                                                 SpatialField<SpatialOps::
-                                                              structured::
-                                                              SingleValue,
-                                                              T> const & arg) {
+                                        T> log10(SpatialOps::SpatialField<SpatialOps::
+                                                                          SingleValue,
+                                                                          T>
+                                                 const & arg) {
           Log10Fcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -5638,10 +5753,10 @@
          public:
           ErfFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ErfFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ErfFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -5652,28 +5767,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -5682,8 +5803,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5698,7 +5825,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct ErfFcn<Resize, Operand> {
             public:
@@ -5708,15 +5835,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct ErfFcn<SeqWalk, Operand> {
          public:
@@ -5791,11 +5920,10 @@
        inline NeboSingleValueExpression<ErfFcn<Initial,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> erf(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg) {
+                                        T> erf(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg) {
           ErfFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -5824,10 +5952,10 @@
          public:
           ErfcFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ErfcFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ErfcFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType
@@ -5839,28 +5967,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -5869,8 +6003,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -5885,7 +6025,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct ErfcFcn<Resize, Operand> {
             public:
@@ -5896,15 +6036,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct ErfcFcn<SeqWalk, Operand> {
          public:
@@ -5979,11 +6121,10 @@
        inline NeboSingleValueExpression<ErfcFcn<Initial,
                                                 NeboConstSingleValueField<Initial,
                                                                           T> >,
-                                        T> erfc(SpatialOps::structured::
-                                                SpatialField<SpatialOps::
-                                                             structured::
-                                                             SingleValue,
-                                                             T> const & arg) {
+                                        T> erfc(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
           ErfcFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -6012,10 +6153,10 @@
          public:
           InvErfFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              InvErfFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              InvErfFcn<GPUWalk, typename Operand::GPUWalkType> typedef
@@ -6027,28 +6168,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -6057,8 +6204,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -6073,7 +6226,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct InvErfFcn<Resize, Operand> {
             public:
@@ -6084,15 +6237,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct InvErfFcn<SeqWalk, Operand> {
          public:
@@ -6168,11 +6323,10 @@
        inline NeboSingleValueExpression<InvErfFcn<Initial,
                                                   NeboConstSingleValueField<Initial,
                                                                             T> >,
-                                        T> inv_erf(SpatialOps::structured::
-                                                   SpatialField<SpatialOps::
-                                                                structured::
-                                                                SingleValue,
-                                                                T> const & arg) {
+                                        T> inv_erf(SpatialOps::SpatialField<SpatialOps::
+                                                                            SingleValue,
+                                                                            T>
+                                                   const & arg) {
           InvErfFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -6203,11 +6357,11 @@
           InvErfcFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType
           ;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              InvErfcFcn<Resize, typename Operand::ResizeType> typedef ResizeType
              ;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              InvErfcFcn<GPUWalk, typename Operand::GPUWalkType> typedef
@@ -6219,28 +6373,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -6249,8 +6409,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -6265,7 +6431,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct InvErfcFcn<Resize, Operand> {
             public:
@@ -6276,15 +6442,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct InvErfcFcn<SeqWalk, Operand> {
          public:
@@ -6360,11 +6528,10 @@
        inline NeboSingleValueExpression<InvErfcFcn<Initial,
                                                    NeboConstSingleValueField<Initial,
                                                                              T> >,
-                                        T> inv_erfc(SpatialOps::structured::
-                                                    SpatialField<SpatialOps::
-                                                                 structured::
-                                                                 SingleValue,
-                                                                 T> const & arg) {
+                                        T> inv_erfc(SpatialOps::SpatialField<SpatialOps::
+                                                                             SingleValue,
+                                                                             T>
+                                                    const & arg) {
           InvErfcFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
           ReturnType;
 
@@ -6393,12 +6560,12 @@
                    typename Operand1::SeqWalkType,
                    typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              EqualCmp<Resize,
                       typename Operand1::ResizeType,
                       typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              EqualCmp<GPUWalk,
@@ -6411,50 +6578,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -6465,8 +6639,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -6483,7 +6667,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct EqualCmp<Resize, Operand1, Operand2> {
             public:
@@ -6495,8 +6679,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -6505,7 +6692,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct EqualCmp<SeqWalk, Operand1, Operand2> {
          public:
@@ -6608,17 +6795,13 @@
                                                >,
                                                T> operator ==(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -6639,9 +6822,7 @@
                                                         SubExpr2>,
                                                T> operator ==(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -6760,9 +6941,7 @@
                                     FieldType> operator ==(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -6889,9 +7068,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -6937,17 +7114,13 @@
                                                                                   T>,
                                                         NeboScalar<Initial, T> >,
                                                T> operator ==(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -6977,9 +7150,7 @@
                                                                            FieldType>::
                                                             Result> >,
                                     FieldType> operator ==(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7010,9 +7181,7 @@
                                                                        value_type>,
                                              SubExpr2>,
                                     FieldType> operator ==(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7044,16 +7213,12 @@
                                                                                   T>
                                                >,
                                                T> operator ==(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7074,9 +7239,7 @@
                                                                                   T>,
                                                         SubExpr2>,
                                                T> operator ==(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -7102,9 +7265,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7173,9 +7334,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7215,12 +7374,12 @@
                      typename Operand1::SeqWalkType,
                      typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              InequalCmp<Resize,
                         typename Operand1::ResizeType,
                         typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              InequalCmp<GPUWalk,
@@ -7233,50 +7392,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -7287,8 +7453,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -7305,7 +7481,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct InequalCmp<Resize, Operand1, Operand2> {
             public:
@@ -7317,8 +7493,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -7327,7 +7506,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct InequalCmp<SeqWalk, Operand1, Operand2> {
          public:
@@ -7430,17 +7609,13 @@
                                                >,
                                                T> operator !=(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7461,9 +7636,7 @@
                                                           SubExpr2>,
                                                T> operator !=(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7583,9 +7756,7 @@
                                     FieldType> operator !=(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7712,9 +7883,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7761,17 +7930,13 @@
                                                           NeboScalar<Initial, T>
                                                >,
                                                T> operator !=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7801,9 +7966,7 @@
                                                                              FieldType>::
                                                               Result> >,
                                     FieldType> operator !=(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7834,9 +7997,7 @@
                                                                          value_type>,
                                                SubExpr2>,
                                     FieldType> operator !=(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -7868,16 +8029,12 @@
                                                                                     T>
                                                >,
                                                T> operator !=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -7898,9 +8055,7 @@
                                                                                     T>,
                                                           SubExpr2>,
                                                T> operator !=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -7927,9 +8082,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -7998,9 +8151,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -8040,12 +8191,12 @@
                       typename Operand1::SeqWalkType,
                       typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              LessThanCmp<Resize,
                          typename Operand1::ResizeType,
                          typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              LessThanCmp<GPUWalk,
@@ -8058,50 +8209,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -8112,8 +8270,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -8130,7 +8298,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct LessThanCmp<Resize, Operand1, Operand2> {
             public:
@@ -8142,8 +8310,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -8152,7 +8323,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct LessThanCmp<SeqWalk, Operand1, Operand2> {
          public:
@@ -8253,17 +8424,13 @@
                                                                                      T>
                                                >,
                                                T> operator <(typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
                                                              arg1,
                                                              SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -8283,9 +8450,7 @@
                                                            NeboScalar<Initial, T>,
                                                            SubExpr2>,
                                                T> operator <(typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -8399,9 +8564,8 @@
                                                                           value_type>
                                     >,
                                     FieldType> operator <(FieldType const & arg1,
-                                                          SpatialOps::structured::
+                                                          SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -8525,9 +8689,8 @@
                                     FieldType> operator <(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
-                                                          SpatialOps::structured::
+                                                          SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -8574,16 +8737,12 @@
                                                            NeboScalar<Initial, T>
                                                >,
                                                T> operator <(SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -8612,9 +8771,8 @@
                                                                               field_type,
                                                                               FieldType>::
                                                                Result> >,
-                                    FieldType> operator <(SpatialOps::structured::
+                                    FieldType> operator <(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -8643,9 +8801,8 @@
                                                                           FieldType::
                                                                           value_type>,
                                                 SubExpr2>,
-                                    FieldType> operator <(SpatialOps::structured::
+                                    FieldType> operator <(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -8677,16 +8834,12 @@
                                                                                      T>
                                                >,
                                                T> operator <(SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -8707,9 +8860,7 @@
                                                                                      T>,
                                                            SubExpr2>,
                                                T> operator <(SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
@@ -8735,9 +8886,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -8805,9 +8954,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -8847,12 +8994,12 @@
                            typename Operand1::SeqWalkType,
                            typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              LessThanEqualCmp<Resize,
                               typename Operand1::ResizeType,
                               typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              LessThanEqualCmp<GPUWalk,
@@ -8866,50 +9013,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -8920,8 +9074,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -8938,7 +9102,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct LessThanEqualCmp<Resize, Operand1, Operand2> {
             public:
@@ -8952,8 +9116,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -8962,7 +9129,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct LessThanEqualCmp<SeqWalk, Operand1, Operand2> {
          public:
@@ -9070,17 +9237,13 @@
                                                >,
                                                T> operator <=(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -9103,9 +9266,7 @@
                                                                 SubExpr2>,
                                                T> operator <=(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -9227,9 +9388,7 @@
                                     FieldType> operator <=(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9360,9 +9519,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9410,17 +9567,13 @@
                                                                 NeboScalar<Initial,
                                                                            T> >,
                                                T> operator <=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -9450,9 +9603,7 @@
                                                                                    FieldType>::
                                                                     Result> >,
                                     FieldType> operator <=(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9485,9 +9636,7 @@
                                                                                value_type>,
                                                      SubExpr2>,
                                     FieldType> operator <=(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -9520,16 +9669,12 @@
                                                                                           T>
                                                >,
                                                T> operator <=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -9551,9 +9696,7 @@
                                                                                           T>,
                                                                 SubExpr2>,
                                                T> operator <=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -9581,9 +9724,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -9654,9 +9795,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -9698,12 +9837,12 @@
                          typename Operand1::SeqWalkType,
                          typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              GreaterThanCmp<Resize,
                             typename Operand1::ResizeType,
                             typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              GreaterThanCmp<GPUWalk,
@@ -9716,50 +9855,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -9770,8 +9916,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -9788,7 +9944,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct GreaterThanCmp<Resize, Operand1, Operand2> {
             public:
@@ -9800,8 +9956,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -9810,7 +9969,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct GreaterThanCmp<SeqWalk, Operand1, Operand2> {
          public:
@@ -9912,17 +10071,13 @@
                                                                                         T>
                                                >,
                                                T> operator >(typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
                                                              arg1,
                                                              SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -9944,9 +10099,7 @@
                                                                          T>,
                                                               SubExpr2>,
                                                T> operator >(typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -10060,9 +10213,8 @@
                                                                              value_type>
                                     >,
                                     FieldType> operator >(FieldType const & arg1,
-                                                          SpatialOps::structured::
+                                                          SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10187,9 +10339,8 @@
                                     FieldType> operator >(NeboExpression<SubExpr1,
                                                                          FieldType>
                                                           const & arg1,
-                                                          SpatialOps::structured::
+                                                          SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10237,16 +10388,12 @@
                                                               NeboScalar<Initial,
                                                                          T> >,
                                                T> operator >(SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -10275,9 +10422,8 @@
                                                                                  field_type,
                                                                                  FieldType>::
                                                                   Result> >,
-                                    FieldType> operator >(SpatialOps::structured::
+                                    FieldType> operator >(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10307,9 +10453,8 @@
                                                                              FieldType::
                                                                              value_type>,
                                                    SubExpr2>,
-                                    FieldType> operator >(SpatialOps::structured::
+                                    FieldType> operator >(SpatialOps::
                                                           SpatialField<SpatialOps::
-                                                                       structured::
                                                                        SingleValue,
                                                                        typename
                                                                        FieldType::
@@ -10342,16 +10487,12 @@
                                                                                         T>
                                                >,
                                                T> operator >(SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -10373,9 +10514,7 @@
                                                                                         T>,
                                                               SubExpr2>,
                                                T> operator >(SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg1,
@@ -10402,9 +10541,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              typename SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>::
                                                              value_type const &
@@ -10472,9 +10609,7 @@
                                                                                        T>
                                                              const & arg1,
                                                              SpatialOps::
-                                                             structured::
                                                              SpatialField<SpatialOps::
-                                                                          structured::
                                                                           SingleValue,
                                                                           T>
                                                              const & arg2) {
@@ -10517,13 +10652,13 @@
                               typename Operand2::SeqWalkType> typedef
           SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              GreaterThanEqualCmp<Resize,
                                  typename Operand1::ResizeType,
                                  typename Operand2::ResizeType> typedef
              ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              GreaterThanEqualCmp<GPUWalk,
@@ -10538,50 +10673,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -10592,8 +10734,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -10610,7 +10762,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct GreaterThanEqualCmp<Resize, Operand1, Operand2> {
             public:
@@ -10624,8 +10776,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -10634,7 +10789,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct GreaterThanEqualCmp<SeqWalk, Operand1, Operand2> {
          public:
@@ -10743,17 +10898,13 @@
                                                >,
                                                T> operator >=(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
                                                               arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -10776,9 +10927,7 @@
                                                                    SubExpr2>,
                                                T> operator >=(typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -10901,9 +11050,7 @@
                                     FieldType> operator >=(FieldType const &
                                                            arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11037,9 +11184,7 @@
                                                                           FieldType>
                                                            const & arg1,
                                                            SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11090,17 +11235,13 @@
                                                                               T>
                                                >,
                                                T> operator >=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -11130,9 +11271,7 @@
                                                                                       FieldType>::
                                                                        Result> >,
                                     FieldType> operator >=(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11165,9 +11304,7 @@
                                                                                   value_type>,
                                                         SubExpr2>,
                                     FieldType> operator >=(SpatialOps::
-                                                           structured::
                                                            SpatialField<SpatialOps::
-                                                                        structured::
                                                                         SingleValue,
                                                                         typename
                                                                         FieldType::
@@ -11200,16 +11337,12 @@
                                                                                              T>
                                                >,
                                                T> operator >=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -11231,9 +11364,7 @@
                                                                                              T>,
                                                                    SubExpr2>,
                                                T> operator >=(SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg1,
@@ -11262,9 +11393,7 @@
                                                               const & arg1,
                                                               typename
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>::
                                                               value_type const &
@@ -11337,9 +11466,7 @@
                                                                                         T>
                                                               const & arg1,
                                                               SpatialOps::
-                                                              structured::
                                                               SpatialField<SpatialOps::
-                                                                           structured::
                                                                            SingleValue,
                                                                            T>
                                                               const & arg2) {
@@ -11381,12 +11508,12 @@
                 typename Operand1::SeqWalkType,
                 typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              AndOp<Resize,
                    typename Operand1::ResizeType,
                    typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              AndOp<GPUWalk,
@@ -11399,50 +11526,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -11453,8 +11587,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -11471,7 +11615,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct AndOp<Resize, Operand1, Operand2> {
             public:
@@ -11483,8 +11627,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -11493,7 +11640,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct AndOp<SeqWalk, Operand1, Operand2> {
          public:
@@ -11562,7 +11709,6 @@
                                                                            FieldType>::
                                                    Result> >,
                                     FieldType> operator &&(bool const & arg1,
-                                                           structured::
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           AndOp<Initial,
@@ -11621,7 +11767,6 @@
                                     FieldType> operator &&(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
-                                                           structured::
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           AndOp<Initial, SubBoolExpr1, NeboMask<Initial, FieldType> > typedef
@@ -11642,8 +11787,7 @@
                                                                            FieldType>::
                                                    Result>,
                                           NeboScalar<Initial, bool> >,
-                                    FieldType> operator &&(structured::
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator &&(SpatialMask<FieldType>
                                                            const & arg1,
                                                            bool const & arg2) {
           AndOp<Initial,
@@ -11666,8 +11810,7 @@
                                                                            FieldType>::
                                                    Result>,
                                           SubBoolExpr2>,
-                                    FieldType> operator &&(structured::
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator &&(SpatialMask<FieldType>
                                                            const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
@@ -11695,10 +11838,8 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                                    FieldType> operator &&(structured::
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator &&(SpatialMask<FieldType>
                                                            const & arg1,
-                                                           structured::
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           AndOp<Initial,
@@ -11720,12 +11861,12 @@
                typename Operand1::SeqWalkType,
                typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              OrOp<Resize,
                   typename Operand1::ResizeType,
                   typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              OrOp<GPUWalk,
@@ -11738,50 +11879,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -11792,8 +11940,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -11810,7 +11968,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct OrOp<Resize, Operand1, Operand2> {
             public:
@@ -11822,8 +11980,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -11832,7 +11993,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct OrOp<SeqWalk, Operand1, Operand2> {
          public:
@@ -11901,7 +12062,6 @@
                                                                           FieldType>::
                                                   Result> >,
                                     FieldType> operator ||(bool const & arg1,
-                                                           structured::
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           OrOp<Initial, NeboScalar<Initial, bool>, NeboMask<Initial, FieldType> >
@@ -11959,7 +12119,6 @@
                                     FieldType> operator ||(NeboBooleanExpression<SubBoolExpr1,
                                                                                  FieldType>
                                                            const & arg1,
-                                                           structured::
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           OrOp<Initial, SubBoolExpr1, NeboMask<Initial, FieldType> > typedef
@@ -11980,8 +12139,7 @@
                                                                           FieldType>::
                                                   Result>,
                                          NeboScalar<Initial, bool> >,
-                                    FieldType> operator ||(structured::
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator ||(SpatialMask<FieldType>
                                                            const & arg1,
                                                            bool const & arg2) {
           OrOp<Initial, NeboMask<Initial, FieldType>, NeboScalar<Initial, bool> >
@@ -12003,8 +12161,7 @@
                                                                           FieldType>::
                                                   Result>,
                                          SubBoolExpr2>,
-                                    FieldType> operator ||(structured::
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator ||(SpatialMask<FieldType>
                                                            const & arg1,
                                                            NeboBooleanExpression<SubBoolExpr2,
                                                                                  FieldType>
@@ -12032,10 +12189,8 @@
                                                                           field_type,
                                                                           FieldType>::
                                                   Result> >,
-                                    FieldType> operator ||(structured::
-                                                           SpatialMask<FieldType>
+                                    FieldType> operator ||(SpatialMask<FieldType>
                                                            const & arg1,
-                                                           structured::
                                                            SpatialMask<FieldType>
                                                            const & arg2) {
           OrOp<Initial,
@@ -12055,10 +12210,10 @@
          public:
           NotOp<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NotOp<Resize, typename Operand::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NotOp<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType;
@@ -12069,28 +12224,34 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
@@ -12099,8 +12260,14 @@
                 return (operand_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -12115,7 +12282,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand>
           struct NotOp<Resize, Operand> {
             public:
@@ -12125,15 +12292,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand>
        struct NotOp<SeqWalk, Operand> {
          public:
@@ -12190,8 +12359,7 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                                    FieldType> operator !(structured::
-                                                          SpatialMask<FieldType>
+                                    FieldType> operator !(SpatialMask<FieldType>
                                                           const & arg) {
           NotOp<Initial, NeboMask<Initial, FieldType> > typedef ReturnType;
 
@@ -12209,12 +12377,12 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              MaxFcn<Resize,
                     typename Operand1::ResizeType,
                     typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              MaxFcn<GPUWalk,
@@ -12227,50 +12395,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -12281,8 +12456,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -12299,7 +12484,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct MaxFcn<Resize, Operand1, Operand2> {
             public:
@@ -12311,8 +12496,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -12321,7 +12509,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct MaxFcn<SeqWalk, Operand1, Operand2> {
          public:
@@ -12418,17 +12606,14 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> max(typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> max(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MaxFcn<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -12444,12 +12629,10 @@
        inline NeboSingleValueExpression<MaxFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> max(typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
+                                        T> max(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -12548,12 +12731,11 @@
                                                               typename FieldType::
                                                               value_type> >,
                              FieldType> max(FieldType const & arg1,
-                                            SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                            SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MaxFcn<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -12667,12 +12849,11 @@
                                                               value_type> >,
                              FieldType> max(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
-                                            SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                            SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MaxFcn<Initial,
                  SubExpr1,
@@ -12716,17 +12897,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> max(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                        T> max(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MaxFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -12749,12 +12927,11 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                             FieldType> max(SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                             FieldType> max(SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             FieldType const & arg2) {
           MaxFcn<Initial,
@@ -12778,12 +12955,11 @@
                                                               typename FieldType::
                                                               value_type>,
                                     SubExpr2>,
-                             FieldType> max(SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                             FieldType> max(SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
@@ -12808,16 +12984,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> max(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> max(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MaxFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -12834,11 +13008,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> max(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
+                                        T> max(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -12859,12 +13032,10 @@
                                         T> max(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MaxFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -12927,11 +13098,10 @@
                                         T> max(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MaxFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 
@@ -12962,12 +13132,12 @@
                  typename Operand1::SeqWalkType,
                  typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              MinFcn<Resize,
                     typename Operand1::ResizeType,
                     typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              MinFcn<GPUWalk,
@@ -12980,50 +13150,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -13034,8 +13211,18 @@
                 return (operand1_.gpu_ready(deviceIndex) && operand2_.gpu_ready(deviceIndex));
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -13052,7 +13239,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Operand1, typename Operand2>
           struct MinFcn<Resize, Operand1, Operand2> {
             public:
@@ -13064,8 +13251,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -13074,7 +13264,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Operand1, typename Operand2>
        struct MinFcn<SeqWalk, Operand1, Operand2> {
          public:
@@ -13171,17 +13361,14 @@
                                                NeboScalar<Initial, T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> min(typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> min(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MinFcn<Initial,
                  NeboScalar<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -13197,12 +13384,10 @@
        inline NeboSingleValueExpression<MinFcn<Initial,
                                                NeboScalar<Initial, T>,
                                                SubExpr2>,
-                                        T> min(typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg1,
+                                        T> min(typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -13301,12 +13486,11 @@
                                                               typename FieldType::
                                                               value_type> >,
                              FieldType> min(FieldType const & arg1,
-                                            SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                            SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MinFcn<Initial,
                  NeboConstField<Initial, FieldType>,
@@ -13420,12 +13604,11 @@
                                                               value_type> >,
                              FieldType> min(NeboExpression<SubExpr1, FieldType>
                                             const & arg1,
-                                            SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                                            SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg2) {
           MinFcn<Initial,
                  SubExpr1,
@@ -13469,17 +13652,14 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                NeboScalar<Initial, T> >,
-                                        T> min(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                        T> min(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MinFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboScalar<Initial, T> > typedef ReturnType;
@@ -13502,12 +13682,11 @@
                                                                            field_type,
                                                                            FieldType>::
                                                    Result> >,
-                             FieldType> min(SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                             FieldType> min(SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             FieldType const & arg2) {
           MinFcn<Initial,
@@ -13531,12 +13710,11 @@
                                                               typename FieldType::
                                                               value_type>,
                                     SubExpr2>,
-                             FieldType> min(SpatialOps::structured::SpatialField<SpatialOps::
-                                                                                 structured::
-                                                                                 SingleValue,
-                                                                                 typename
-                                                                                 FieldType::
-                                                                                 value_type>
+                             FieldType> min(SpatialOps::SpatialField<SpatialOps::
+                                                                     SingleValue,
+                                                                     typename
+                                                                     FieldType::
+                                                                     value_type>
                                             const & arg1,
                                             NeboExpression<SubExpr2, FieldType>
                                             const & arg2) {
@@ -13561,16 +13739,14 @@
                                                                          T>,
                                                NeboConstSingleValueField<Initial,
                                                                          T> >,
-                                        T> min(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                        T> min(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MinFcn<Initial,
                  NeboConstSingleValueField<Initial, T>,
                  NeboConstSingleValueField<Initial, T> > typedef ReturnType;
@@ -13587,11 +13763,10 @@
                                                NeboConstSingleValueField<Initial,
                                                                          T>,
                                                SubExpr2>,
-                                        T> min(SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg1,
+                                        T> min(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg1,
                                                NeboSingleValueExpression<SubExpr2,
                                                                          T>
                                                const & arg2) {
@@ -13612,12 +13787,10 @@
                                         T> min(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               typename SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T>::value_type const
-                                               & arg2) {
+                                               typename SpatialOps::SpatialField<SpatialOps::
+                                                                                 SingleValue,
+                                                                                 T>::
+                                               value_type const & arg2) {
           MinFcn<Initial, SubExpr1, NeboScalar<Initial, T> > typedef ReturnType;
 
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
@@ -13680,11 +13853,10 @@
                                         T> min(NeboSingleValueExpression<SubExpr1,
                                                                          T>
                                                const & arg1,
-                                               SpatialOps::structured::
-                                               SpatialField<SpatialOps::
-                                                            structured::
-                                                            SingleValue,
-                                                            T> const & arg2) {
+                                               SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg2) {
           MinFcn<Initial, SubExpr1, NeboConstSingleValueField<Initial, T> >
           typedef ReturnType;
 

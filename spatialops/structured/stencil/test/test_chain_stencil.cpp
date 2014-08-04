@@ -25,7 +25,6 @@
 #include <spatialops/SpatialOpsTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 #include <test/TestHelper.h>
@@ -36,7 +35,6 @@
 #include <stdexcept>
 #include "ReferenceStencil.h"
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 using std::string;
@@ -48,13 +46,16 @@ template<typename FirstOpType,
          typename DestType>
  inline bool test_stencil_chain(OperatorDatabase & opdb, IntVec npts, bool bc[]) {
     /* basic definitions: */
-    const structured::GhostData ghosts = structured::GhostData(1);
-    const structured::BoundaryCellInfo srcbc = structured::BoundaryCellInfo::
-    build<SrcType>(bc[0], bc[1], bc[2]);
-    const structured::BoundaryCellInfo itmbc = structured::BoundaryCellInfo::
-    build<ItmdType>(bc[0], bc[1], bc[2]);
-    const structured::BoundaryCellInfo destbc = structured::BoundaryCellInfo::
-    build<DestType>(bc[0], bc[1], bc[2]);
+    const GhostData ghosts = GhostData(1);
+    const BoundaryCellInfo srcbc = BoundaryCellInfo::build<SrcType>(bc[0],
+                                                                    bc[1],
+                                                                    bc[2]);
+    const BoundaryCellInfo itmbc = BoundaryCellInfo::build<ItmdType>(bc[0],
+                                                                     bc[1],
+                                                                     bc[2]);
+    const BoundaryCellInfo destbc = BoundaryCellInfo::build<DestType>(bc[0],
+                                                                      bc[1],
+                                                                      bc[2]);
     const MemoryWindow mwSrc = get_window_with_ghost(npts, ghosts, srcbc);
     const MemoryWindow mwItmd = get_window_with_ghost(npts, ghosts, itmbc);
     const MemoryWindow mwDest = get_window_with_ghost(npts, ghosts, destbc);

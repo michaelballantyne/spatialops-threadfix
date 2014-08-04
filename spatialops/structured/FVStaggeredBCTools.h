@@ -25,11 +25,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
-#include <spatialops/structured/FVTools.h>
-
 namespace SpatialOps{
-namespace structured{
-
 
   /**
    *  @brief A convenient way to implement constant valued boundary
@@ -190,8 +186,6 @@ namespace structured{
     }
   }
 
-} // namespace structured
 } // namespace SpatialOps
-
 
 #endif  // Expr_BoundaryCondition_h

@@ -7,6 +7,7 @@ set( PATCH_VERSION "0" )
 
 
 option( ENABLE_TESTS "Enable building of regression tests (recommended)" ON )
+option( ENABLE_EXAMPLES "Enable building of examples tests" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
 option( NEBO_REPORT_BACKEND "Require Nebo to report what backend it is using" OFF )
@@ -45,9 +46,6 @@ set( SpatialOps_CONFIG_INSTALL
 set( boost_comps "program_options" )
 
 if( ENABLE_THREADS )
-  set( TILL_THREADS ON )
-  set( FIELD_EXPRESSION_THREADS ON )
-  set( STENCIL_THREADS ON )
   find_package( Threads REQUIRED )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} )
   set( boost_comps ${boost_comps} "thread;system" )
@@ -207,6 +205,10 @@ endmacro( nebo_add_library )
 add_subdirectory( spatialops )
 
 
+if( ENABLE_EXAMPLES )
+  add_subdirectory( examples )
+endif( ENABLE_EXAMPLES )
+
 # this will compile all of the test cases.  Use "make test" to execute
 # them and see a summary.
 if( ENABLE_TESTS )
@@ -232,12 +234,6 @@ install( FILES
 # variables that are used for building the configuration file for the
 # SpatialOps installation.  This can be used by other CMake build
 # systems that use the SpatialOps library.
-
-# get the location for the installed library
-get_target_property( SOLocation spatialops LOCATION )
-
-# get the full name for the installed library
-get_filename_component( SOInstallLib ${SOLocation} NAME )
 
 set( SpatialOps_INCLUDE ${CMAKE_INSTALL_PREFIX}/include )
 

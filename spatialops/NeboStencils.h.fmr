@@ -353,20 +353,21 @@
                                                       (val-construct 'coefs_ 'coefs))
                                                 null)
                                 (val-call (scope 'Pts 'possible_ghosts)
-                                          (val-member-call 'arg_ 'possible_ghosts))
-                                (val-call 'min
-                                          (val-call 'possible_ghosts)
-                                          (val-member-call 'arg_ 'minimum_ghosts))
-                                (val-member-call 'arg_ 'has_extent)
+                                          (val-member-call 'arg_ 'ghosts_with_bc))
+                                (val-call (scope 'Pts 'possible_ghosts)
+                                          (val-member-call 'arg_ 'ghosts_without_bc))
+                                (val-member-call 'arg_ 'has_extents)
                                 null
-                                (val-member-call 'arg_ 'extent 'dir)
-                                (list (val-member-call 'arg_ 'init)
+                                (val-member-call 'arg_ 'extents)
+                                null
+                                (val-member-call 'arg_ 'has_bc)
+                                (list (val-member-call 'arg_ 'init init-arg)
                                       'coefs_)
                                 (list (val-member-call 'arg_ 'resize)
                                       'coefs_)
                                 (val-member-call 'arg_ 'cpu_ready)
                                 (val-member-call 'arg_ 'gpu_ready DI-chunk)
-                                (list (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                (list (val-member-call 'arg_ 'gpu_init gpu-init-arg)
                                       'coefs_)
                                 (val-member-call 'arg_ 'gpu_prep DI-chunk)
                                 null
@@ -380,7 +381,7 @@
                                                (list (val-construct 'arg_ 'arg)
                                                      (val-construct 'coefs_ 'coefs))
                                                null)
-                               (list (val-member-call 'arg_ 'init)
+                               (list (val-member-call 'arg_ 'init init-arg)
                                      'coefs_)
                                null
                                (list (stmt-dcl-variable (const 'Arg) 'arg_)
@@ -437,12 +438,15 @@
                                                       (val-construct 'coefs_ 'coefs))
                                                 null)
                                 (val-call (scope 'Pts 'possible_additive_ghosts)
-                                          (val-member-call 'arg_ 'possible_ghosts))
-                                (val-member-call 'arg_ 'minimum_ghosts)
+                                          (val-member-call 'arg_ 'ghosts_with_bc))
+                                (val-call (scope 'Pts 'possible_additive_ghosts)
+                                          (val-member-call 'arg_ 'ghosts_without_bc))
                                 (val-member-call 'arg_ 'has_extent)
                                 null
-                                (val-member-call 'arg_ 'extent 'dir)
-                                (list (val-member-call 'arg_ 'init)
+                                (val-member-call 'arg_ 'extents)
+                                null
+                                (val-member-call 'arg_ 'has_bc)
+                                (list (val-member-call 'arg_ 'init init-arg)
                                       'coefs_
                                       (val-call 'lowest_indicies)
                                       (val-call 'highest_indicies))
@@ -452,13 +456,13 @@
                                       (val-call 'highest_indicies))
                                 (val-member-call 'arg_ 'cpu_ready)
                                 (val-member-call 'arg_ 'gpu_ready DI-chunk)
-                                (list (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                (list (val-member-call 'arg_ 'gpu_init gpu-init-arg)
                                       'coefs_)
                                 (val-member-call 'arg_ 'gpu_prep DI-chunk)
                                 (list (def-returning-function (constize (dcl-function 'actual_ghosts GhostData))
                                         null
                                         (val-call (scope 'Pts 'possible_ghosts)
-                                                  (val-member-call 'arg_ 'possible_ghosts)))
+                                                  (val-member-call 'arg_ 'ghosts_with_bc)))
                                       (def-returning-function (constize (dcl-function 'lowest_indicies IntVec))
                                         null
                                         (val-negate (val-member-call (val-call 'actual_ghosts)
@@ -467,10 +471,7 @@
                                         null
                                         (val-add (val-member-call (val-call 'actual_ghosts)
                                                                   'get_plus)
-                                                 (val-call IntVec
-                                                           (val-call 'extent 0)
-                                                           (val-call 'extent 1)
-                                                           (val-call 'extent 2)))))
+                                                 (val-call 'extents))))
                                 (list (stmt-dcl-variable (const 'Arg) 'arg_)
                                       (stmt-dcl-variable (const 'Coefs) 'coefs_)))
                 (bs-Resize-rhs (stmt-typedef (type-template NSCC (scope 'Pts 'length))
@@ -485,7 +486,7 @@
                                                      (val-construct 'low_ 'low)
                                                      (val-construct 'high_ 'high))
                                                null)
-                               (list (val-member-call 'arg_ 'init)
+                               (list (val-member-call 'arg_ 'init init-arg)
                                      'coefs_
                                      'low_
                                      'high_)
@@ -556,18 +557,19 @@
                                                 (val-construct 'arg_ 'a)
                                                 null)
                                 (val-call (scope 'Pts 'possible_ghosts)
-                                          (val-member-call 'arg_ 'possible_ghosts))
-                                (val-call 'min
-                                          (val-call 'possible_ghosts)
-                                          (val-member-call 'arg_ 'minimum_ghosts))
-                                (val-member-call 'arg_ 'has_extent)
+                                          (val-member-call 'arg_ 'ghosts_with_bc))
+                                (val-call (scope 'Pts 'possible_ghosts)
+                                          (val-member-call 'arg_ 'ghosts_without_bc))
+                                (val-member-call 'arg_ 'has_extents)
                                 null
-                                (val-member-call 'arg_ 'extent 'dir)
-                                (val-member-call 'arg_ 'init)
+                                (val-member-call 'arg_ 'extents)
+                                null
+                                (val-member-call 'arg_ 'has_bc)
+                                (val-member-call 'arg_ 'init init-arg)
                                 (val-member-call 'arg_ 'resize)
                                 (val-member-call 'arg_ 'cpu_ready)
                                 (val-member-call 'arg_ 'gpu_ready DI-chunk)
-                                (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                (val-member-call 'arg_ 'gpu_init gpu-init-arg)
                                 (val-member-call 'arg_ 'gpu_prep DI-chunk)
                                 null
                                 (stmt-dcl-variable (const 'Arg) 'arg_))
@@ -576,7 +578,7 @@
                                (bm-constructor (function-pmtr (ref (const 'Arg)) 'arg)
                                                (val-construct 'arg_ 'arg)
                                                null)
-                               (val-member-call 'arg_ 'init)
+                               (val-member-call 'arg_ 'init init-arg)
                                null
                                (stmt-dcl-variable (const 'Arg) 'arg_))
                 (bs-SeqWalk-rhs (list (sum-general-eval-struct 'EvalExpr #false)
@@ -624,18 +626,19 @@
                                                 (val-construct 'arg_ 'a)
                                                 null)
                                 (val-call (type-template 'point_possible_ghosts 'Point)
-                                          (val-member-call 'arg_ 'possible_ghosts))
-                                (val-call 'min
-                                          (val-call 'possible_ghosts)
-                                          (val-member-call 'arg_ 'minimum_ghosts))
-                                (val-member-call 'arg_ 'has_extent)
+                                          (val-member-call 'arg_ 'ghosts_with_bc))
+                                (val-call (type-template 'point_possible_ghosts 'Point)
+                                          (val-member-call 'arg_ 'ghosts_without_bc))
+                                (val-member-call 'arg_ 'has_extents)
                                 null
-                                (val-member-call 'arg_ 'extent 'dir)
-                                (val-member-call 'arg_ 'init)
+                                (val-member-call 'arg_ 'extents)
+                                null
+                                (val-member-call 'arg_ 'has_bc)
+                                (val-member-call 'arg_ 'init init-arg)
                                 (val-member-call 'arg_ 'resize)
                                 (val-member-call 'arg_ 'cpu_ready)
                                 (val-member-call 'arg_ 'gpu_ready DI-chunk)
-                                (val-member-call 'arg_ 'gpu_init DI-chunk)
+                                (val-member-call 'arg_ 'gpu_init gpu-init-arg)
                                 (val-member-call 'arg_ 'gpu_prep DI-chunk)
                                 null
                                 (stmt-dcl-variable (const 'Arg) 'arg_))
@@ -645,7 +648,7 @@
                                (bm-constructor (function-pmtr (ref (const 'Arg)) 'arg)
                                                (val-construct 'arg_ 'arg)
                                                null)
-                               (val-member-call 'arg_ 'init)
+                               (val-member-call 'arg_ 'init init-arg)
                                null
                                (stmt-dcl-variable (const 'Arg) 'arg_))
                 (bs-SeqWalk-rhs null

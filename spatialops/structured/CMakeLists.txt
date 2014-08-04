@@ -23,27 +23,29 @@ add_subdirectory( stencil )
 target_link_libraries( spatialops-structured spatialops-stencil )
 
 install( FILES
+  BitField.h
   BoundaryCellInfo.h
+  CudaMemoryAllocator.h
+  DoubleVec.h
+  ExternalAllocators.h
+  FieldComparisons.h
+  FieldHelper.h
+  FieldInfo.h
   FVStaggeredBCTools.h
+  FVStaggered.h
   FVStaggeredLocationTypes.h
   FVStaggeredFieldTypes.h
-  FVTools.h
   Grid.h
   GhostData.h
   IndexTriplet.h
   IntVec.h
   Numeric3Vec.h
-  ExternalAllocators.h
-  CudaMemoryAllocator.h
   MemoryPool.h
   MemoryTypes.h
   MemoryWindow.h
-  FieldComparisons.h
   SpatialField.h
-  SpatialMask.h
-  BitField.h
   SpatialFieldStore.h
-  FieldHelper.h
+  SpatialMask.h
   DESTINATION include/spatialops/structured
   PERMISSIONS OWNER_READ GROUP_READ WORLD_READ
   )

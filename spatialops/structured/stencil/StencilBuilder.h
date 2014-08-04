@@ -29,18 +29,21 @@
 
 namespace SpatialOps{
 
-  class OperatorDatabase;
-
-namespace structured{
+  class OperatorDatabase; // forward declaration
+  class Grid;             // forward declaration
 
   /**
-   *  \fn void build_stencils( const unsigned int nx,
-   *                           const unsigned int ny,
-   *                           const unsigned int nz,
-   *                           const double Lx,
-   *                           const double Ly,
-   *                           const double Lz,
-   *                           OperatorDatabase& opdb );
+   *  \ingroup optypes
+   *
+   *  \fn void build_stencils( const unsigned int,
+   *                           const unsigned int,
+   *                           const unsigned int,
+   *                           const double,
+   *                           const double,
+   *                           const double,
+   *                           OperatorDatabase& );
+   *
+   *  \brief builds commonly used stencil operators
    *
    *  \param nx number of points in the x-direction
    *  \param ny number of points in the y-direction
@@ -58,7 +61,18 @@ namespace structured{
                        const double Lz,
                        OperatorDatabase& opdb );
 
-} // namespace structured
+  /**
+   * \ingroup optypes
+   *
+   * \fn void build_stencils( const Grid&, OperatorDatabase& )
+   *
+   * \brief builds commonly used stencil operators
+   *
+   * \param grid the grid to build the stencils on
+   * \param opDB the OperatorDatabase to store the stencils in
+   */
+  void build_stencils( const Grid& grid, OperatorDatabase& opDB );
+
 } // namespace SpatialOps
 
 #endif // SpatialOps_structured_StencilBuilder_h

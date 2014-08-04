@@ -35,40 +35,48 @@
 
           NeboMask<SeqWalk, FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboMask<Resize, FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboMask<GPUWalk, FieldType> typedef GPUWalkType;
           #endif
           /* __CUDACC__ */
 
-          NeboMask(structured::SpatialMask<FieldType> const & m)
+          NeboMask(SpatialMask<FieldType> const & m)
           : mask_(m)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return mask_.get_valid_ghost_data() + point_to_ghost(mask_.boundary_info().has_extra());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return point_to_ghost(mask_.boundary_info().has_extra());
+          inline GhostData ghosts_without_bc(void) const {
+             return mask_.get_valid_ghost_data();
           }
 
-          inline bool has_extent(void) const { return true; }
+          inline bool has_extents(void) const { return true; }
 
-          inline int extent(int const dir) const {
-             return mask_.window_without_ghost().extent(dir) - mask_.boundary_info().has_extra(dir);
+          inline IntVec extents(void) const {
+             return mask_.window_without_ghost().extents();
           }
 
-          inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
+          inline IntVec has_bc(void) const {
+             return point_to_ghost(mask_.boundary_info().has_bc());
+          }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(mask_);
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const { return ResizeType(mask_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -79,14 +87,16 @@
                 return mask_.find_consumer(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, mask_);
              }
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<structured::SpatialMask<FieldType> *>(&mask_)->
-                   add_consumer(deviceIndex);
+                   const_cast<SpatialMask<FieldType> *>(&mask_)->add_consumer(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -94,9 +104,9 @@
           /* __CUDACC__ */
 
          private:
-          structured::SpatialMask<FieldType> const mask_;
+          SpatialMask<FieldType> const mask_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename FieldType>
           struct NeboMask<Resize, FieldType> {
             public:
@@ -104,17 +114,21 @@
 
              NeboMask<SeqWalk, FieldType> typedef SeqWalkType;
 
-             NeboMask(structured::SpatialMask<FieldType> const & m)
+             NeboMask(SpatialMask<FieldType> const & m)
              : mask_(m)
              {}
 
-             inline SeqWalkType init(void) const { return SeqWalkType(mask_); }
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(mask_);
+             }
 
             private:
-             structured::SpatialMask<FieldType> const mask_;
+             SpatialMask<FieldType> const mask_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename FieldType>
        struct NeboMask<SeqWalk, FieldType> {
          public:
@@ -122,7 +136,7 @@
 
           typename field_type::value_type typedef value_type;
 
-          NeboMask(structured::SpatialMask<FieldType> const & m)
+          NeboMask(SpatialMask<FieldType> const & m)
           : mask_(m)
           {}
 
@@ -131,7 +145,7 @@
           }
 
          private:
-          structured::SpatialMask<FieldType> const mask_;
+          SpatialMask<FieldType> const mask_;
       };
       #ifdef __CUDACC__
          template<typename FieldType>
@@ -141,8 +155,7 @@
 
              typename field_type::value_type typedef value_type;
 
-             NeboMask(int const deviceIndex,
-                      structured::SpatialMask<FieldType> const & m)
+             NeboMask(int const deviceIndex, SpatialMask<FieldType> const & m)
              : bitField_(m.mask_values(deviceIndex)),
                xOffset_(m.window_with_ghost().offset(0) + m.get_ghost_data().get_minus(0)),
                yOffset_(m.window_with_ghost().offset(1) + m.get_ghost_data().get_minus(1)),

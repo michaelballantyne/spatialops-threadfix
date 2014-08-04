@@ -39,7 +39,7 @@
 #  endif
    /* NEBO_REPORT_BACKEND */
 
-#  ifdef FIELD_EXPRESSION_THREADS
+#  ifdef ENABLE_THREADS
 #     include <spatialops/SpatialOpsTools.h>
 #     include <vector>
 #     include <boost/bind.hpp>
@@ -47,7 +47,7 @@
 #     include <spatialops/structured/IntVec.h>
 #     include <spatialops/Semaphore.h>
 #  endif
-   /* FIELD_EXPRESSION_THREADS */
+   /* ENABLE_THREADS */
 
 #  ifdef __CUDACC__
 #     include <sstream>
@@ -60,10 +60,10 @@
       struct All;
       struct InteriorOnly;
 
-      inline structured::GhostData calculate_actual_ghost(bool const useGhost,
-                                                          structured::GhostData const & lhs,
-                                                          structured::BoundaryCellInfo const & bc,
-                                                          structured::GhostData const & rhs) {
+      inline GhostData calculate_actual_ghost(bool const useGhost,
+                                                          GhostData const & lhs,
+                                                          BoundaryCellInfo const & bc,
+                                                          GhostData const & rhs) {
         if(bc.has_bc(0) && rhs.get_plus(0) < bc.has_extra(0)) {
           std::ostringstream msg;
           msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
@@ -96,26 +96,9 @@
 
         return ((useGhost
                  ? min((lhs + point_to_ghost(bc.has_extra())), rhs)
-                 : structured::GhostData(structured::IntVec(0, 0, 0),
+                 : GhostData(IntVec(0, 0, 0),
                                          bc.has_extra()))
                 - point_to_ghost(bc.has_extra()));
-      };
-
-      inline structured::GhostData calculate_limits(bool const useGhost,
-                                                    structured::MemoryWindow const & lhsMemoryWindow,
-                                                    structured::GhostData const & lhsCurrentGhosts,
-                                                    structured::GhostData const & lhsPossibleGhosts,
-                                                    structured::BoundaryCellInfo const & bc,
-                                                    structured::GhostData const rhsPossibleGhosts) {
-        structured::GhostData lhsActualGhosts = calculate_actual_ghost(useGhost,
-                                                                       lhsPossibleGhosts,
-                                                                       bc,
-                                                                       rhsPossibleGhosts);
-
-        return structured::GhostData(lhsActualGhosts.get_minus(),
-                                     (lhsMemoryWindow.extent() - lhsCurrentGhosts.get_minus() - lhsCurrentGhosts.get_plus() +
-                                      lhsActualGhosts.get_plus()));
-                                      
       };
 
       template<typename Type1, typename Type2>
@@ -124,7 +107,7 @@
       template<typename Type>
        struct NeboFieldCheck<Type, Type> { Type typedef Result; };
 
-      inline structured::IntVec nebo_find_partition(structured::IntVec const & extent,
+      inline IntVec nebo_find_partition(IntVec const & extent,
                                                     int const thread_count) {
          int x = 1;
          int y = 1;
@@ -134,33 +117,22 @@
          else if(thread_count <= extent[1]) { y = thread_count; }
          else if(thread_count <= extent[0]) { x = thread_count; };
 
-         return structured::IntVec(x, y, z);
+         return IntVec(x, y, z);
       };
 
-      inline int nebo_partition_count(structured::IntVec const & split) {
+      inline int nebo_partition_count(IntVec const & split) {
          return split[0] * split[1] * split[2];
       };
 
-      inline void nebo_set_up_extents(structured::IntVec const & current,
-                                      structured::IntVec const & split,
-                                      int & localXLow,
-                                      int & localXHigh,
-                                      int & localYLow,
-                                      int & localYHigh,
-                                      int & localZLow,
-                                      int & localZHigh,
-                                      int const xLow,
-                                      int const xHigh,
-                                      int const yLow,
-                                      int const yHigh,
-                                      int const zLow,
-                                      int const zHigh) {
-        using namespace structured;
+      inline void nebo_set_up_extents(IntVec const & current,
+                                      IntVec const & split,
+                                      GhostData & localLimits,
+                                      GhostData const & limits) {
 
         //full extent indexed from 0 rather than DLow (which is nonpositive - zero or below)
-        IntVec const fullExtent(xHigh - xLow,
-                                yHigh - yLow,
-                                zHigh - zLow);
+        IntVec const fullExtent(limits.get_plus(0) - limits.get_minus(0),
+                                limits.get_plus(1) - limits.get_minus(1),
+                                limits.get_plus(2) - limits.get_minus(2));
 
         //sanity checks
 #       ifndef NDEBUG
@@ -195,23 +167,23 @@
         IntVec const high = low + stdExtent + currentExtra;
 
         //shift back to indexing from DLow rather than zero
-        localXLow = low[0] + xLow;
-        localYLow = low[1] + yLow;
-        localZLow = low[2] + zLow;
-        localXHigh = high[0] + xLow;
-        localYHigh = high[1] + yLow;
-        localZHigh = high[2] + zLow;
+        localLimits = GhostData(low[0] + limits.get_minus(0),
+                                            high[0] + limits.get_minus(0),
+                                            low[1] + limits.get_minus(1),
+                                            high[1] + limits.get_minus(1),
+                                            low[2] + limits.get_minus(2),
+                                            high[2] + limits.get_minus(2));
       };
 
-      inline structured::IntVec nebo_next_partition(structured::IntVec const & current,
-                                                    structured::IntVec const & split) {
-        structured::IntVec result;
+      inline IntVec nebo_next_partition(IntVec const & current,
+                                                    IntVec const & split) {
+        IntVec result;
 
         if(current[2] < split[2] - 1)
-          result = structured::IntVec(current[0], current[1], 1 + current[2]);
+          result = IntVec(current[0], current[1], 1 + current[2]);
         else if(current[1] < split[1] - 1)
-          result = structured::IntVec(current[0], 1 + current[1], 0);
-        else result = structured::IntVec(1 + current[0], 0, 0);
+          result = IntVec(current[0], 1 + current[1], 0);
+        else result = IntVec(1 + current[0], 0, 0);
 
         return result;
       };
@@ -236,7 +208,7 @@
       template<typename Operand, typename T>
        struct NeboSingleValueExpression {
          public:
-          SpatialOps::structured::SpatialField<SpatialOps::structured::SingleValue, T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef field_type;
 
           Operand typedef Expression;
 
@@ -270,7 +242,7 @@
       template<typename Operand, typename T>
        struct NeboBooleanSingleValueExpression {
          public:
-          SpatialOps::structured::SpatialField<SpatialOps::structured::SingleValue, T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef field_type;
 
           Operand typedef Expression;
 
@@ -286,10 +258,10 @@
 
       /* Modes: */
       struct Initial;
-#     ifdef FIELD_EXPRESSION_THREADS
+#     ifdef ENABLE_THREADS
          struct Resize;
 #     endif
-      /* FIELD_EXPRESSION_THREADS */
+      /* ENABLE_THREADS */
       struct SeqWalk;
 #     ifdef __CUDACC__
         struct GPUWalk;

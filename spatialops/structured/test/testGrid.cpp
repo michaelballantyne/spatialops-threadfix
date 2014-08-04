@@ -1,12 +1,10 @@
 #include <spatialops/structured/Grid.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <test/TestHelper.h>
 
 #include <cmath>
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 
@@ -59,17 +57,11 @@ bool test_field( const Grid& grid,
 int main()
 {
   const IntVec npts( 3, 3, 3 );
-  std::vector<double> length(3,1.0), spc(3,1.0);
-
-  length[0] = 1.0;
-  length[1] = 11.0;
-  length[2] = 111.0;
+  const DoubleVec length(1.0,11.0,111.0);
 
   const Grid grid( npts, length );
 
-  spc[0] = grid.spacing<XDIR>();
-  spc[1] = grid.spacing<YDIR>();
-  spc[2] = grid.spacing<ZDIR>();
+  const DoubleVec spc = grid.spacing();
 
   cout << "Grid info: [nx,ny,nz] = " << npts << endl
        << "           [Lx,Ly,Lz] = " << "[" << length[0] << "," << length[1] << "," << length[2] << "]" << endl

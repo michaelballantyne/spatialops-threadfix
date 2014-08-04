@@ -27,7 +27,6 @@
 #include <iostream>
 
 using namespace SpatialOps;
-using namespace structured;
 using namespace std;
 
 int main()

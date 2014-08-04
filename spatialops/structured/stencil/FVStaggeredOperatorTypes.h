@@ -28,13 +28,12 @@
 #include <spatialops/Nebo.h>
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    *  \struct OperatorTypeBuilder
    *  \author James C. Sutherland
-   *
-   *  \brief Builds operator types
+   *  \ingroup optypes
+   *  \brief Builds operator types from field types and operator type descriptors.
    *  \tparam OpT the type of operator (\c Interpolant, \c Gradient, \c Divergence)
    *  \tparam SrcT the field type that the operator acts on
    *  \tparam DestT the field type that the operator produces
@@ -57,6 +56,10 @@ namespace structured{
    *
    *  Note that we only provide fully specialized versions of this template
    *  so that unsupported operator types cannot be inadvertently formed.
+   *
+   *  \sa BasicOpTypes
+   *  \sa \ref example-stencil-type-inference
+   *  \sa \ref example-stencils
    */
   template<typename OpT, typename SrcT, typename DestT>
   struct OperatorTypeBuilder;
@@ -73,20 +76,23 @@ namespace structured{
   /**
    *  \struct BasicOpTypes
    *  \author James C. Sutherland
-   *
+   *  \ingroup optypes
    *  \brief Provides typedefs for common operator types on a given volume
    *  \tparam CellT the type of volume we are considering.
    *
    *  The following public typedefs are made:
-   *   - \c InterpC2FX Interpolate to the x-surface
-   *   - \c InterpC2FY Interpolate to the y-surface
-   *   - \c InterpC2FZ Interpolate to the z-surface
-   *   - \c GradX Calculate \f$\frac{\partial}{\partial x}$\f on the x-surface
-   *   - \c GradY Calculate \f$\frac{\partial}{\partial y}$\f on the y-surface
-   *   - \c GradZ Calculate \f$\frac{\partial}{\partial z}$\f on the z-surface
-   *   - \c DivX Calculate the divergence from the x-surface to the volume
-   *   - \c DivY Calculate the divergence from the y-surface to the volume
-   *   - \c DivZ Calculate the divergence from the z-surface to the volume
+   *
+   *  Operator Type  | Description
+   *  ---------------|----------------
+   *  \c InterpC2FX  | Interpolate to the x-surface
+   *  \c InterpC2FY  | Interpolate to the y-surface
+   *  \c InterpC2FZ  | Interpolate to the z-surface
+   *  \c GradX       | Calculate \f$\frac{\partial}{\partial x}\f$ on the x-surface
+   *  \c GradY       | Calculate \f$\frac{\partial}{\partial y}\f$ on the y-surface
+   *  \c GradZ       | Calculate \f$\frac{\partial}{\partial z}\f$ on the z-surface
+   *  \c DivX        | Calculate the divergence from the x-surface to the volume
+   *  \c DivY        | Calculate the divergence from the y-surface to the volume
+   *  \c DivZ        | Calculate the divergence from the z-surface to the volume
    *
    *  This struct is defined for the following field types:
    *   - \c SVolField
@@ -94,11 +100,15 @@ namespace structured{
    *   - \c YVolField
    *   - \c ZVolField
    *
-   *  Examples:
-   *  \code
+   *  Example usage:
+   *  \code{.cpp}
    *  typedef BasicOpTypes<SVolField>::GradY      MyGradYType;
    *  typedef BasicOpTypes<SVolField>::InterpC2FX InterpSVolSSurfX;
    *  \endcode
+   *
+   *  \sa OperatorTypeBuilder
+   *  \sa \ref example-stencil-type-inference
+   *  \sa \ref example-stencils
    */
   template< typename CellT > struct BasicOpTypes;
 
@@ -282,7 +292,6 @@ namespace structured{
   FD_ALL_VOL_FIELDS( GradientY )
   FD_ALL_VOL_FIELDS( GradientZ )
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif // SpatialOps_structured_FVStaggeredOpTypes_h

@@ -3,7 +3,6 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/OperatorDatabase.h>
 
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 
@@ -14,7 +13,6 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 

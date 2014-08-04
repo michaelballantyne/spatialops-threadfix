@@ -24,7 +24,6 @@
 #define EXTERNALSTENCILTEST_H_
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/SpatialOpsDefs.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/MemoryWindow.h>
 #include <spatialops/structured/IndexTriplet.h>
@@ -34,8 +33,8 @@ namespace SpatialOps {
 
     struct PointFieldTraits {
       typedef NODIR FaceDir;
-      typedef structured::IndexTriplet< 0, 0, 0> Offset;
-      typedef structured::IndexTriplet<0,0,0>  BCExtra;
+      typedef IndexTriplet< 0, 0, 0> Offset;
+      typedef IndexTriplet<0,0,0>  BCExtra;
     };
 
     /**
@@ -47,7 +46,7 @@ namespace SpatialOps {
      *  points from a parent field and return them back to a parent
      *  field.
      */
-    typedef structured::SpatialField<Point::PointFieldTraits, float> PointFloatField;
+    typedef SpatialField<Point::PointFieldTraits, float> PointFloatField;
 
   } // namespace Point
 } // namespace SpatialOps

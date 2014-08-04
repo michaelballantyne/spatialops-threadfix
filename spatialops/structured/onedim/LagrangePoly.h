@@ -182,8 +182,8 @@ public:
   /**
    *  Constructs a LagrangeDerivative from the set of data.
    *
-   *  \param xpts The independent values.
-   *  \param ypts The dependent (function) values.
+   *  \param x The independent values.
+   *  \param y The dependent (function) values.
    *  \param order OPTIONAL.  If supplied at construction, this will
    *         be used as the default polynomial order for the
    *         interpolant.  The polynomial order can also be specified

@@ -28,9 +28,6 @@
  *
  *  \date   August, 2012
  *  \author Christopher Earl
- *
- *  \addtogroup structured
- *  @{
  */
 
 #include <spatialops/SpatialOpsConfigure.h>
@@ -38,9 +35,7 @@
 #include <spatialops/SpatialOpsDefs.h>
 
 #include <spatialops/structured/IntVec.h>
-#include <spatialops/structured/IndexTriplet.h>
 
-#include <iomanip>
 #include <string>
 #include <sstream>
 #include <stdexcept>
@@ -48,10 +43,10 @@
 #define GHOST_MAX 9001
 
 namespace SpatialOps{
-namespace structured{
 
   /**
    * \class GhostData
+   * \ingroup fields
    * \date July, 2013
    * \author James C. Sutherland
    * \brief Holds information about the number of ghost cells on each side of the domain
@@ -127,7 +122,7 @@ namespace structured{
        isInf_ = rhs.isInf_;
      }
 
-    GhostData& operator=( const GhostData& rhs )
+    inline GhostData& operator=( const GhostData& rhs )
     {
       minus_ = rhs.minus_;
       plus_  = rhs.plus_;
@@ -267,12 +262,6 @@ namespace structured{
     return out;
   }
 
-
-  } // namespace structured
 } // namespace SpatialOps
-
-/**
- * @}
- */
 
 #endif /* SpatialOps_GhostData_h */

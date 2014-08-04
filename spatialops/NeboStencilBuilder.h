@@ -47,10 +47,10 @@
 #define NEBO_ADD_POINT(POINT) template AddPoint< POINT >::Result
 
 //Define a new stencil from three constant integers
-#define NEBO_FIRST_IJK(X, Y, Z) NeboStencilPointCollection< structured::IndexTriplet<X,Y,Z>, NeboNil >
+#define NEBO_FIRST_IJK(X, Y, Z) NeboStencilPointCollection< IndexTriplet<X,Y,Z>, NeboNil >
 
 //Add a point (three constant integers) to an existing stencil
-#define NEBO_ADD_IJK(X, Y, Z) AddPoint< structured::IndexTriplet<X,Y,Z> >::Result
+#define NEBO_ADD_IJK(X, Y, Z) AddPoint< IndexTriplet<X,Y,Z> >::Result
 
 namespace SpatialOps {
 
@@ -61,7 +61,7 @@ namespace SpatialOps {
   template< typename List, typename IT >
     struct ListSubtract
     {
-      typedef NeboStencilPointCollection< typename structured::Subtract< typename List::Point, IT >::result,
+      typedef NeboStencilPointCollection< typename Subtract< typename List::Point, IT >::result,
                                           typename ListSubtract< typename List::Collection, IT >::result >
               result;
     };
@@ -69,7 +69,7 @@ namespace SpatialOps {
   template< typename Point, typename IT >
     struct ListSubtract< NeboStencilPointCollection< Point, NeboNil >, IT >
     {
-      typedef NeboStencilPointCollection< typename structured::Subtract< Point, IT >::result, NeboNil >
+      typedef NeboStencilPointCollection< typename Subtract< Point, IT >::result, NeboNil >
               result;
     };
 
@@ -158,10 +158,9 @@ namespace SpatialOps {
         // destination field offset
         typedef typename DestFieldType::Location::Offset                     DestOffset;
         // low (first) stencil point location (relative to the destination point)
-        typedef typename structured::GreaterThan<SrcOffset,
-                                                 DestOffset>::result::Negate LowStPt;
+        typedef typename GreaterThan<SrcOffset, DestOffset>::result::Negate  LowStPt;
         // high (second) stencil point location (relative to the destination point)
-        typedef typename structured::LessThan<SrcOffset, DestOffset>::result HighStPt;
+        typedef typename LessThan<SrcOffset, DestOffset>::result             HighStPt;
         // collection of all stencil points in this stencil
         typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)          StPtCollection;
     };
@@ -178,13 +177,13 @@ namespace SpatialOps {
         struct TemplateIf<false, True, False> { False typedef result; };
 
         // source field offset
-        typedef typename SrcFieldType::Location::Offset                             SrcOffset;
+        typedef typename SrcFieldType::Location::Offset  SrcOffset;
         // destination field offset
-        typedef typename DestFieldType::Location::Offset                            DestOffset;
+        typedef typename DestFieldType::Location::Offset DestOffset;
         // unit vectors
-        typedef structured::IndexTriplet<1, 0, 0>                                   XUnit;
-        typedef structured::IndexTriplet<0, 1, 0>                                   YUnit;
-        typedef structured::IndexTriplet<0, 0, 1>                                   ZUnit;
+        typedef IndexTriplet<1, 0, 0>   XUnit;
+        typedef IndexTriplet<0, 1, 0>   YUnit;
+        typedef IndexTriplet<0, 0, 1>   ZUnit;
         // first direction (unit vector)
         typedef typename TemplateIf<((int)(SrcOffset::X) != (int)(DestOffset::X)),
                                     XUnit,
@@ -194,42 +193,42 @@ namespace SpatialOps {
                                     ZUnit,
                                     YUnit>::result                                  SecondDir;
         // source offset in the first direction
-        typedef typename structured::Multiply<SrcOffset, FirstDir>::result          SrcInFirstDir;
+        typedef typename Multiply<SrcOffset, FirstDir>::result          SrcInFirstDir;
         // source offset in the second direction
-        typedef typename structured::Multiply<SrcOffset, SecondDir>::result         SrcInSecondDir;
+        typedef typename Multiply<SrcOffset, SecondDir>::result         SrcInSecondDir;
         // destination offset in the first direction
-        typedef typename structured::Multiply<DestOffset, FirstDir>::result         DestInFirstDir;
+        typedef typename Multiply<DestOffset, FirstDir>::result         DestInFirstDir;
         // destination offset in the second direction
-        typedef typename structured::Multiply<DestOffset, SecondDir>::result        DestInSecondDir;
+        typedef typename Multiply<DestOffset, SecondDir>::result        DestInSecondDir;
         // low value in the first direction
-        typedef typename structured::GreaterThan<SrcInFirstDir,
+        typedef typename GreaterThan<SrcInFirstDir,
                                                  DestInFirstDir>::result::Negate    LoValInFirstDir;
         // high value in the first direction
-        typedef typename structured::LessThan<SrcInFirstDir,
+        typedef typename LessThan<SrcInFirstDir,
                                               DestInFirstDir>::result               HiValInFirstDir;
         // low value in the second direction
-        typedef typename structured::GreaterThan<SrcInSecondDir,
+        typedef typename GreaterThan<SrcInSecondDir,
                                             DestInSecondDir>::result::Negate        LoValInSecondDir;
         // high value in the second direction
-        typedef typename structured::LessThan<SrcInSecondDir,
+        typedef typename LessThan<SrcInSecondDir,
                                               DestInSecondDir>::result              HiValInSecondDir;
         // stencil point locations (relative to the destination point)
-        typedef typename structured::Add<LoValInFirstDir, LoValInSecondDir>::result StPt1;
-        typedef typename structured::Add<HiValInFirstDir, LoValInSecondDir>::result StPt2;
-        typedef typename structured::Add<LoValInFirstDir, HiValInSecondDir>::result StPt3;
-        typedef typename structured::Add<HiValInFirstDir, HiValInSecondDir>::result StPt4;
+        typedef typename Add<LoValInFirstDir, LoValInSecondDir>::result StPt1;
+        typedef typename Add<HiValInFirstDir, LoValInSecondDir>::result StPt2;
+        typedef typename Add<LoValInFirstDir, HiValInSecondDir>::result StPt3;
+        typedef typename Add<HiValInFirstDir, HiValInSecondDir>::result StPt4;
         // collection of all stencil points in this stencil
-      typedef NEBO_FIRST_POINT(StPt1)::NEBO_ADD_POINT(StPt2)
-              ::NEBO_ADD_POINT(StPt3)::NEBO_ADD_POINT(StPt4)                        StPtCollection;
+        typedef NEBO_FIRST_POINT(StPt1)::NEBO_ADD_POINT(StPt2)
+                ::NEBO_ADD_POINT(StPt3)::NEBO_ADD_POINT(StPt4)                      StPtCollection;
     };
 
     template<typename OperatorType, typename SrcFieldType, typename DestFieldType>
     struct FDStencilCollection {
-        typedef typename OperatorType::DirT                                 DirT;
-        typedef typename structured::UnitTriplet<DirT>::type                DirVec;
-        typedef typename DirVec::Negate                                     LowStPt;
-        typedef DirVec                                                      HighStPt;
-        typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)         StPtCollection;
+        typedef typename OperatorType::DirT                          DirT;
+        typedef typename UnitTriplet<DirT>::type                     DirVec;
+        typedef typename DirVec::Negate                              LowStPt;
+        typedef DirVec                                               HighStPt;
+        typedef NEBO_FIRST_POINT(LowStPt)::NEBO_ADD_POINT(HighStPt)  StPtCollection;
     };
 
   /**
@@ -508,9 +507,9 @@ namespace SpatialOps {
       // destination field offset
       typedef typename DestFieldType::Location::Offset                     DestOffset;
       // minus-side stencil point location
-      typedef typename structured::LessThan<SrcOffset, DestOffset>::result MinusPoint;
+      typedef typename LessThan<SrcOffset, DestOffset>::result MinusPoint;
       // plus-side stencil point location
-      typedef typename structured::GreaterThan<SrcOffset,
+      typedef typename GreaterThan<SrcOffset,
                                                DestOffset>::result::Negate PlusPoint;
     };
 
@@ -541,8 +540,8 @@ namespace SpatialOps {
         typedef SrcFieldT  SrcFieldType;  ///< source field type
         typedef DestFieldT DestFieldType; ///< destination field type
 
-        typedef structured::SpatialMask<SrcFieldType>  SrcMask;  ///< source mask type
-        typedef structured::SpatialMask<DestFieldType> DestMask; ///< destination mask type
+        typedef SpatialMask<SrcFieldType>  SrcMask;  ///< source mask type
+        typedef SpatialMask<DestFieldType> DestMask; ///< destination mask type
 
         typedef typename MaskShiftPoints<OperatorType, SrcFieldType, DestFieldType>::MinusPoint MinusPoint; ///< negative face shift for mask
         typedef typename MaskShiftPoints<OperatorType, SrcFieldType, DestFieldType>::PlusPoint  PlusPoint;  ///< positive face shift for mask
@@ -602,8 +601,8 @@ namespace SpatialOps {
       typedef typename PointCollection::First       HighPoint;     ///< stencil offset for high point in phi, assumes gamma is origin
       typedef typename PointCollection::AllButFirst NonHighPoints; ///< stencil offsets for all but high point in phi, assumes gamma is origin
 
-      typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, LowPoint>:: result LowGammaPoint;
-      typedef typename structured::Subtract<structured::IndexTriplet<0,0,0>, HighPoint>::result HighGammaPoint;
+      typedef typename Subtract<IndexTriplet<0,0,0>, LowPoint>:: result LowGammaPoint;
+      typedef typename Subtract<IndexTriplet<0,0,0>, HighPoint>::result HighGammaPoint;
       typedef typename ListSubtract<NonLowPoints,  LowPoint>:: result                           NonLowSrcPoints;
       typedef typename ListSubtract<NonHighPoints, HighPoint>::result                           NonHighSrcPoints;
       typedef NeboMaskShiftBuilder<OperatorType, GammaFieldType, PhiFieldType>                  Shift;
@@ -615,7 +614,6 @@ namespace SpatialOps {
       typedef NeboEdgelessStencilBuilder<NeboNil, NonLowSrcPoints,                        PhiFieldType,   PhiFieldType> MinusPhiType;
       typedef NeboEdgelessStencilBuilder<NeboNil, NonHighSrcPoints,                       PhiFieldType,   PhiFieldType> PlusPhiType;
 
-      typedef structured::IntVec IntVec;
       typedef std::vector<IntVec> Points;
       typedef Points::const_iterator PointIterator;
 
@@ -626,8 +624,8 @@ namespace SpatialOps {
       : lowCoef_(op.coefs().last()),
         highCoef_(op.coefs().coef()),
         minusGamma_(1.0),
-        minusPhi_(op.coefs().all_but_last()),
         plusGamma_(1.0),
+        minusPhi_(op.coefs().all_but_last()),
         plusPhi_(op.coefs().others()),
         shift_()
       {}
@@ -636,18 +634,23 @@ namespace SpatialOps {
 
       /**
        * \brief Apply boundary condition with gamma as an expression
-       * \param mask the mask of points where boundary condition applies
+       * \param points the mask of points where boundary condition applies
+       * \param shift
+       * \param shiftGamma
+       * \param shiftPhi
        * \param phi the field to modify
        * \param gamma the Nebo expression to read
+       * \param coef
        */
       template<typename ExprType, typename ShiftGamma, typename ShiftPhi>
-      inline void cpu_apply(const Points & points,
-                            const IntVec & shift,
-                            const ShiftGamma & shiftGamma,
-                            const ShiftPhi & shiftPhi,
-                            PhiFieldType & phi,
-                            const NeboExpression<ExprType, GammaFieldType> & gamma,
-                            const double coef) const {
+      inline void cpu_apply( const Points & points,
+                             const IntVec & shift,
+                             const ShiftGamma & shiftGamma,
+                             const ShiftPhi & shiftPhi,
+                             PhiFieldType & phi,
+                             const NeboExpression<ExprType, GammaFieldType> & gamma,
+                             const double coef ) const
+      {
         typedef NeboField<Initial, PhiFieldType> LhsTypeInit;
         typedef typename LhsTypeInit::SeqWalkType LhsType;
         LhsTypeInit lhsInit(phi);
@@ -659,9 +662,12 @@ namespace SpatialOps {
         typedef NeboScalar<Initial, double> NumType;
         typedef DivOp<Initial, DiffType, NumType> RhsTypeInit;
         typedef typename RhsTypeInit::SeqWalkType RhsType;
+        //arguments to init() call are meaningless, but they are not used at all...
         RhsType rhs = RhsTypeInit(DiffType(shiftGamma(gamma).expr(),
                                            shiftPhi(phi).expr()),
-                                  NumType(coef)).init();
+                                  NumType(coef)).init(IntVec(0,0,0),
+                                                      GhostData(0),
+                                                      IntVec(0,0,0));
 
         PointIterator       ip = points.begin();
         PointIterator const ep = points.end();
@@ -678,13 +684,14 @@ namespace SpatialOps {
        * \param mask the mask of points where boundary condition applies
        * \param phi the field to modify
        * \param gamma the Nebo expression to read
+       * \param minus boolean flag, true if operating on negative face
        */
       template<typename ExprType>
-      inline void operator()(structured::SpatialMask<GammaFieldType> mask,
+      inline void operator()(SpatialMask<GammaFieldType> mask,
                              PhiFieldType & phi,
                              const NeboExpression<ExprType, GammaFieldType> & gamma,
                              bool minus) const {
-        if(phi.device_index() == CPU_INDEX) {
+        if(phi.active_device_index() == CPU_INDEX) {
           if(minus)
             cpu_apply<ExprType, MinusGammaType, MinusPhiType>(mask.points(),
                                                               Shift::MinusPoint::int_vec(),
@@ -701,7 +708,8 @@ namespace SpatialOps {
                                                             phi,
                                                             gamma,
                                                             highCoef_);
-        } else {
+        }
+        else {
           if(minus)
             phi <<= cond(shift_.minus(mask), (minusGamma_(gamma) - minusPhi_(phi)) / lowCoef_)
                         (phi);
@@ -716,11 +724,13 @@ namespace SpatialOps {
        * \param mask the mask of points where boundary condition applies
        * \param phi the field to modify
        * \param gamma the field to read
+       * \param minus
        */
-      inline void operator()(structured::SpatialMask<GammaFieldType> mask,
+      inline void operator()(SpatialMask<GammaFieldType> mask,
                              PhiFieldType & phi,
                              const GammaFieldType & gamma,
-                             bool minus) const {
+                             bool minus) const
+      {
         typedef NeboConstField<Initial, GammaFieldType> GammaField;
         typedef NeboExpression<GammaField, GammaFieldType> GammaExpr;
         (*this)(mask, phi, GammaExpr(GammaField(gamma)), minus);
@@ -731,11 +741,13 @@ namespace SpatialOps {
        * \param mask the mask of points where boundary condition applies
        * \param phi the field to modify
        * \param gamma the scalar to read
+       * \param minus
        */
-      inline void operator()(structured::SpatialMask<GammaFieldType> mask,
+      inline void operator()(SpatialMask<GammaFieldType> mask,
                              PhiFieldType & phi,
                              const double gamma,
-                             bool minus) const {
+                             bool minus) const
+      {
         typedef NeboScalar<Initial, double> GammaScalar;
         typedef NeboExpression<GammaScalar, GammaFieldType> GammaExpr;
         (*this)(mask, phi, GammaExpr(GammaScalar(gamma)), minus);

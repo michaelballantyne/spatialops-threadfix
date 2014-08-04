@@ -22,10 +22,8 @@
 
 #include "Grid.h"
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 
 namespace SpatialOps{
-namespace structured{
 
   template< typename DirT, typename FieldT >
   double shift(){
@@ -36,15 +34,11 @@ namespace structured{
   };
 
   Grid::Grid( const IntVec npts,
-              const std::vector<double>& length )
+              const DoubleVec length )
     : npts_( npts ),
-      length_( length )
-  {
-    assert( length.size() == 3 );
-    for( size_t i=0; i<3; ++i ){
-      spacing_.push_back( length[i] / double(npts[i]) );
-    }
-  }
+      length_( length ),
+      spacing_( length_/npts_ )
+  {}
 
   template<typename CoordT> unsigned int get_dir();
   template<> unsigned int get_dir<XDIR>(){ return 0; }
@@ -69,6 +63,18 @@ namespace structured{
 
     typedef typename FieldT::iterator FieldIter;
 
+#   ifdef ENABLE_CUDA
+    // if the field is on GPU, move it to CPU, populate it, then sync it back.
+    // this is slow, but the Grid class isn't used much in production, and this
+    // could be done only during the setup phase rather than repeatedly.
+    const short devIx = f.active_device_index();
+    const bool isCPU = (devIx == CPU_INDEX);
+    if( !isCPU ) {
+      f.add_device( CPU_INDEX );
+      f.set_device_as_active( CPU_INDEX );
+    }
+#   endif
+
     FieldIter iter=f.begin();
 
     const MemoryWindow& mwInterior = f.window_without_ghost();
@@ -87,6 +93,9 @@ namespace structured{
         }
       }
     }
+#   ifdef ENABLE_CUDA
+    if( !isCPU ) f.validate_device( devIx );
+#   endif
   }
 
   //==================================================================
@@ -114,5 +123,4 @@ namespace structured{
   //
   //==================================================================
 
-} // namespace structured
 } // namespace SpatialOps

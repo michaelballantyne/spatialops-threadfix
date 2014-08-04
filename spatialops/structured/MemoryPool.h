@@ -20,6 +20,10 @@
  * IN THE SOFTWARE.
  */
 
+/**
+ * \file MemoryPool.h
+ */
+
 #ifndef UT_MemoryPool_h
 #define UT_MemoryPool_h
 
@@ -29,13 +33,12 @@
 #include <spatialops/structured/MemoryTypes.h>
 
 namespace SpatialOps {
-namespace structured {
 
 template<typename T>
 class Pool{
-  typedef std::stack<T*> FieldQueue;
+  typedef std::stack<T*>              FieldQueue;
   typedef std::map<size_t,FieldQueue> FQSizeMap;
-  typedef std::map<T*,size_t> FieldSizeMap;
+  typedef std::map<T*,size_t>         FieldSizeMap;
 
   static bool destroyed_;
   bool pinned_;
@@ -49,19 +52,46 @@ class Pool{
   Pool(const Pool&);
   Pool& operator=(const Pool&);
 
+  static Pool& self();
+
+  const unsigned short int deviceIndex_;
+
  public:
 
-  static Pool& self();
-  T* get( const short int deviceLocation, const size_t n );
-  void put( const short int deviceLocation, T* );
-  size_t active() const;
-  size_t total() const{ return cpuhighWater_; }
-  const unsigned short int deviceIndex_;
+  /**
+   * @brief Obtain a pointer to a block of memory with the requested size.
+   *        If the requested size is zero, this returns a NULL pointer.
+   * @param deviceLocation the location where the memory is requested
+   * @param n the size of the block of memory
+   *
+   * Example: return a pointer to a block of memory for 5 doubles
+   * \code
+   * double* my5Doubles = Pool<double>::get( CPU_INDEX, 5 );
+   * \endcode
+   */
+  static T* get( const short int deviceLocation, const size_t n );
+
+  /**
+   * @brief Return the requested block of memory to the pool. This should only
+   *        be done for memory requested from the pool to begin with!
+   * @param deviceLocation the location to return it to
+   * @param t the pointer to the block of memory.
+   */
+  static void put( const short int deviceLocation, T* t );
+
+  /**
+   * @return the number of active fields in the pool on CPU
+   */
+  static size_t active();
+
+  /**
+   * @return the maximum number of active fields in the pool on CPU
+   */
+  static size_t total();
 };
 
 template<typename T> bool Pool<T>::destroyed_ = false;
 
-} //namespace structured
 } //namespace SpatialOps
 
 #endif

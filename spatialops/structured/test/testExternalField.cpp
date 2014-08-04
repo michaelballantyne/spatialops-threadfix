@@ -26,7 +26,6 @@
 #include "testExternalField.h"
 
 using namespace SpatialOps;
-using namespace structured;
 using namespace Point;
 using namespace ema::cuda;
 
@@ -46,7 +45,7 @@ int main(int argc, char** argv) {
   memset(T1, 1, bytes * sizeof(double));
   try {
     std::cout << "Checking simple allocation, " << bytes * sizeof(double)
-        << " bytes: ";
+              << " bytes: ";
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
     std::cout << "PASS\n";
   } catch (...) {
@@ -57,8 +56,10 @@ int main(int argc, char** argv) {
   try {
     std::cout << "Checking proper value initialization: \n";
     PointField p(window, T1, InternalStorage, EXTERNAL_CUDA_GPU, 0);
-    CDI.memcpy_from((void*) T2, p.field_values(EXTERNAL_CUDA_GPU, 0), p.allocated_bytes(),
-        p.device_index());
+    CDI.memcpy_from((void*) T2,
+                    p.field_values(EXTERNAL_CUDA_GPU, 0),
+                    p.allocated_bytes(),
+                    p.active_device_index());
     for (unsigned int k = 0; k < bytes; ++k) {
       if (T2[k] != T1[k]) {
         throw;
@@ -76,8 +77,10 @@ int main(int argc, char** argv) {
     p.add_consumer(LOCAL_RAM, 0);
     std::cout << "Finished adding consumer\n";
     memcpy(T2, p.field_values(LOCAL_RAM, 0), p.allocated_bytes());
-    CDI.memcpy_from((void*) T3, p.field_values( EXTERNAL_CUDA_GPU, p.device_index() ),
-    		p.allocated_bytes(), p.device_index());
+    CDI.memcpy_from((void*) T3,
+                    p.field_values( EXTERNAL_CUDA_GPU, p.active_device_index() ),
+                    p.allocated_bytes(),
+                    p.active_device_index());
     for (unsigned int k = 0; k < bytes; ++k) {
       if (T2[k] != T1[k] || T3[k] != T1[k]) {
         throw;
@@ -178,8 +181,10 @@ int main(int argc, char** argv) {
     r->add_consumer(EXTERNAL_CUDA_GPU, 0);
 
     memcpy(T2, r->field_values(LOCAL_RAM, 0), r->allocated_bytes());
-    CDI.memcpy_from(T3, r->field_values( EXTERNAL_CUDA_GPU, r->device_index() ),
-    		r->allocated_bytes(), r->device_index() );
+    CDI.memcpy_from(T3,
+                    r->field_values( EXTERNAL_CUDA_GPU, r->active_device_index() ),
+                    r->allocated_bytes(),
+                    r->active_device_index() );
 
     for (unsigned int k = 0; k < bytes; ++k) {
       if (T2[k] != T1[k] || T3[k] != T1[k]) {

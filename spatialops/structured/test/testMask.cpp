@@ -1,5 +1,4 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
 #include <spatialops/structured/FieldHelper.h>
@@ -21,12 +20,14 @@
 #include <spatialops/NeboMask.h>
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 
 int main(int argc, const char *argv[])
 {
+  const bool print = false;
+  TestHelper status(print);
+
   typedef SVolField FieldT;
 
   const int nghost = 1;
@@ -75,6 +76,21 @@ int main(int argc, const char *argv[])
             (mask2, 7)
             (4);
 
-  //negated because display_fields_compare returns 1 for equal and this test should return 0 for passing
-  return !(display_fields_compare(result, f, false, false));
+  status( (display_fields_compare(result, f, print, print)), "Cond version");
+
+  f <<= 4;
+  masked_assign(mask, f, 3);
+  masked_assign(mask2, f, 7);
+
+  status( (display_fields_compare(result, f, print, print)), "masked_assign version");
+
+  if( status.ok() ) {
+    std::cout << "ALL TESTS PASSED :)" << std::endl;
+    return 0;
+  } else {
+    std::cout << "******************************" << std::endl
+              << " At least one test FAILED! :(" << std::endl
+              << "******************************" << std::endl;
+    return -1;
+  }
 }

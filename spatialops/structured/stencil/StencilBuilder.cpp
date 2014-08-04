@@ -26,8 +26,9 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
 #include <spatialops/OperatorDatabase.h>
 
+#include <spatialops/structured/Grid.h>
+
 namespace SpatialOps{
-namespace structured{
 
 #define REG_BASIC_OP_TYPES( VOL )                                       \
   {                                                                     \
@@ -211,5 +212,11 @@ namespace structured{
 
   //------------------------------------------------------------------
 
-} // namespace structured
+  void build_stencils( const Grid& grid, OperatorDatabase& opDB )
+  {
+    build_stencils( grid.extent(0), grid.extent(1), grid.extent(2),
+                    grid.length(0), grid.length(1), grid.length(2),
+                    opDB );
+  }
+
 } // namespace SpatialOps

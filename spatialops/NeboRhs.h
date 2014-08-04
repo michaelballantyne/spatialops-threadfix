@@ -35,10 +35,10 @@
 
           NeboScalar<SeqWalk, AtomicType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboScalar<Resize, AtomicType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboScalar<GPUWalk, AtomicType> typedef GPUWalkType;
@@ -49,31 +49,40 @@
           : value_(v)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_with_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_without_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
-          inline bool has_extent(void) const { return false; }
+          inline bool has_extents(void) const { return false; }
 
-          inline int extent(int const dir) const { return 0; }
+          inline IntVec extents(void) const { return IntVec(0, 0, 0); }
 
-          inline SeqWalkType init(void) const { return SeqWalkType(value_); }
+          inline IntVec has_bc(void) const { return IntVec(0, 0, 0); }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(value_);
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const { return ResizeType(value_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return true; }
 
              inline bool gpu_ready(int const deviceIndex) const { return true; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
                 return GPUWalkType(value_);
              }
 
@@ -87,7 +96,7 @@
          private:
           value_type const value_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename AtomicType>
           struct NeboScalar<Resize, AtomicType> {
             public:
@@ -99,13 +108,17 @@
              : value_(value)
              {}
 
-             inline SeqWalkType init(void) const { return SeqWalkType(value_); }
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(value_);
+             }
 
             private:
              value_type const value_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename AtomicType>
        struct NeboScalar<SeqWalk, AtomicType> {
          public:
@@ -153,10 +166,10 @@
 
           NeboConstField<SeqWalk, FieldType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboConstField<Resize, FieldType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboConstField<GPUWalk, FieldType> typedef GPUWalkType;
@@ -167,27 +180,35 @@
           : field_(f)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
+          inline GhostData ghosts_with_bc(void) const {
              return field_.get_valid_ghost_data() + point_to_ghost(field_.boundary_info().has_extra());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return point_to_ghost(field_.boundary_info().has_extra());
+          inline GhostData ghosts_without_bc(void) const {
+             return field_.get_valid_ghost_data();
           }
 
-          inline bool has_extent(void) const { return true; }
+          inline bool has_extents(void) const { return true; }
 
-          inline int extent(int const dir) const {
-             return field_.window_with_ghost().extent(dir) - field_.boundary_info().has_extra(dir)
-                    - field_.get_valid_ghost_data().get_minus(dir) - field_.get_valid_ghost_data().get_plus(dir);
+          inline IntVec extents(void) const {
+             return field_.window_with_ghost().extent() - field_.get_valid_ghost_data().get_minus()
+                    - field_.get_valid_ghost_data().get_plus();
           }
 
-          inline SeqWalkType init(void) const { return SeqWalkType(field_); }
+          inline IntVec has_bc(void) const {
+             return field_.boundary_info().has_bc();
+          }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(field_);
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const { return ResizeType(field_); }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -198,13 +219,16 @@
                 return field_.is_valid(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, field_);
              }
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<FieldType *>(&field_)->add_field_loc(deviceIndex);
+                   const_cast<FieldType *>(&field_)->add_device(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -214,7 +238,7 @@
          private:
           FieldType const field_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename FieldType>
           struct NeboConstField<Resize, FieldType> {
             public:
@@ -226,13 +250,17 @@
              : field_(f)
              {}
 
-             inline SeqWalkType init(void) const { return SeqWalkType(field_); }
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(field_);
+             }
 
             private:
              FieldType const field_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename FieldType>
        struct NeboConstField<SeqWalk, FieldType> {
          public:
@@ -304,20 +332,18 @@
       template<typename T>
        struct NeboConstSingleValueField<Initial, T> {
          public:
-          SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                               SingleValue,
-                                               T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          field_type;
 
-          SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                               SingleValue,
-                                               T> typedef SingleValueFieldType;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          SingleValueFieldType;
 
           NeboConstSingleValueField<SeqWalk, T> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              NeboConstSingleValueField<Resize, T> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              NeboConstSingleValueField<GPUWalk, T> typedef GPUWalkType;
@@ -328,28 +354,32 @@
           : field_(f)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_with_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return structured::GhostData(GHOST_MAX);
+          inline GhostData ghosts_without_bc(void) const {
+             return GhostData(GHOST_MAX);
           }
 
-          inline bool has_extent(void) const { return false; }
+          inline bool has_extents(void) const { return false; }
 
-          inline int extent(int const dir) const { return 0; }
+          inline IntVec extents(void) const { return IntVec(0, 0, 0); }
 
-          inline SeqWalkType init(void) const {
+          inline IntVec has_bc(void) const { return IntVec(0, 0, 0); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
              return SeqWalkType(* field_.field_values(CPU_INDEX));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(* field_.field_values(CPU_INDEX));
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -360,13 +390,16 @@
                 return field_.is_valid(deviceIndex);
              }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
                 return GPUWalkType(deviceIndex, field_);
              }
 
              #ifdef NEBO_GPU_TEST
                 inline void gpu_prep(int const deviceIndex) const {
-                   const_cast<SingleValueFieldType *>(&field_)->add_field_loc(deviceIndex);
+                   const_cast<SingleValueFieldType *>(&field_)->add_device(deviceIndex);
                 }
              #endif
              /* NEBO_GPU_TEST */
@@ -376,13 +409,12 @@
          private:
           SingleValueFieldType const field_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename T>
           struct NeboConstSingleValueField<Resize, T> {
             public:
-             SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                  SingleValue,
-                                                  T> typedef field_type;
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+             field_type;
 
              NeboConstSingleValueField<SeqWalk, T> typedef SeqWalkType;
 
@@ -390,19 +422,22 @@
              : value_(v)
              {}
 
-             inline SeqWalkType init(void) const { return SeqWalkType(value_); }
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(value_);
+             }
 
             private:
              double const value_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename T>
        struct NeboConstSingleValueField<SeqWalk, T> {
          public:
-          SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                               SingleValue,
-                                               T> typedef field_type;
+          SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+          field_type;
 
           typename field_type::value_type typedef value_type;
 
@@ -421,15 +456,12 @@
          template<typename T>
           struct NeboConstSingleValueField<GPUWalk, T> {
             public:
-             SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                  SingleValue,
-                                                  T> typedef field_type;
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
+             field_type;
 
              typename field_type::value_type typedef value_type;
 
-             SpatialOps::structured::SpatialField<SpatialOps::structured::
-                                                  SingleValue,
-                                                  T> typedef
+             SpatialOps::SpatialField<SpatialOps::SingleValue, T> typedef
              SingleValueFieldType;
 
              NeboConstSingleValueField(int const deviceIndex,

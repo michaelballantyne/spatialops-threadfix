@@ -58,26 +58,32 @@
                                                        const & fexpr) {
           typename FieldType::value_type typedef value_type;
 
-          ExprType initial = fexpr.expr();
+          ExprType const initial = fexpr.expr();
 
-          structured::GhostData ghosts = (useGhost ? initial.possible_ghosts() :
-                                          initial.minimum_ghosts());
+          GhostData const ghosts = (useGhost ? initial.ghosts_without_bc() :
+                                    GhostData(0));
+
+          IntVec const extents = initial.extents();
+
+          IntVec const hasBC = initial.has_bc();
 
           const int xLow = - ghosts.get_minus(0);
 
-          const int xHigh = initial.extent(0) + ghosts.get_plus(0);
+          const int xHigh = extents[0] + ghosts.get_plus(0);
 
           const int yLow = - ghosts.get_minus(1);
 
-          const int yHigh = initial.extent(1) + ghosts.get_plus(1);
+          const int yHigh = extents[1] + ghosts.get_plus(1);
 
           const int zLow = - ghosts.get_minus(2);
 
-          const int zHigh = initial.extent(2) + ghosts.get_plus(2);
+          const int zHigh = extents[2] + ghosts.get_plus(2);
 
           value_type result = initialValue;
 
-          typename ExprType::SeqWalkType expr = initial.init();
+          typename ExprType::SeqWalkType expr = initial.init(extents,
+                                                             ghosts,
+                                                             hasBC);
 
           for(int z = zLow; z < zHigh; z++) {
              for(int y = yLow; y < yHigh; y++) {

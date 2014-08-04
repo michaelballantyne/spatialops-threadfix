@@ -36,8 +36,6 @@
 #include <boost/type_traits.hpp>
 
 namespace SpatialOps{
-namespace structured{
-
 
 template< typename T >
 Pool<T>::Pool() : deviceIndex_(0)
@@ -105,20 +103,22 @@ template< typename T >
 T*
 Pool<T>::get( const short int deviceLocation, const size_t _n )
 {
-  assert( !destroyed_ );
+  Pool<T>& pool = Pool<T>::self();
 
-  if( pad_==0 ) pad_ = _n/10;
-  size_t n = _n+pad_;
+  assert( !pool.destroyed_ );
+
+  if( pool.pad_==0 ) pool.pad_ = _n/10;
+  size_t n = _n+pool.pad_;
 
   if( deviceLocation == CPU_INDEX ){
     T* field = NULL;
-    typename FQSizeMap::iterator ifq = cpufqm_.lower_bound( n );
-    if(ifq == cpufqm_.end()) ifq = cpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
-    else                     n = ifq->first;
+    typename FQSizeMap::iterator ifq = pool.cpufqm_.lower_bound( n );
+    if( ifq == pool.cpufqm_.end() ) ifq = pool.cpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
+    else n = ifq->first;
 
     FieldQueue& fq = ifq->second;
     if( fq.empty() ){
-      ++cpuhighWater_;
+      ++pool.cpuhighWater_;
       try{
 
 #       ifdef ENABLE_CUDA
@@ -139,7 +139,7 @@ Pool<T>::get( const short int deviceLocation, const size_t _n )
                   << e.what() << std::endl
                   << __FILE__ << " : " << __LINE__ << std::endl;
       }
-      fsm_[field] = n;
+      pool.fsm_[field] = n;
     }
     else{
       field = fq.top(); fq.pop();
@@ -149,16 +149,16 @@ Pool<T>::get( const short int deviceLocation, const size_t _n )
 # ifdef ENABLE_CUDA
   else if( IS_GPU_INDEX(deviceLocation) ){
     T* field = NULL;
-    typename FQSizeMap::iterator ifq = gpufqm_.lower_bound( n );
-    if(ifq == gpufqm_.end()) ifq = gpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
-    else                     n = ifq->first;
+    typename FQSizeMap::iterator ifq = pool.gpufqm_.lower_bound( n );
+    if(ifq == pool.gpufqm_.end()) ifq = pool.gpufqm_.insert( ifq, make_pair(n,FieldQueue()) );
+    else                          n = ifq->first;
 
     FieldQueue& fq = ifq->second;
     if( fq.empty() ) {
-      ++gpuhighWater_;
+      ++pool.gpuhighWater_;
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
       field = (T*)CDI.get_raw_pointer( n*sizeof(T), deviceLocation );
-      fsm_[field] = n;
+      pool.fsm_[field] = n;
     }
     else{
       field = fq.top(); fq.pop();
@@ -180,24 +180,26 @@ template< typename T >
 void
 Pool<T>::put( const short int deviceLocation, T* t )
 {
+  Pool<T>& pool = Pool<T>::self();
+
   // in some cases (notably in the LBMS code), singleton destruction order
   // causes the pool to be prematurely deleted.  Then subsequent calls here
   // would result in undefined behavior.  If the singleton has been destroyed,
   // then we will just ignore calls to return resources to the pool.  This will
   // leak memory on shut-down in those cases.
-  if( destroyed_ ) return;
+  if( pool.destroyed_ ) return;
 
   if( deviceLocation == CPU_INDEX ){
-    const size_t n = fsm_[t];
-    const typename FQSizeMap::iterator ifq = cpufqm_.lower_bound( n );
-    assert( ifq != cpufqm_.end() );
+    const size_t n = pool.fsm_[t];
+    const typename FQSizeMap::iterator ifq = pool.cpufqm_.lower_bound( n );
+    assert( ifq != pool.cpufqm_.end() );
     ifq->second.push(t);
   }
 # ifdef ENABLE_CUDA
   else if( IS_GPU_INDEX(deviceLocation) ) {
-    const size_t n = fsm_[t];
-    const typename FQSizeMap::iterator ifq = gpufqm_.lower_bound( n );
-    assert( ifq != gpufqm_.end() );
+    const size_t n = pool.fsm_[t];
+    const typename FQSizeMap::iterator ifq = pool.gpufqm_.lower_bound( n );
+    assert( ifq != pool.gpufqm_.end() );
     ifq->second.push(t);
   }
 # endif
@@ -213,19 +215,27 @@ Pool<T>::put( const short int deviceLocation, T* t )
 
 template<typename T>
 size_t
-Pool<T>::active() const{
+Pool<T>::active()
+{
+  Pool<T>& pool = Pool<T>::self();
   size_t n=0;
-  for( typename FQSizeMap::const_iterator ifq=cpufqm_.begin(); ifq!=cpufqm_.end(); ++ifq ){
+  for( typename FQSizeMap::const_iterator ifq=pool.cpufqm_.begin(); ifq!=pool.cpufqm_.end(); ++ifq ){
     n += ifq->second.size();
   }
-  return cpuhighWater_-n;
+  return pool.cpuhighWater_ - n;
+}
+
+template<typename T>
+size_t
+Pool<T>::total()
+{
+  return Pool<T>::self().cpuhighWater_;
 }
 
 
-// explicit instantiation
+// explicit instantiation for supported pool types
 template class Pool<double>;
 template class Pool<float>;
 template class Pool<unsigned int>;
 
-}
-}
+} // namespace SpatialOps

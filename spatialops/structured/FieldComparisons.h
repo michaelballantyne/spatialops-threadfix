@@ -23,24 +23,31 @@
 #define SpatialOps_FieldComparisons_h
 
 #include <spatialops/Nebo.h>
+#include <spatialops/structured/SpatialFieldStore.h>
 #include <sstream>
+
+// Boost includes //
+#include <boost/math/special_functions/next.hpp>
 
 #define FIELDCOMPARISONS_ABS_ERROR_CONST .000001
 
 /**
+ * @file FieldComparisons.h
+ * @ingroup fields
  * @brief Comparison operators
+ *
  * WARNING: Slow in general and comparison with external fields will incur copy penalties.
  */
 namespace SpatialOps{
-namespace structured{
 
 template<typename FieldT>
 class FieldComparisonHelper;
 
 /**
+ * @fn template<typename FieldT> bool field_not_equal(const FieldT&, const FieldT&, double)
  * @brief Returns if f1 is element-wise not equal to f2 within a certain relative
  * tolerance.
- *
+ * @ingroup fields
  * This function simply calls field_equal and negates it.
  * \c return !field_equal(f1, f2, error, error_abs);
  * error_abs is defined as default to be the L2 norm of \c f1 multiplied by \c error
@@ -83,6 +90,8 @@ bool field_not_equal(const FieldT& f1, const FieldT& f2, double error, const dou
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_equal(const FieldT&, const FieldT&, double)
+ *
  * @brief Returns if f1 is element-wise equal to f2 within a certain relative
  * tolerance.
  *
@@ -107,7 +116,8 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error=0.0)
 }
 
 /**
- * @brief Returns if f1 is element-wise equal to f2 within a certain relative
+ * @fn template<typename FieldT> bool field_equal(const FieldT&, const FieldT&, double, const double)
+ * @brief Determines if f1 is element-wise equal to f2 within a certain relative
  * tolerance.
  *
  * This function returns the result of |f1 - f2|/(error_abs + |f1|) > error element wise.
@@ -118,88 +128,39 @@ bool field_equal(const FieldT& f1, const FieldT& f2, double error=0.0)
  * @param f1 -- Field 1
  * @param f2 -- Field 2
  * @param error -- Allowable percentage of error. i.e. 1% = .01
- * @param error_abs -- Allowable absolute error.  This term becomes significant
+ * @param errorAbs -- Allowable absolute error.  This term becomes significant
  * in the calculation as f1 approaches zero.
  */
 template<typename FieldT>
-bool field_equal(const FieldT& f1, const FieldT& f2, double error, const double error_abs)
+bool field_equal(const FieldT& f1, const FieldT& f2, double error, const double errorAbs)
 {
-  MemoryWindow w1(f1.window_with_ghost());
-  MemoryWindow w2(f2.window_with_ghost());
-  BoundaryCellInfo bc1(f1.boundary_info());
-  BoundaryCellInfo bc2(f2.boundary_info());
-  GhostData gd1(f1.get_valid_ghost_data());
-  GhostData gd2(f2.get_valid_ghost_data());
+  const MemoryWindow& w1 = f1.window_with_ghost();
+  const MemoryWindow& w2 = f2.window_with_ghost();
 
-  if(w1 != w2) {
+  if( w1 != w2 ){
     throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
   }
 
   error = std::abs(error);
-  bool exact_comparison = error == 0.0;
-  FieldT *temp1 = 0;
-  FieldT *temp2 = 0;
-  typename FieldT::const_iterator *if1 = 0;
-  typename FieldT::const_iterator *iend = 0;
-  typename FieldT::const_iterator *if2 = 0;
+  const bool exactComparison = error == 0.0;
 
-  //initialize if1 and iend
-  if(!(if1 = FieldComparisonHelper<FieldT>::init_iterator(f1, w1, bc1, gd1, &temp1))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-  if(temp1)
-    iend = new typename FieldT::const_iterator(temp1->end());
-  else
-    iend = new typename FieldT::const_iterator(f1.end());
+  SpatFldPtr<FieldT> tmp1, tmp2;
+  typename FieldT::const_iterator if1, iend, if2;
 
-
-  //initialize if2
-  if(!(if2 = FieldComparisonHelper<FieldT>::init_iterator(f2, w2, bc2, gd2, &temp2))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f2.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  } //memory leak if runtime error thrown
+  FieldComparisonHelper<FieldT>::init_iterator(f1, tmp1, if1, iend);
+  FieldComparisonHelper<FieldT>::init_iterator(f2, tmp2, if2, iend);
 
   //do comparison
-  bool result = true;
-  for (; *if1 != *iend; ++(*if1), ++(*if2)) {
-    if(exact_comparison) {
-      if (**if1 != **if2) {
-        result = false;
-        break;
-      }
+  for( ; if2 != iend; ++if1, ++if2 ){
+    if( exactComparison ){
+      if( *if1 != *if2 ) return false;
     }
     else {
-      const double denom = std::abs(**if1) + error_abs;
-
-      if (std::abs(**if1 - **if2)/denom > error) {
-        result =  false;
-        break;
-      }
+      const double denom = std::abs(*if1) + errorAbs;
+      if( std::abs(*if1 - *if2)/denom > error )  return false;
     }
   }
-
-  if(temp1) delete temp1;
-  if(temp2) delete temp2;
-  delete if1;
-  delete iend;
-  delete if2;
-
-  return result;
+  return true;
 }
 //------------------------------------------------------------------
 
@@ -236,79 +197,32 @@ bool field_not_equal_abs(const FieldT& f1, const FieldT& f2, double error=0.0) {
 template<typename FieldT>
 bool field_equal_abs(const FieldT& f1, const FieldT& f2, double error=0.0)
 {
-  MemoryWindow w1(f1.window_with_ghost());
-  MemoryWindow w2(f2.window_with_ghost());
-  BoundaryCellInfo bc1(f1.boundary_info());
-  BoundaryCellInfo bc2(f2.boundary_info());
-  GhostData gd1(f1.get_valid_ghost_data());
-  GhostData gd2(f2.get_valid_ghost_data());
+  const MemoryWindow w1 = f1.window_with_ghost();
+  const MemoryWindow w2 = f2.window_with_ghost();
 
   if(w1 != w2) {
     throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
   }
 
   error = std::abs(error);
-  bool exact_comparison = error == 0.0;
-  FieldT *temp1 = 0;
-  FieldT *temp2 = 0;
-  typename FieldT::const_iterator *if1 = 0;
-  typename FieldT::const_iterator *iend = 0;
-  typename FieldT::const_iterator *if2 = 0;
+  const bool exactComparison = error == 0.0;
 
-  //initialize if1 and iend
-  if(!(if1 = FieldComparisonHelper<FieldT>::init_iterator(f1, w1, bc1, gd1, &temp1))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-  if(temp1)
-    iend = new typename FieldT::const_iterator(temp1->end());
-  else
-    iend = new typename FieldT::const_iterator(f1.end());
+  SpatFldPtr<FieldT> tmp1, tmp2;
+  typename FieldT::const_iterator if1, iend, if2;
 
-  //initialize if2
-  if(!(if2 = FieldComparisonHelper<FieldT>::init_iterator(f2, w2, bc2, gd2, &temp2))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f2.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  } //memory leak if runtime error thrown
+  FieldComparisonHelper<FieldT>::init_iterator( f1, tmp1, if1, iend );
+  FieldComparisonHelper<FieldT>::init_iterator( f2, tmp2, if2, iend );
 
   //do comparison
-  bool result = true;
-  for (; *if1 != *iend; ++(*if1), ++(*if2)) {
-    if(exact_comparison) {
-      if(**if1 != **if2) {
-        result = false;
-        break;
-      }
+  for( ; if2 != iend; ++if1, ++if2 ){
+    if( exactComparison ){
+      if(*if1 != *if2) return false;
     }
     else {
-      if(std::abs(**if1 - **if2) > error) {
-        result = false;
-        break;
-      }
+      if( std::abs(*if1 - *if2) > error ) return false;
     }
   }
-
-  if(temp1) delete temp1;
-  if(temp2) delete temp2;
-  delete if1;
-  delete iend;
-  delete if2;
-
-  return result;
+  return true;
 }
 //------------------------------------------------------------------
 
@@ -351,78 +265,30 @@ bool field_not_equal_ulp(const FieldT& f1, const FieldT& f2, const unsigned int 
 template<typename FieldT>
 bool field_equal_ulp(const FieldT& f1, const FieldT& f2, const unsigned int ulps)
 {
-  MemoryWindow w1(f1.window_with_ghost());
-  MemoryWindow w2(f2.window_with_ghost());
-  BoundaryCellInfo bc1(f1.boundary_info());
-  BoundaryCellInfo bc2(f2.boundary_info());
-  GhostData gd1(f1.get_valid_ghost_data());
-  GhostData gd2(f2.get_valid_ghost_data());
+  const MemoryWindow& w1 = f1.window_with_ghost();
+  const MemoryWindow& w2 = f2.window_with_ghost();
 
   if(w1 != w2) {
     throw( std::runtime_error( "Attempted comparison between fields of unequal size." ) );
   }
 
-  bool exact_comparison = ulps == 0;
-  FieldT *temp1 = 0;
-  FieldT *temp2 = 0;
-  typename FieldT::const_iterator *if1 = 0;
-  typename FieldT::const_iterator *iend = 0;
-  typename FieldT::const_iterator *if2 = 0;
+  const bool exactComparison = ulps == 0;
+  SpatFldPtr<FieldT> tmp1, tmp2;
+  typename FieldT::const_iterator if1, iend, if2;
 
-  //initialize if1 and iend
-  if(!(if1 = FieldComparisonHelper<FieldT>::init_iterator(f1, w1, bc1, gd1, &temp1))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-  if(temp1)
-    iend = new typename FieldT::const_iterator(temp1->end());
-  else
-    iend = new typename FieldT::const_iterator(f1.end());
-
-  //initialize if2
-  if(!(if2 = FieldComparisonHelper<FieldT>::init_iterator(f2, w2, bc2, gd2, &temp2))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f2.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  } //memory leak if runtime error thrown
+  FieldComparisonHelper<FieldT>::init_iterator( f1, tmp1, if1, iend );
+  FieldComparisonHelper<FieldT>::init_iterator( f2, tmp2, if2, iend );
 
   //do comparison
-  bool result = true;
-  for (; *if1 != *iend; ++(*if1), ++(*if2)) {
-    if(exact_comparison) {
-      if (boost::math::float_distance(**if1, **if2) != 0) {
-        result = false;
-        break;
-      }
+  for( ; if2 != iend; ++if1, ++if2 ){
+    if( exactComparison ){
+      if( boost::math::float_distance(*if1, *if2) != 0) return false;
     }
     else {
-      if (std::abs(boost::math::float_distance(**if1, **if2)) > ulps) {
-        result =  false;
-        break;
-      }
+      if (std::abs(boost::math::float_distance(*if1, *if2)) > ulps) return false;
     }
   }
-
-  if(temp1) delete temp1;
-  if(temp2) delete temp2;
-  delete if1;
-  delete iend;
-  delete if2;
-
-  return result;
+  return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -501,6 +367,8 @@ bool field_equal(const double d, const FieldT& f1, double error=0.0)
 }
 
 /**
+ * @fn template<typename FieldT> bool field_equal(const double, const FieldT&, double, const double )
+ * @ingroup fields
  * @brief Returns if f1 is element-wise equal to the scalar value d
  * within a certain relative tolerance.
  *
@@ -512,67 +380,36 @@ bool field_equal(const double d, const FieldT& f1, double error=0.0)
  * @param d -- Scalar value
  * @param f1 -- Field 1
  * @param error -- Allowable percentage of error. i.e. 1% = .01
- * @param error_abs -- Allowable absolute error.  This term becomes significant
+ * @param errorAbs -- Allowable absolute error.  This term becomes significant
  * in the calculation as d approaches zero.
  */
 template<typename FieldT>
-bool field_equal(const double d, const FieldT& f1, double error, const double error_abs)
+bool field_equal(const double d, const FieldT& f1, double error, const double errorAbs)
 {
-  MemoryWindow w1(f1.window_with_ghost());
-  BoundaryCellInfo bc1(f1.boundary_info());
-  GhostData gd1(f1.get_valid_ghost_data());
-
   error = std::abs(error);
-  bool exact_comparison = error == 0.0;
-  FieldT *temp1 = 0;
-  typename FieldT::const_iterator *if1 = 0;
-  typename FieldT::const_iterator *iend = 0;
+  const bool exactComparison = error == 0.0;
 
-  //initialize if1 and iend
-  if(!(if1 = FieldComparisonHelper<FieldT>::init_iterator(f1, w1, bc1, gd1, &temp1))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-  if(temp1)
-    iend = new typename FieldT::const_iterator(temp1->end());
-  else
-    iend = new typename FieldT::const_iterator(f1.end());
+  SpatFldPtr<FieldT> tmp;
+  typename FieldT::const_iterator if1, iend;
+
+  FieldComparisonHelper<FieldT>::init_iterator(f1,tmp,if1,iend);
 
   //do comparison
-  bool result = true;
-  const double denom = std::abs(d) + error_abs;
-  for (; *if1 != *iend; ++(*if1)) {
-    if(exact_comparison) {
-      if (**if1 != d) {
-        result = false;
-        break;
-      }
+  const double denom = std::abs(d) + errorAbs;
+  for( ; if1 != iend; ++if1 ){
+    if( exactComparison ){
+      if( *if1 != d ) return false;
     }
-    else {
-
-      if (std::abs(d - **if1)/denom > error) {
-        result =  false;
-        break;
-      }
+    else{
+      if( std::abs(d - *if1)/denom > error ) return false;
     }
   }
-
-  if(temp1) delete temp1;
-  delete if1;
-  delete iend;
-
-  return result;
+  return true;
 }
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_not_equal_abs(const double, const FieldT&, const double )
  * @brief Returns if f1 is element-wise not equal to Scalar value d within a
  * certain absolute tolerance.
  *
@@ -586,12 +423,14 @@ bool field_equal(const double d, const FieldT& f1, double error, const double er
  * @param error -- Allowable absolute value of error.
  */
 template<typename FieldT>
-bool field_not_equal_abs(const double d, const FieldT& f1, double error=0.0) {
+bool field_not_equal_abs(const double d, const FieldT& f1, const double error=0.0) {
   return !field_equal_abs(d, f1, error);
 }
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_equal_abs(const double, const FieldT&, double)
+ *
  * @brief Returns if f1 is element-wise equal to Scalar value d within a
  * certain absolute tolerance.
  *
@@ -605,59 +444,30 @@ bool field_not_equal_abs(const double d, const FieldT& f1, double error=0.0) {
 template<typename FieldT>
 bool field_equal_abs(const double d, const FieldT& f1, double error=0.0)
 {
-  MemoryWindow w1(f1.window_with_ghost());
-  BoundaryCellInfo bc1(f1.boundary_info());
-  GhostData gd1(f1.get_valid_ghost_data());
-
   error = std::abs(error);
-  bool exact_comparison = error == 0.0;
-  FieldT *temp1 = 0;
-  typename FieldT::const_iterator *if1 = 0;
-  typename FieldT::const_iterator *iend = 0;
+  const bool exactComparison = error == 0.0;
 
-  //initialize if1 and iend
-  if(!(if1 = FieldComparisonHelper<FieldT>::init_iterator(f1, w1, bc1, gd1, &temp1))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-  if(temp1)
-    iend = new typename FieldT::const_iterator(temp1->end());
-  else
-    iend = new typename FieldT::const_iterator(f1.end());
+  SpatFldPtr<FieldT> tmp;
+  typename FieldT::const_iterator if1, iend;
+
+  FieldComparisonHelper<FieldT>::init_iterator(f1,tmp,if1,iend);
 
   //do comparison
-  bool result = true;
-  for (; *if1 != *iend; ++(*if1)) {
-    if(exact_comparison) {
-      if(**if1 != d) {
-        result = false;
-        break;
-      }
+  for( ; if1 != iend; ++if1 ){
+    if( exactComparison ){
+      if( *if1 != d ) return false;
     }
-    else {
-      if(std::abs(d - **if1) > error) {
-        result = false;
-        break;
-      }
+    else{
+      if( std::abs(d - *if1)  > error ) return false;
     }
   }
-
-  if(temp1) delete temp1;
-  delete if1;
-  delete iend;
-
-  return result;
+  return true;
 }
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_not_equal_ulp(const double, const FieldT&, const unsigned int)
+ *
  * @brief Returns if f1 is element-wise not equal to Scalar value d within a
  * certain number of ulps.
  *
@@ -677,6 +487,8 @@ bool field_not_equal_ulp(const double d, const FieldT& f1, const unsigned int ul
 //------------------------------------------------------------------
 
 /**
+ * @fn template<typename FieldT> bool field_equal_ulp(const double, const FieldT&, const unsigned int)
+ *
  * @brief Returns if f1 is element-wise equal to Scalar value d within a
  * certain number of ulps.
  *
@@ -696,54 +508,23 @@ bool field_not_equal_ulp(const double d, const FieldT& f1, const unsigned int ul
 template<typename FieldT>
 bool field_equal_ulp(const double d, const FieldT& f1, const unsigned int ulps)
 {
-  MemoryWindow w1(f1.window_with_ghost());
-  BoundaryCellInfo bc1(f1.boundary_info());
-  GhostData gd1(f1.get_valid_ghost_data());
+  bool exactComparison = ulps == 0;
 
-  bool exact_comparison = ulps == 0;
-  FieldT *temp1 = 0;
-  typename FieldT::const_iterator *if1 = 0;
-  typename FieldT::const_iterator *iend = 0;
+  SpatFldPtr<FieldT> tmp;
+  typename FieldT::const_iterator if1, iend;
 
-  //initialize if1 and iend
-  if(!(if1 = FieldComparisonHelper<FieldT>::init_iterator(f1, w1, bc1, gd1, &temp1))) {
-    std::ostringstream msg;
-    msg << "Attempted comparison operation on unsupported memory type, at "
-      << __FILE__
-      << " : " << __LINE__ << std::endl;
-    msg << "\t - "
-      << "Attempted to compare with a field in "
-      << SpatialOps::DeviceTypeTools::get_memory_type_description(
-          f1.device_index()) << std::endl;
-    throw(std::runtime_error(msg.str()));
-  }
-  if(temp1)
-    iend = new typename FieldT::const_iterator(temp1->end());
-  else
-    iend = new typename FieldT::const_iterator(f1.end());
+  FieldComparisonHelper<FieldT>::init_iterator(f1,tmp,if1,iend);
 
   //do comparison
-  bool result = true;
-  for (; *if1 != *iend; ++(*if1)) {
-    if(exact_comparison) {
-      if (boost::math::float_distance(d, **if1) != 0) {
-        result = false;
-        break;
-      }
+  for( ; if1 != iend; ++if1 ){
+    if( exactComparison ){
+      if( boost::math::float_distance(d, *if1) != 0 ) return false;
     }
-    else {
-      if (std::abs(boost::math::float_distance(d, **if1)) > ulps) {
-        result =  false;
-        break;
-      }
+    else{
+      if( std::abs(boost::math::float_distance(d, *if1)) > ulps ) return false;
     }
   }
-
-  if(temp1) delete temp1;
-  delete if1;
-  delete iend;
-
-  return result;
+  return true;
 }
 
 /**
@@ -764,45 +545,55 @@ class FieldComparisonHelper
    * @brief Returns a field iterator to data in \c field or null.  This function
    * is only intended to be used by the functions in this file.
    *
-   * This function will return a \c const_iterator to the data in \c field or a copy
-   * of the data in \c field.  This function will copy the data of \c field if \c
-   * field is not on local ram, and assign the pointer to the new memory created
-   * for the copy in \c localPtr.  It is up for the caller of this function to
-   * delete the iterator returned and the \c *localPtr if they are not null.
-   *
-   * If this function returns null, it means \c field had an unsupported memory
-   * type.
+   * This function will a \c const_iterator to the beginning and end of the data
+   * in \c field or a copy of the data in \c field.  This function will copy the
+   * data of \c field if \c field is not on local ram, and then assign the
+   * iterators to the new memory created for the copy in \c localPtr.
    *
    * @tparam FieldT -- Any type of SpatialField
+   *
    * @param field -- Field to return an iterator to.
-   * @param window -- Memory window of \c field
-   * @param bcinfo -- Boundary cell info of \c field
-   * @param ghost -- Ghost data of \c field
-   * @param localPtr -- Pointer to a pointer which will be overriden if \c field
-   * does not exist on local ram.  This pointer will point to memory created for
-   * the copy of \c field to local ram.
+   * @param fcopy -- In the case where the field is not on CPU, then this will
+   * hold the CPU copy of the field on return.
+   * @param ibegin -- to be populated with the begin() iterator
+   * @param iend -- to be populated with the end() iterator
    */
   private:
-    inline static typename FieldT::const_iterator* init_iterator(FieldT const & field,
-        MemoryWindow const & window,
-        BoundaryCellInfo const & bcinfo,
-        GhostData const & ghost,
-        FieldT** const localPtr)
+    inline static void
+    init_iterator( const FieldT& field,
+                   SpatFldPtr<FieldT>& fcopy,
+                   typename FieldT::const_iterator& ibegin,
+                   typename FieldT::const_iterator& iend )
     {
-      //we can get the iterator directly if on local ram
-      if(field.device_index() == CPU_INDEX) {
-        return new typename FieldT::const_iterator(field.begin());
-      }
       //we need to transfer the field to local ram to iterate
-      else if (IS_GPU_INDEX(field.device_index())) {
-        *localPtr = new FieldT(window, bcinfo, ghost, NULL, InternalStorage);
-        **localPtr = field;
-
-        return new typename FieldT::const_iterator((*localPtr)->begin());
+      if( IS_CPU_INDEX( field.active_device_index() ) ){
+        ibegin = field.begin();
+        iend   = field.end();
       }
-      else {
-        //unsupported memory comparison
-        return 0;
+#     ifdef ENABLE_CUDA
+      else if( IS_GPU_INDEX(field.active_device_index()) ){
+        fcopy = SpatialFieldStore::get<FieldT>(field);
+        *fcopy <<= field;
+        fcopy->add_device(CPU_INDEX);
+        //
+        // jcs hack to get things working.  There are two issues here:
+        //
+        //   1. in order to get begin() to use the const version, we need to have
+        //      a const field, which "fcopy" is not.
+        //
+        //   2. For the non-const field to work with a non-const version of begin()
+        //      we need to first set the active field location to the CPU.  This
+        //      Seems to cause problems with the memory pool due to a bug that
+        //      has not yet been resolved.
+        //
+        const FieldT* const fcopyA = &(*fcopy);
+        ibegin = fcopyA->begin();
+        iend   = fcopyA->end();
+        return;
+      }
+#     endif
+      else{
+        throw std::runtime_error("Unrecognized field location (FieldComparisons.h FieldCopmarisonHelper::init_iterator()");
       }
     }
 
@@ -815,7 +606,6 @@ class FieldComparisonHelper
     friend bool field_equal_ulp<FieldT>(const double d, const FieldT& f1, const unsigned int ulps);
 };
 
-} // namespace structured
 } // namespace SpatialOps
 
 #endif //SpatialOps_FieldComparisons_h

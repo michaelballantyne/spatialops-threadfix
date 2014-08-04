@@ -40,13 +40,27 @@ namespace Particle{
    *  and we must define operators to move between particle fields and
    *  mesh fields.
    */
+
+  /**
+   * \struct ParticleFieldTraits
+   * \brief defines type traits for particle fields
+   * \ingroup fieldtypes
+   */
   struct ParticleFieldTraits{
     typedef NODIR FaceDir;
-    typedef structured::IndexTriplet<0,0,0>  Offset;
-    typedef structured::IndexTriplet<0,0,0>  BCExtra;
+    typedef IndexTriplet<0,0,0>  Offset;
+    typedef IndexTriplet<0,0,0>  BCExtra;
   };
 
-  typedef structured::SpatialField< ParticleFieldTraits > ParticleField;
+  /**
+   * \typedef ParticleField
+   * \brief defines a ParticleField
+   * \ingroup fieldtypes
+   *
+   * Note that ParticleField objects should not have any structure associated
+   * with them.  They are simply treated as an array of values.
+   */
+  typedef SpatialField< ParticleFieldTraits > ParticleField;
 
 
 } // namespace Particle

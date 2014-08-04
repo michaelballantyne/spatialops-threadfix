@@ -1,8 +1,6 @@
 #include <spatialops/Nebo.h>
 
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
-#include <spatialops/structured/Grid.h>
 
 #include "test_stencil_helper.h"
 #include <test/TestHelper.h>
@@ -12,7 +10,6 @@
 namespace po = boost::program_options;
 
 using namespace SpatialOps;
-using namespace structured;
 
 #include <stdexcept>
 using std::cout;
