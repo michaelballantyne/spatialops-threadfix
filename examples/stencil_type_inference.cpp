@@ -27,7 +27,7 @@ IN THE SOFTWARE.
 \date   Jul 10, 2014
 \author James C. Sutherland
 
-\page example-stencil-type-inference Infering operator types
+\page example-stencil-type-inference Inferring operator types
 
 # Goal
 Illustrate how to obtain stencil operator types.
