@@ -414,10 +414,19 @@ namespace SpatialOps{
     /**
      * \brief check if the device (deviceIndex) is available and valid
      *
-     * \param deviceIndex index ofdevice to check
+     * \param deviceIndex index of device to check
      */
     bool is_valid( const short int deviceIndex ) const{
       return info_->is_valid( deviceIndex );
+    }
+
+    /**
+     * \brief check if the device (deviceIndex) is available
+     *
+     * \param deviceIndex index of device to check
+     */
+    bool is_available( const short int deviceIndex ) const{
+      return info_->is_available( deviceIndex );
     }
 
     /**

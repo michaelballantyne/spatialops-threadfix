@@ -384,9 +384,16 @@ namespace SpatialOps{
     /**
      * \brief check if the device (deviceIndex) is available and valid
      *
-     * \param deviceIndex index ofdevice to check
+     * \param deviceIndex index of device to check
      */
     bool is_valid( const short int deviceIndex ) const;
+
+    /**
+     * \brief check if the device (deviceIndex) is available
+     *
+     * \param deviceIndex index of device to check
+     */
+    bool is_available( const short int deviceIndex ) const;
 
     /**
      * \brief return a non-constant pointer to memory on the given device
@@ -689,6 +696,27 @@ namespace SpatialOps{
                 << " is not valid. " << std::endl;
 #   endif
     return ( iter != deviceMap_.end() && iter->second.isValid_ );
+  }
+
+//------------------------------------------------------------------
+
+  template<typename T>
+  bool FieldInfo<T>::is_available( const short int deviceIndex ) const
+  {
+#   ifdef DEBUG_SF_ALL
+    std::cout << "Call to SpatialField::is_available() for device : "
+              << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
+#   endif
+
+    DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
+
+    ConstMapIter iter = deviceMap_.find( deviceIndex );
+#   ifndef NDEBUG
+    if( iter == deviceMap_.end() )
+      std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description( deviceIndex )
+                << " is not allocated. " << std::endl;
+#   endif
+    return ( iter != deviceMap_.end() );
   }
 
 //------------------------------------------------------------------
