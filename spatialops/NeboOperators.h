@@ -11721,6 +11721,23 @@
                                        NeboMask<Initial, FieldType>(arg2)));
        }
 
+      /* Boolean X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<AndOp<Initial,
+                                                     NeboScalar<Initial, bool>,
+                                                     SubBoolSingleValueExpr2>,
+                                               T> operator &&(bool const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          AndOp<Initial, NeboScalar<Initial, bool>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
+       }
+
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<AndOp<Initial,
@@ -11775,6 +11792,29 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          SubBoolExpr1,
+                                          SubBoolSingleValueExpr2>,
+                                    FieldType> operator &&(NeboBooleanExpression<SubBoolExpr1,
+                                                                                 FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          AndOp<Initial, SubBoolExpr1, SubBoolSingleValueExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        }
 
       /* Mask X Boolean */
@@ -11850,6 +11890,117 @@
 
           return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
                                        NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* Mask X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                          SubBoolSingleValueExpr2>,
+                                    FieldType> operator &&(SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          AndOp<Initial, NeboMask<Initial, FieldType>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Boolean */
+      template<typename SubBoolSingleValueExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<AndOp<Initial,
+                                                     SubBoolSingleValueExpr1,
+                                                     NeboScalar<Initial, bool> >,
+                                               T> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              bool const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, NeboScalar<Initial, bool> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, bool>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          SubBoolSingleValueExpr1,
+                                          SubBoolExpr2>,
+                                    FieldType> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           NeboBooleanExpression<SubBoolExpr2,
+                                                                                 FieldType>
+                                                           const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, SubBoolExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Mask */
+      template<typename SubBoolSingleValueExpr1, typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          SubBoolSingleValueExpr1,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                                    FieldType> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, NeboMask<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename T>
+       inline NeboBooleanSingleValueExpression<AndOp<Initial,
+                                                     SubBoolSingleValueExpr1,
+                                                     SubBoolSingleValueExpr2>,
+                                               T> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2>
@@ -12073,6 +12224,23 @@
                                        NeboMask<Initial, FieldType>(arg2)));
        }
 
+      /* Boolean X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<OrOp<Initial,
+                                                    NeboScalar<Initial, bool>,
+                                                    SubBoolSingleValueExpr2>,
+                                               T> operator ||(bool const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          OrOp<Initial, NeboScalar<Initial, bool>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
+       }
+
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<OrOp<Initial,
@@ -12127,6 +12295,29 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         SubBoolExpr1,
+                                         SubBoolSingleValueExpr2>,
+                                    FieldType> operator ||(NeboBooleanExpression<SubBoolExpr1,
+                                                                                 FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          OrOp<Initial, SubBoolExpr1, SubBoolSingleValueExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        }
 
       /* Mask X Boolean */
@@ -12201,6 +12392,117 @@
 
           return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
                                        NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* Mask X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                         SubBoolSingleValueExpr2>,
+                                    FieldType> operator ||(SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          OrOp<Initial, NeboMask<Initial, FieldType>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Boolean */
+      template<typename SubBoolSingleValueExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<OrOp<Initial,
+                                                    SubBoolSingleValueExpr1,
+                                                    NeboScalar<Initial, bool> >,
+                                               T> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              bool const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, NeboScalar<Initial, bool> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, bool>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         SubBoolSingleValueExpr1,
+                                         SubBoolExpr2>,
+                                    FieldType> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           NeboBooleanExpression<SubBoolExpr2,
+                                                                                 FieldType>
+                                                           const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, SubBoolExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Mask */
+      template<typename SubBoolSingleValueExpr1, typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         SubBoolSingleValueExpr1,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                                    FieldType> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, NeboMask<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename T>
+       inline NeboBooleanSingleValueExpression<OrOp<Initial,
+                                                    SubBoolSingleValueExpr1,
+                                                    SubBoolSingleValueExpr2>,
+                                               T> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
       template<typename CurrentMode, typename Operand>

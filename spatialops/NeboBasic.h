@@ -104,6 +104,10 @@
       template<typename Type1, typename Type2>
        struct NeboFieldCheck;
 
+      template<typename T>
+       struct NeboFieldCheck<SpatialOps::SpatialField<SpatialOps::SingleValue, T>,
+                             SpatialOps::SpatialField<SpatialOps::SingleValue, T> > {};
+
       template<typename Type>
        struct NeboFieldCheck<Type, Type> { Type typedef Result; };
 

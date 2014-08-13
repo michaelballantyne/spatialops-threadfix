@@ -371,12 +371,12 @@
 (define if-arg-SubBoolSingleValueExpr
   (list 'atomic-only
         (lambda (num value-type checked-value-type)
-          (let ([type (literal 'SubBoolExpr num)]
+          (let ([type (literal 'SubBoolSingleValueExpr num)]
                 [arg (literal 'arg num)])
             (list 'SubBoolSingleValueExpr
                   #false
                   #true
-                  null
+                  type
                   ignore-spacing-check
                   type
                   type
@@ -502,7 +502,7 @@
 
 (define binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
 (define unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
-(define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr if-arg-Mask))
+(define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr if-arg-Mask if-arg-SubBoolSingleValueExpr))
 (define unary-logical-expr-arg-lst (list if-arg-SubBoolExpr if-arg-Mask))
 (define (build-binary-function name internal-name external-name)
   (internal-smt-list blank-line
