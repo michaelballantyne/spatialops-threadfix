@@ -24,4 +24,12 @@ set( ENABLE_THREADS @ENABLE_THREADS@ )
 set( NTHREADS @NTHREADS@ )
 set( ENABLE_CUDA @ENABLE_CUDA@ )
 
+# CUDA Settings
+if( ENABLE_CUDA )
+  set( CUDA_ARCHITECTURE       @CUDA_ARCHITECTURE@       CACHE STRING "CUDA compute capability" FORCE )
+  set( CUDA_NVCC_FLAGS         @CUDA_NVCC_FLAGS@         CACHE STRING "Compiler flags passed to NVCC" FORCE)
+  set( CUDA_NVCC_FLAGS_RELEASE @CUDA_NVCC_FLAGS_RELEASE@ CACHE STRING "Release build compiler flags" FORCE )
+endif( ENABLE_CUDA )
+
 include( @CMAKE_INSTALL_PREFIX@/lib/spatialops/SpatialOps.cmake )
+include( @SpatialOps_CONFIG_INSTALL@/NeboBuildTools.cmake )
