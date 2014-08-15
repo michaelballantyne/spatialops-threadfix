@@ -4,7 +4,7 @@ set( src
      StencilBuilder.cpp
     )
 
-nebo_add_library( spatialops-stencil src )
+nebo_add_library( spatialops-stencil ${src} )
 
 if( ENABLE_TESTS )
   add_subdirectory( test )
