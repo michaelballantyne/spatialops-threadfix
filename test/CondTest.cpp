@@ -18,18 +18,18 @@ int main()
   typedef SVolField Field;
   typedef SingleValueField SVField;
   
-  const int nghost = 1;
-  const GhostData ghost(nghost);
+  const GhostData oneGhost(1);
+  const GhostData noGhost(0);
   const BoundaryCellInfo   bc = BoundaryCellInfo::build<Field>(true,true,true);
   const BoundaryCellInfo svbc = BoundaryCellInfo::build<SVField>(true,true,true);
-  const MemoryWindow   window( get_window_with_ghost(IntVec(nx,ny,nz),ghost,bc) );
-  const MemoryWindow svwindow( get_window_with_ghost(IntVec(1,1,1),ghost,svbc) );
+  const MemoryWindow   window( get_window_with_ghost(IntVec(nx,ny,nz),oneGhost,bc) );
+  const MemoryWindow svwindow( get_window_with_ghost(IntVec(1,1,1),oneGhost,svbc) );
 
 
-  Field ffa( window, bc, ghost, NULL );
-  Field ffb( window, bc, ghost, NULL );
-  SVField sva( svwindow, svbc, ghost, NULL );
-  SVField svb( svwindow, svbc, ghost, NULL );
+  Field ffa( window, bc, oneGhost, NULL );
+  Field ffb( window, bc, oneGhost, NULL );
+  SVField sva( svwindow, svbc, noGhost, NULL );
+  SVField svb( svwindow, svbc, noGhost, NULL );
   double dtest;
   
   std::vector<Field> vec = std::vector<Field>();
