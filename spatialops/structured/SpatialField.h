@@ -165,18 +165,14 @@ namespace SpatialOps{
       info_( new FieldInfo<T>( window, bc, ghosts, fieldValues, mode, devIdx ) )
     {
       SingleValueCheck<Location>::check( localWindow_, ghosts );
-      // this error trapping is disabled currently because of the way that Wasatch is
-      // hijacking the SpatialOps interface for flux limiters.  Once that gets folded
-      // into a real nebo interface using operators we will be able to reinstate
-      // these error trappings
-      //# ifndef NDEBUG
-      //  // ensure that we have a consistent BoundaryCellInfo object
-      //  for( int i=0; i<3; ++i ){
-      //    if( bcInfo_.has_bc(i) ){
-      //      assert( bcInfo_.num_extra(i) == Location::BCExtra::int_vec()[i] );
-      //    }
-      //  }
-      //# endif // NDEBUG
+#     ifndef NDEBUG
+      // ensure that we have a consistent BoundaryCellInfo object
+      for( int i=0; i<3; ++i ){
+        if( localWindow_.extent(i)>1 && bcInfo_.has_bc(i) ){
+          assert( bcInfo_.num_extra(i) == Location::BCExtra::int_vec()[i] );
+        }
+      }
+#     endif // NDEBUG
     }
 
     /**

@@ -129,7 +129,7 @@ namespace SpatialOps {
      * \brief obtain the number of extra cells *potentially* present on this field due to presence of physical boundaries
      * @param dir the direction of interest (0=x, 1=y, 2=z)
      */
-    inline int num_extra( const int dir ) const{ return nExtra_[dir]; }
+    inline int num_extra( const int dir ) const{ assert(dir<3 && dir>=0); return nExtra_[dir]; }
 
     /**
      * \brief obtain the number of extra cells present on this field due to presence of physical boundaries.  If no physical boundary is present, this returns zero.
@@ -140,7 +140,7 @@ namespace SpatialOps {
      * \brief obtain the number of extra cells *actually* present on this field due to presence of physical boundaries
      * @param dir the direction of interest (0=x, 1=y, 2=z)
      */
-    inline int has_extra( const int dir ) const{ assert(dir<=2 && dir>=0); return has_bc(dir) ? num_extra(dir) : 0; }
+    inline int has_extra( const int dir ) const{ assert(dir<3 && dir>=0); return has_bc(dir) ? num_extra(dir) : 0; }
 
     /**
      * \brief obtain the number of extra cells *actually* present on this field due to presence of physical boundaries
@@ -150,13 +150,11 @@ namespace SpatialOps {
     /**
      * \brief limit extra cells to dimensions with extents > 1
      */
-    inline BoundaryCellInfo limit_by_extent(IntVec const & extent) const {
-      return BoundaryCellInfo(has_bc(0),
-                              has_bc(1),
-                              has_bc(2),
-                              IntVec(extent[0] == 1 ? 0 : has_extra(0),
-                                     extent[1] == 1 ? 0 : has_extra(1),
-                                     extent[2] == 1 ? 0 : has_extra(2)));
+    inline BoundaryCellInfo limit_by_extent( const IntVec& extent ) const{
+      return BoundaryCellInfo( has_bc(0), has_bc(1), has_bc(2),
+                               IntVec( extent[0] == 1 ? 0 : has_extra(0),
+                                       extent[1] == 1 ? 0 : has_extra(1),
+                                       extent[2] == 1 ? 0 : has_extra(2) ) );
     }
   };
 
