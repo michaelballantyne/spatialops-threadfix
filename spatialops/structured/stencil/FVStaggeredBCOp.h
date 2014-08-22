@@ -152,6 +152,8 @@ namespace SpatialOps{
      */
     void operator()( std::vector<SrcFieldT*>& f ) const;
 
+    static bool is_gpu_runnable(){ return false; }
+
   }; // class BoundaryConditionOp
 
 
