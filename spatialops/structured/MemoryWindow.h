@@ -160,9 +160,15 @@ namespace SpatialOps{
      */
     inline size_t local_npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
-    inline size_t glob_dim( const size_t i ) const{ return size_t(nptsGlob_[i]); }
-    inline size_t offset  ( const size_t i ) const{ return size_t(offset_[i]  ); }
-    inline size_t extent  ( const size_t i ) const{ return size_t(extent_[i]  ); }
+    inline size_t glob_dim( const size_t i ) const{ assert(i<3 && i>=0); return size_t(nptsGlob_[i]); }
+    inline size_t offset  ( const size_t i ) const{ assert(i<3 && i>=0); return size_t(offset_[i]  ); }
+    inline size_t extent  ( const size_t i ) const{ assert(i<3 && i>=0); return size_t(extent_[i]  ); }
+
+    inline int& offset( const size_t i ){ assert(i<3 && i>=0); return offset_[i]; }
+    inline int& extent( const size_t i ){ assert(i<3 && i>=0); return extent_[i]; }
+
+    inline IntVec& extent(){ return extent_; }
+    inline IntVec& offset(){ return offset_; }
 
     inline const IntVec& extent  () const{ return extent_;   }
     inline const IntVec& offset  () const{ return offset_;   }
@@ -190,7 +196,8 @@ namespace SpatialOps{
      * \param newGhosts number of ghost cells to add to window
      */
     MemoryWindow reset_ghosts( GhostData const & oldGhosts,
-                               GhostData const & newGhosts ) const {
+                               GhostData const & newGhosts ) const
+    {
       IntVec oldTotal = oldGhosts.get_minus() + oldGhosts.get_plus();
       IntVec newTotal = newGhosts.get_minus() + newGhosts.get_plus();
 
@@ -217,7 +224,8 @@ namespace SpatialOps{
      *
      * If global dimensions are different, returns false.
      */
-    bool fits_in( MemoryWindow const & outer ) const {
+    bool fits_in( MemoryWindow const & outer ) const
+    {
       return ( glob_dim() == outer.glob_dim() &&
                offset()   >= outer.offset()   &&
                extent()   <= outer.extent()   );
@@ -237,19 +245,18 @@ namespace SpatialOps{
      * Debug mode asserts that inner fits in outer.
      */
     bool fits_between( MemoryWindow const & inner,
-                       MemoryWindow const & outer ) const {
-#ifndef NDEBUG
+                       MemoryWindow const & outer ) const
+    {
       assert( inner.fits_in(outer) );
-#endif
-      return ( inner.fits_in(*this)   &&
-               (*this).fits_in(outer) );
+      return ( inner.fits_in(*this) && (*this).fits_in(outer) );
     }
 
     /**
      * \brief Writes the internals of MemoryWindow to a string
      * \return a string value representing the internals of MemoryWindow.
      */
-    inline std::string print() const {
+    inline std::string print() const
+    {
       std::stringstream s;
       s << "Offset: " << offset_ << std::endl
         << "Extent: " << extent_ << std::endl;
