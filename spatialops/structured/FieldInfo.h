@@ -407,6 +407,9 @@ namespace SpatialOps{
     /**
      * \brief return a constant pointer to memory on the given device
      *
+     * NOTE: no check is performed to determine if the memory returned is valid.
+     * See the is_valid() method to perform that check.
+     *
      * \param deviceIndex device index for device memory to return (defaults to CPU_INDEX)
      */
     inline const T* const_field_values( const short int deviceIndex = CPU_INDEX ) const;
@@ -767,11 +770,7 @@ namespace SpatialOps{
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
 
-    //check device exists and is valid
-    if( iter != deviceMap_.end() && iter->second.isValid_ ){
-      return iter->second.field_;
-    }
-    else if( iter == deviceMap_.end() ) {
+    if( iter == deviceMap_.end() ) {
       //device is not available
       std::ostringstream msg;
       msg << "Request for const field pointer on a device for which it has not been allocated\n"
@@ -779,13 +778,14 @@ namespace SpatialOps{
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
-    else {
-      //device is available but not valid
-      std::ostringstream msg;
-      msg << "Requested const field pointer on a device is not valid! \n"
-          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }
+//    else {
+//      //device is available but not valid
+//      std::ostringstream msg;
+//      msg << "Requested const field pointer on a device is not valid! \n"
+//          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+//      throw(std::runtime_error(msg.str()));
+//    }
+    return iter->second.field_;
   }
 
 //------------------------------------------------------------------
