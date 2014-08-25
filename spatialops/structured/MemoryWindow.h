@@ -160,12 +160,12 @@ namespace SpatialOps{
      */
     inline size_t local_npts() const{ return extent_[0] * extent_[1] * extent_[2]; }
 
-    inline size_t glob_dim( const size_t i ) const{ assert(i<3 && i>=0); return size_t(nptsGlob_[i]); }
-    inline size_t offset  ( const size_t i ) const{ assert(i<3 && i>=0); return size_t(offset_[i]  ); }
-    inline size_t extent  ( const size_t i ) const{ assert(i<3 && i>=0); return size_t(extent_[i]  ); }
+    inline size_t glob_dim( const size_t i ) const{ assert(i<3); return size_t(nptsGlob_[i]); }
+    inline size_t offset  ( const size_t i ) const{ assert(i<3); return size_t(offset_[i]  ); }
+    inline size_t extent  ( const size_t i ) const{ assert(i<3); return size_t(extent_[i]  ); }
 
-    inline int& offset( const size_t i ){ assert(i<3 && i>=0); return offset_[i]; }
-    inline int& extent( const size_t i ){ assert(i<3 && i>=0); return extent_[i]; }
+    inline int& offset( const size_t i ){ assert(i<3); return offset_[i]; }
+    inline int& extent( const size_t i ){ assert(i<3); return extent_[i]; }
 
     inline IntVec& extent(){ return extent_; }
     inline IntVec& offset(){ return offset_; }

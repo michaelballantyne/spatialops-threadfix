@@ -78,7 +78,7 @@ namespace SpatialOps{
    * FieldInfo abstracts the low-level details of a field, mainly memory management
    * and synchronization of memory between devices.
    *
-   * \tparam T - the underlying datatype (defaults to \c double)
+   * \tparam T - the underlying data type (defaults to \c double)
    *
    * \par Related classes:
    *  - \ref MemoryWindow
@@ -133,7 +133,7 @@ namespace SpatialOps{
     typedef typename DeviceMemoryMap::const_iterator ConstMapIter;
     typedef typename DeviceMemoryMap::iterator       MapIter;
 
-    DeviceMemoryMap deviceMap_;     ///< Map from device indicies to DeviceMemorys
+    DeviceMemoryMap deviceMap_;     ///< Map from device indices to DeviceMemorys
     MemoryWindow wholeWindow_;      ///< Representation of the largest valid window for this field (includes ghost cells)
     const BoundaryCellInfo bcInfo_; ///< Information about this field's behavior on a boundary
     const GhostData totalGhosts_;   ///< The total number of ghost cells on each face of this field
@@ -175,12 +175,12 @@ namespace SpatialOps{
      * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
      * \param devIdx      device index of originally active device (default: CPU_INDEX)
      */
-    FieldInfo(const MemoryWindow& window,
-              const BoundaryCellInfo& bc,
-              const GhostData& ghosts,
-              T* const fieldValues = NULL,
-              const StorageMode mode = InternalStorage,
-              const short int devIdx = CPU_INDEX);
+    FieldInfo( const MemoryWindow& window,
+               const BoundaryCellInfo& bc,
+               const GhostData& ghosts,
+               T* const fieldValues = NULL,
+               const StorageMode mode = InternalStorage,
+               const short int devIdx = CPU_INDEX );
 
     /**
      * \brief FieldInfo destructor
@@ -687,7 +687,7 @@ namespace SpatialOps{
     DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
-#   ifndef NDEBUG
+#   ifndef DEBUG_SF_ALL
     if( iter == deviceMap_.end() )
       std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description( deviceIndex )
                 << " is not allocated. " << std::endl;
@@ -711,7 +711,7 @@ namespace SpatialOps{
     DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
-#   ifndef NDEBUG
+#   ifndef DEBUG_SF_ALL
     if( iter == deviceMap_.end() )
       std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description( deviceIndex )
                 << " is not allocated. " << std::endl;
