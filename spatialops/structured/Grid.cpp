@@ -94,7 +94,10 @@ namespace SpatialOps{
       }
     }
 #   ifdef ENABLE_CUDA
-    if( !isCPU ) f.validate_device( devIx );
+    if( !isCPU ){
+      f.validate_device( devIx );
+      f.set_device_as_active( devIx );
+    }
 #   endif
   }
 
