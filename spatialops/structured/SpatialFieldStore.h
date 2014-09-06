@@ -26,6 +26,7 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/SpatialOpsTools.h>
 
 #include <stack>
 #include <map>
