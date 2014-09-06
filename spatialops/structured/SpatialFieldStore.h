@@ -243,9 +243,9 @@ public:
   {
     if( deviceIndex == -9999 ) deviceIndex = f.active_device_index();
 
-    if( is_same_type<FieldT,SingleValueField>() ){
+    if( is_same_type<FieldT,SpatialField<SingleValue> >() ){
       return get_from_window<FieldT>( MemoryWindow( IntVec(1,1,1) ),
-                                      BoundaryCellInfo::build<SingleValueField>(),
+                                      BoundaryCellInfo::build<SpatialField<SingleValue> >(),
                                       GhostData(0),
                                       deviceIndex );
     }
