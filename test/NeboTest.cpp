@@ -279,6 +279,36 @@ class Pow
 };
 
 /**
+ *  @class Square
+ *
+ *  @brief Functor which squares argument
+ *
+ */
+class Square
+{
+  public:
+    double operator() (double a) const
+    {
+      return a * a;
+    }
+};
+
+/**
+ *  @class Cube
+ *
+ *  @brief Functor which cubes argument
+ *
+ */
+class Cube
+{
+  public:
+    double operator() (double a) const
+    {
+      return a * a * a;
+    }
+};
+
+/**
  *  @class Max_Functor
  *
  *  @brief Functor which calls \c std::max on \c a and \c b
@@ -478,6 +508,8 @@ class TestContext
     status(run_test_ignore_nan_ulp(test <<= log(input1), (unary_lambda<double(*)(double), Field>(std::log, input1)), 1), "log test");
     //documentation says with 1 ulp, empirically found to be 2
     status(run_test_ignore_nan_ulp(test <<= log10(input1), (unary_lambda<double(*)(double), Field>(std::log10, input1)), 2), "log10 test");
+    status(run_test(test <<= square(input1), (unary_lambda<Square, Field>(Square(), input1))), "square test");
+    status(run_test(test <<= cube(input1), (unary_lambda<Cube, Field>(Cube(), input1))), "cube test");
 
     //erf
     status(run_test_ulp(test <<= erf(input1), (unary_lambda<double(*)(double), Field>(boost::math::erf, input1)), 2), "erf test");

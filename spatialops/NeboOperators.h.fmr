@@ -30,6 +30,7 @@
 (define (build-Nary-struct name
                            number
                            eval-return-type
+                           eval-body
                            CPU-internal-use
                            GPU-internal-use)
   (define num-lst
@@ -139,20 +140,25 @@
                                (op_-mfc 'init init-arg)
                                null
                                gen-data-mems)
-                (bs-SeqWalk-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
-                                              vt-chunk)
-                                gen-constructor
-                                eval-return-type
-                                (CPU-internal-use index-arg)
-                                null
-                                exec-data-mems)
-                (bs-gpu-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
-                                          vt-chunk)
-                            gen-constructor
-                            eval-return-type
-                            (GPU-internal-use index-arg)
-                            null
-                            exec-data-mems)))
+                (bs-SeqWalk-rhs-with-eval-body (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                                             vt-chunk)
+                                               gen-constructor
+                                               eval-return-type
+                                               (eval-body index-arg)
+                                               (CPU-internal-use index-arg)
+                                               null
+                                               exec-data-mems)
+                (bs-gpu-rhs-with-eval-body (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                                         vt-chunk)
+                                           gen-constructor
+                                           eval-return-type
+                                           (eval-body index-arg)
+                                           (GPU-internal-use index-arg)
+                                           null
+                                           exec-data-mems)))
+
+(define (return-null args)
+  null)
 
 (define (build-binary-function-struct name internal-name)
   (let ([internal-use (lambda (args)
@@ -162,6 +168,7 @@
     (build-Nary-struct name
                        2
                        vt-chunk
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -173,6 +180,7 @@
     (build-Nary-struct name
                        2
                        vt-chunk
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -183,8 +191,21 @@
   (build-Nary-struct name
                      1
                      vt-chunk
+                     return-null
                      (internal-use CPU-internal-name)
                      (internal-use GPU-internal-name)))
+
+(define (build-unary-function-struct-with-reuse name internal-name)
+  (define internal-use (lambda (args) (internal-name 'result)))
+  (build-Nary-struct name
+                     1
+                     vt-chunk
+                     (lambda (args)
+                       (stmt-typed-assign (const 'double)
+                                          'result
+                                          (val-member-call 'operand_ 'eval args)))
+                     internal-use
+                     internal-use))
 
 (define (build-comparison-struct name internal-name)
   (let ([internal-use (lambda (args)
@@ -194,6 +215,7 @@
     (build-Nary-struct name
                        2
                        'bool
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -204,6 +226,7 @@
     (build-Nary-struct name
                        1
                        'bool
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -215,6 +238,7 @@
     (build-Nary-struct name
                        2
                        'bool
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -228,6 +252,7 @@
     (build-Nary-struct name
                        2
                        vt-chunk
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -516,6 +541,17 @@
   (internal-smt-list blank-line
                      (build-unary-function-struct name CPU-internal-name GPU-internal-name)
                      (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
+(define (build-unary-function-with-reuse name external-name count)
+  (define (internal-expr count)
+    (lambda (result)
+      (if (= 1 count)
+          result
+          (val-multiply result
+                        ((internal-expr (- count 1))
+                         result)))))
+  (internal-smt-list blank-line
+                     (build-unary-function-struct-with-reuse name (internal-expr count))
+                     (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
 (define (build-comparison-operator name internal-name external-name)
   (internal-smt-list blank-line
                      (build-comparison-struct name internal-name)
@@ -604,6 +640,8 @@
                         (scope 'boost (scope 'math 'erfc_inv))
                         'erfcinv
                         'inv_erfc)
+  (build-unary-function-with-reuse 'SquareFcn 'square 2)
+  (build-unary-function-with-reuse 'CubeFcn 'cube 3)
   (build-comparison-operator 'EqualCmp '== (add-spaces 'operator '==))
   (build-comparison-operator 'InequalCmp '!= (add-spaces 'operator '!=))
   (build-comparison-operator 'LessThanCmp '< (add-spaces 'operator '<))

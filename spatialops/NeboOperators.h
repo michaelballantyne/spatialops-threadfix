@@ -6551,6 +6551,418 @@
           return ReturnTerm(ReturnType(arg.expr()));
        };
 
+      template<typename CurrentMode, typename Operand>
+       struct SquareFcn;
+      template<typename Operand>
+       struct SquareFcn<Initial, Operand> {
+         public:
+          SquareFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
+
+          #ifdef ENABLE_THREADS
+             SquareFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             SquareFcn<GPUWalk, typename Operand::GPUWalkType> typedef
+             GPUWalkType;
+          #endif
+          /* __CUDACC__ */
+
+          SquareFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
+          }
+
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
+          }
+
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
+
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(operand_.resize());
+             }
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+         private:
+          Operand const operand_;
+      };
+      #ifdef ENABLE_THREADS
+         template<typename Operand>
+          struct SquareFcn<Resize, Operand> {
+            public:
+             SquareFcn<SeqWalk, typename Operand::SeqWalkType> typedef
+             SeqWalkType;
+
+             SquareFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+             }
+
+            private:
+             Operand const operand_;
+         }
+      #endif
+      /* ENABLE_THREADS */;
+      template<typename Operand>
+       struct SquareFcn<SeqWalk, Operand> {
+         public:
+          typename Operand::value_type typedef value_type;
+
+          SquareFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             double const result = operand_.eval(x, y, z);;
+
+             return result * result;
+          }
+
+         private:
+          Operand operand_;
+      };
+      #ifdef __CUDACC__
+         template<typename Operand>
+          struct SquareFcn<GPUWalk, Operand> {
+            public:
+             typename Operand::value_type typedef value_type;
+
+             SquareFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                double const result = operand_.eval(x, y, z);;
+
+                return result * result;
+             }
+
+            private:
+             Operand operand_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      /* Field */
+      template<typename FieldType>
+       inline NeboExpression<SquareFcn<Initial,
+                                       NeboConstField<Initial,
+                                                      typename NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                      Result> >,
+                             FieldType> square(FieldType const & arg) {
+          SquareFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
+       }
+
+      /* SubExpr */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<SquareFcn<Initial, SubExpr>, FieldType> square(NeboExpression<SubExpr,
+                                                                                           FieldType>
+                                                                            const
+                                                                            &
+                                                                            arg) {
+          SquareFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<SquareFcn<Initial,
+                                                  NeboConstSingleValueField<Initial,
+                                                                            T> >,
+                                        T> square(SpatialOps::SpatialField<SpatialOps::
+                                                                           SingleValue,
+                                                                           T>
+                                                  const & arg) {
+          SquareFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<SquareFcn<Initial, SubExpr>, T> square(NeboSingleValueExpression<SubExpr,
+                                                                                                         T>
+                                                                               const
+                                                                               &
+                                                                               arg) {
+          SquareFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       };
+
+      template<typename CurrentMode, typename Operand>
+       struct CubeFcn;
+      template<typename Operand>
+       struct CubeFcn<Initial, Operand> {
+         public:
+          CubeFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
+
+          #ifdef ENABLE_THREADS
+             CubeFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             CubeFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType
+             ;
+          #endif
+          /* __CUDACC__ */
+
+          CubeFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
+          }
+
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
+          }
+
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
+
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(operand_.resize());
+             }
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+         private:
+          Operand const operand_;
+      };
+      #ifdef ENABLE_THREADS
+         template<typename Operand>
+          struct CubeFcn<Resize, Operand> {
+            public:
+             CubeFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType
+             ;
+
+             CubeFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+             }
+
+            private:
+             Operand const operand_;
+         }
+      #endif
+      /* ENABLE_THREADS */;
+      template<typename Operand>
+       struct CubeFcn<SeqWalk, Operand> {
+         public:
+          typename Operand::value_type typedef value_type;
+
+          CubeFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             double const result = operand_.eval(x, y, z);;
+
+             return result * result * result;
+          }
+
+         private:
+          Operand operand_;
+      };
+      #ifdef __CUDACC__
+         template<typename Operand>
+          struct CubeFcn<GPUWalk, Operand> {
+            public:
+             typename Operand::value_type typedef value_type;
+
+             CubeFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                double const result = operand_.eval(x, y, z);;
+
+                return result * result * result;
+             }
+
+            private:
+             Operand operand_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      /* Field */
+      template<typename FieldType>
+       inline NeboExpression<CubeFcn<Initial,
+                                     NeboConstField<Initial,
+                                                    typename NeboFieldCheck<typename
+                                                                            FieldType::
+                                                                            field_type,
+                                                                            FieldType>::
+                                                    Result> >,
+                             FieldType> cube(FieldType const & arg) {
+          CubeFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
+       }
+
+      /* SubExpr */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<CubeFcn<Initial, SubExpr>, FieldType> cube(NeboExpression<SubExpr,
+                                                                                       FieldType>
+                                                                        const &
+                                                                        arg) {
+          CubeFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<CubeFcn<Initial,
+                                                NeboConstSingleValueField<Initial,
+                                                                          T> >,
+                                        T> cube(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
+          CubeFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<CubeFcn<Initial, SubExpr>, T> cube(NeboSingleValueExpression<SubExpr,
+                                                                                                     T>
+                                                                           const
+                                                                           & arg) {
+          CubeFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       };
+
       template<typename CurrentMode, typename Operand1, typename Operand2>
        struct EqualCmp;
       template<typename Operand1, typename Operand2>
