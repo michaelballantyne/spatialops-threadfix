@@ -50,7 +50,7 @@ TimeLogger::TimeLogger( const std::string logFileName,
   haveFileIO_( true ),
   format_( format )
 {
-  std::ifstream infile( logFileName, std::ios_base::in );
+  std::ifstream infile( logFileName.c_str() );
   if( infile.good() ){
     // load the existing file from disk rather than simply appending it.
     // This will ensure that the tree structure is properly maintained.
