@@ -42,7 +42,7 @@ include( NeboBuildTools.cmake )
 # resolve required libraries
 
 # setup the boost library
-set( boost_comps "program_options" )
+set( boost_comps "program_options;date_time" )
 
 if( ENABLE_THREADS )
   find_package( Threads REQUIRED )
