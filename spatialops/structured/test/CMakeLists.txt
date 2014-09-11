@@ -1,6 +1,6 @@
 nebo_cuda_prep_dir()
 
-set( libs spatialops-structured spatialops ${TPL_LIBRARIES} )
+set( libs spatialops-structured spatialops ${TPL_LIBRARIES} timelogger )
 
 include_directories( ${spatialops_SOURCE_DIR}/include . )
 

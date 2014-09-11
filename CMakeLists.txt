@@ -150,7 +150,7 @@ if( ENABLE_TESTS )
 endif( ENABLE_TESTS )
 
 add_subdirectory( spatialops )
-
+add_subdirectory( util )
 
 if( ENABLE_EXAMPLES )
   add_subdirectory( examples )

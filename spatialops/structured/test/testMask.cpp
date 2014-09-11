@@ -19,6 +19,8 @@
 #include <spatialops/structured/SpatialMask.h>
 #include <spatialops/NeboMask.h>
 
+#include <util/TimeLogger.h>
+
 using namespace SpatialOps;
 using std::cout;
 using std::endl;
@@ -28,12 +30,14 @@ int main(int argc, const char *argv[])
   const bool print = false;
   TestHelper status(print);
 
+  TimeLogger timer( "testMask.log" );
+
   typedef SVolField FieldT;
 
   const int nghost = 1;
   const GhostData ghost(nghost);
   const BoundaryCellInfo bcinfo = BoundaryCellInfo::build<FieldT>(false,false,false);
-  MemoryWindow w(IntVec(10, 10, 10));
+  MemoryWindow w(IntVec(30, 30, 30));
   FieldT f(w, bcinfo, ghost, NULL, InternalStorage);
   FieldT result(w, bcinfo, ghost, NULL, InternalStorage);
   FieldT::iterator ir = result.begin();
@@ -54,6 +58,8 @@ int main(int argc, const char *argv[])
   std::vector<IntVec> maskSet;
   std::vector<IntVec> maskSet2;
 
+  timer.start("mask-creation");
+
   //mask of center
   maskSet.push_back(IntVec(3, 3, 0));
   maskSet.push_back(IntVec(4, 3, 0));
@@ -70,19 +76,27 @@ int main(int argc, const char *argv[])
   SpatialMask<FieldT> mask(f, maskSet);
   SpatialMask<FieldT> mask2(f, maskSet2);
 
+  timer.stop( "mask-creation" );
+
+  timer.start( "cond-mask" );
   SpatialMask<FieldT> typedef SpatialMaskT;
   NeboMask<Initial, FieldT> typedef NeboMaskT;
   f <<= cond(mask, 3)
             (mask2, 7)
             (4);
+  timer.stop( "cond-mask" );
 
   status( (display_fields_compare(result, f, print, print)), "Cond version");
 
+  timer.start( "masked-assign" );
   f <<= 4;
   masked_assign(mask, f, 3);
   masked_assign(mask2, f, 7);
+  timer.stop( "masked-assign" );
 
   status( (display_fields_compare(result, f, print, print)), "masked_assign version");
+
+  std::cout << "Time: " << timer.total_time() << std::endl;
 
   if( status.ok() ) {
     std::cout << "ALL TESTS PASSED :)" << std::endl;

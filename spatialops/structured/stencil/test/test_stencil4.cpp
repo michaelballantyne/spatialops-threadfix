@@ -5,6 +5,7 @@
 #include "test_stencil_helper.h"
 #include <test/TestHelper.h>
 
+#include <util/TimeLogger.h>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -20,6 +21,7 @@ int main( int iarg, char* carg[] )
 {
   IntVec npts;
   bool bcplus[] = { false, false, false };
+  std::string timingFileName;
 
   {
     po::options_description desc("Supported Options");
@@ -30,7 +32,8 @@ int main( int iarg, char* carg[] )
       ( "nz",   po::value<int>(&npts[2])->default_value(5), "number of points in z-dir for base mesh" )
       ( "bcx",  "indicates physical boundary on +x side" )
       ( "bcy",  "indicates physical boundary on +y side" )
-      ( "bcz",  "indicates physical boundary on +z side" );
+      ( "bcz",  "indicates physical boundary on +z side" )
+      ("logfile-name",po::value<std::string>(&timingFileName)->default_value("stencil4_timings.log"),"Name for the timing log file");
 
     po::variables_map args;
     po::store( po::parse_command_line(iarg,carg,desc), args );
@@ -65,7 +68,7 @@ int main( int iarg, char* carg[] )
 
   try{
     TestHelper status( true );
-
+    TimeLogger timer( timingFileName );
     const double length = 10.0;
 
     if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,SVolField,XSurfYField,XDIR,YDIR>( npts, bcplus, length, 2.0 ), "SVol->XSurfY" );
@@ -82,6 +85,8 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,YSurfZField,SVolField,YDIR,ZDIR>( npts, bcplus, length, 2.0 ), "YSurfZ->SVol" );
     if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,ZSurfXField,SVolField,ZDIR,XDIR>( npts, bcplus, length, 2.0 ), "ZSurfX->SVol" );
     if( npts[0]>1 && npts[1]>1 ) status( run_convergence<Interpolant,ZSurfYField,SVolField,ZDIR,YDIR>( npts, bcplus, length, 2.0 ), "ZSurfY->SVol" );
+
+    std::cout << "Time: " << timer.total_time() << std::endl;
 
     if( status.ok() ){
       cout << "PASS" << endl;

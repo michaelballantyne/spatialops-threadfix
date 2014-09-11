@@ -30,7 +30,7 @@
 
 //-----------------------------------------------------------------------------
 
-#include <test/TimeLogger.h>
+#include <util/TimeLogger.h>
 
 #include <boost/foreach.hpp>
 
@@ -70,10 +70,8 @@ TimeLogger::TimeLogger( const std::string logFileName,
           << "\nwill be used\n\n";
     }
   }
-//  std::cout << "\n------------------------------------\n";
-//  std::cout << "\nEXISTING TREE:\n";
-//  boost::property_tree::json_parser::write_json( std::cout, pt_ );
-//  std::cout << "\n------------------------------------\n";
+  // start the timer that measures the lifetime of the TimeLogger.
+  totalTime_.start();
 }
 
 TimeLogger::TimeLogger( const Format format )
@@ -85,6 +83,7 @@ TimeLogger::TimeLogger( const Format format )
 
 TimeLogger::~TimeLogger()
 {
+  totalTime_.stop();
   write_entries();
 }
 
@@ -92,7 +91,9 @@ TimeLogger::~TimeLogger()
 
 void TimeLogger::start( const std::string& label ){
   Entries::iterator it = entries_.find( label );
-  if( it == entries_.end() ) it = entries_.insert( entries_.begin(), make_pair(label, Timer()) );
+  if( it == entries_.end() ){
+    it = entries_.insert( entries_.begin(), make_pair(label, Timer()) );
+  }
   it->second.start();
 }
 
@@ -100,13 +101,19 @@ void TimeLogger::start( const std::string& label ){
 
 void TimeLogger::reset( const std::string& label ){
   Entries::iterator it = entries_.find( label );
-  if( it == entries_.end() ) it = entries_.insert( entries_.begin(), make_pair(label, Timer()) );
+  if( it == entries_.end() ){
+    it = entries_.insert( entries_.begin(), make_pair(label, Timer()) );
+  }
   it->second.reset();
 }
 
 //-----------------------------------------------------------------------------
 
-double TimeLogger::stop( const std::string& label ){
+double TimeLogger::stop( const std::string& label )
+{
+# ifndef NDEBUG
+  assert( entries_.find( label ) != entries_.end() );
+# endif
   return entries_[label].stop();
 }
 
@@ -130,33 +137,29 @@ const Timer& TimeLogger::timer( const std::string& label ) const
 
 //-----------------------------------------------------------------------------
 
-double TimeLogger::total_time() const
+double TimeLogger::total_time()
 {
-  double totTime = 0;
-  BOOST_FOREACH( const Entries::value_type& vt, entries_ ){
-    totTime += vt.second.elapsed_time();
-  }
-  return totTime;
+  totalTime_.stop();
+  const double t = totalTime_.elapsed_time();
+  totalTime_.start();
+  return t;
 }
 
 //-----------------------------------------------------------------------------
 
 void TimeLogger::write_entries()
 {
-  const boost::gregorian::date dayTime( boost::gregorian::day_clock::local_day() );
-
-  const std::string timeStamp = boost::gregorian::to_iso_extended_string( dayTime );
+  const boost::posix_time::ptime time = boost::posix_time::second_clock::local_time();
+  const std::string timeStamp = boost::posix_time::to_simple_string(time);
 
   boost::property_tree::ptree pt;
 
-  double totTime = 0;
   BOOST_FOREACH( const Entries::value_type& vt, entries_ ){
     const Timer& t = vt.second;
     const std::string& label = vt.first;
-    totTime += t.elapsed_time();
     pt.put( label, t.elapsed_time() );
   }
-  pt.put( "total_time", totTime );
+  pt.put( "total_time", totalTime_.elapsed_time() );
 
   pt_.add_child( timeStamp, pt );
 

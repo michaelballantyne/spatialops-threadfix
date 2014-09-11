@@ -2,12 +2,6 @@ nebo_cuda_prep_dir()
 
 set( libs spatialops spatialops-structured spatialops-stencil ${TPL_LIBRARIES} )
 
-add_library( timelogger STATIC TimeLogger.cpp )
-target_link_libraries( timelogger ${Boost_LIBRARIES} )
-install( TARGETS timelogger DESTINATION lib/spatialops )
-install( FILES TimeLogger.h DESTINATION include/spatialops/test )
-
-
 nebo_add_executable( field_exprs testFieldExprs.cpp )
 target_link_libraries( field_exprs ${libs} )
 add_test( field_exprs field_exprs )

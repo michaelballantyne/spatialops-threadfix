@@ -38,6 +38,9 @@
  * \date Sep 8, 2014
  * \author James C. Sutherland
  * \brief Provides basic timing functionality
+ *
+ * This class provides stopwatch-like functionality.  You can repeatedly call
+ * start/stop and the cumulative time will be reported, just like on a stopwatch.
  */
 class Timer{
   boost::posix_time::ptime startTime_, stopTime_;
@@ -49,16 +52,19 @@ public:
 
   ~Timer(){}
 
-  /** \brief start the timer */
+  /** \brief (re)-start the timer */
   inline void start(){
     previous_ = elapsed_time();
     startTime_ = boost::posix_time::microsec_clock::universal_time();
   }
 
-  /** \brief stop the timer and return the elapsed time */
+  /**
+   *  \brief Stop the timer and return the time since the last call to start().
+   *  This is different from elapsed_time().
+   */
   inline double stop(){
     stopTime_ = boost::posix_time::microsec_clock::universal_time();
-    return elapsed_time();
+    return (stopTime_-startTime_).total_microseconds()*1e-6;
   }
 
   /** \brief reset the timer */
@@ -67,7 +73,13 @@ public:
     stopTime_ = startTime_ = boost::posix_time::microsec_clock::universal_time();
   }
 
-  /** \brief return the time elapsed between the last calls to start() and stop() */
+  /**
+   * \brief Return the total time for the timer.  This is the sum of all time
+   *  intervals between calls to start/stop since the timer was constructed.
+   *
+   *  Note that if the timer is running (start() without a paired stop()),
+   *  that time will not be incorporated into this call.
+   */
   inline double elapsed_time() const{
     return previous_ + (stopTime_-startTime_).total_microseconds()*1e-6;
   }
@@ -125,8 +137,8 @@ public:
   /** \brief Obtain the requested timer */
   const Timer& timer( const std::string& label ) const;
 
-  /** \brief sum all timers */
-  double total_time() const;
+  /** \brief Obtain the elapsed time that this Logger has been in existence (time since construction) */
+  double total_time();
 
 private:
   std::string logFileName_;
@@ -134,6 +146,8 @@ private:
   const Format format_;
   typedef std::map<std::string,Timer>  Entries;
   Entries entries_;
+
+  Timer totalTime_;
 
   boost::property_tree::ptree pt_;
 
