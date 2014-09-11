@@ -29,8 +29,11 @@
 #include <map>
 #include <fstream>
 
+#include <boost/foreach.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/xml_parser.hpp>
 
 
 /**
@@ -96,49 +99,17 @@ public:
  *  timing. It also allows for log files to be written to disk and for existing
  *  log files to be appended, thus creating a time history of performance.
  *
+ *  NOTE: this requires several boost libraries, including: date_time
  */
 class TimeLogger
 {
+
 public:
 
   enum Format{
     XML,
     JSON
   };
-
-  /**
-   * @param logFileName the name of the logging file to use (existing files will be appended)
-   * @param format either JSON or XML. JSON is default if no argument is provided
-   */
-  TimeLogger( const std::string logFileName,
-              const Format format=JSON );
-
-  /**
-   * @brief Log to std::cout
-   * @param format either JSON or XML. JSON is default if no argument is provided
-   */
-  TimeLogger( const Format format=JSON );
-
-  ~TimeLogger();
-
-  /** (re)start the given timer */
-  void start( const std::string& label );
-
-  /** \brief stop the given timer */
-  double stop( const std::string& label );
-
-  /** \brief reset the given timer */
-  void reset( const std::string& label );
-
-  /** \brief add a Timer to the logger */
-  void add_entry( const std::string& label,
-                  const Timer& timer );
-
-  /** \brief Obtain the requested timer */
-  const Timer& timer( const std::string& label ) const;
-
-  /** \brief Obtain the elapsed time that this Logger has been in existence (time since construction) */
-  double total_time();
 
 private:
   std::string logFileName_;
@@ -151,7 +122,141 @@ private:
 
   boost::property_tree::ptree pt_;
 
-  void write_entries();
+  inline void write_entries()
+  {
+    const boost::posix_time::ptime time = boost::posix_time::second_clock::local_time();
+    const std::string timeStamp = boost::posix_time::to_simple_string(time);
+
+    boost::property_tree::ptree pt;
+
+    BOOST_FOREACH( const Entries::value_type& vt, entries_ ){
+      const Timer& t = vt.second;
+      const std::string& label = vt.first;
+      pt.put( label, t.elapsed_time() );
+    }
+    pt.put( "total_time", totalTime_.elapsed_time() );
+
+    pt_.add_child( timeStamp, pt );
+
+    switch( format_ ){
+      case JSON:
+        if( haveFileIO_ ) boost::property_tree::json_parser::write_json( logFileName_, pt_ );
+        else              boost::property_tree::json_parser::write_json( std::cout,    pt_ );
+        break;
+      case XML:
+       if( haveFileIO_ ) boost::property_tree::xml_parser::write_xml( logFileName_, pt_ );
+       else              boost::property_tree::xml_parser::write_xml( std::cout,    pt_ );
+        break;
+    }
+  }
+
+public:
+  /**
+   * @param logFileName the name of the logging file to use (existing files will be appended)
+   * @param format either JSON or XML. JSON is default if no argument is provided
+   */
+  TimeLogger( const std::string logFileName,
+              const Format format=JSON )
+  : logFileName_( logFileName ),
+    haveFileIO_( true ),
+    format_( format )
+  {
+    std::ifstream infile( logFileName.c_str() );
+    if( infile.good() ){
+      // load the existing file from disk rather than simply appending it.
+      // This will ensure that the tree structure is properly maintained.
+      try{
+        switch( format_ ){
+          case JSON: boost::property_tree::json_parser::read_json( infile, pt_ ); break;
+          case XML : boost::property_tree::xml_parser ::read_xml ( infile, pt_ ); break;
+        }
+      }
+      catch( std::exception& err ){
+        logFileName_ = logFileName + ".new";
+        std::cout << "\n\nNOTE: there was an error reading the log file " << logFileName
+            << "Details follow:\n"
+            << err.what()
+            << "\nTo avoid overwriting the log file, a different log file named \n\t"
+            << logFileName_
+            << "\nwill be used\n\n";
+      }
+    }
+    // start the timer that measures the lifetime of the TimeLogger.
+    totalTime_.start();
+  }
+
+
+  /**
+   * @brief Log to std::cout
+   * @param format either JSON or XML. JSON is default if no argument is provided
+   */
+  TimeLogger( const Format format=JSON )
+  : haveFileIO_( false ),
+    format_( format )
+  {}
+
+
+  ~TimeLogger()
+  {
+    totalTime_.stop();
+    write_entries();
+  }
+
+
+
+  /** (re)start the given timer */
+  inline void start( const std::string& label )
+  {
+    Entries::iterator it = entries_.find( label );
+    if( it == entries_.end() ){
+      it = entries_.insert( entries_.begin(), make_pair(label, Timer()) );
+    }
+    it->second.start();
+  }
+
+  /** \brief stop the given timer */
+  inline double stop( const std::string& label )
+  {
+  # ifndef NDEBUG
+    assert( entries_.find( label ) != entries_.end() );
+  # endif
+    return entries_[label].stop();
+  }
+
+  /** \brief reset the given timer */
+  inline void reset( const std::string& label )
+  {
+    Entries::iterator it = entries_.find( label );
+    if( it == entries_.end() ){
+      it = entries_.insert( entries_.begin(), make_pair(label, Timer()) );
+    }
+    it->second.reset();
+  }
+
+
+  /** \brief add a Timer to the logger */
+  inline void add_entry( const std::string& label, const Timer& timer ){
+    entries_[label] = timer;
+  }
+
+
+  /** \brief Obtain the requested timer */
+  inline const Timer& timer( const std::string& label ) const
+  {
+    Entries::const_iterator it = entries_.find( label );
+    assert( it != entries_.end() );
+    return it->second;
+  }
+
+  /** \brief Obtain the elapsed time that this Logger has been in existence (time since construction) */
+  inline double total_time()
+  {
+    totalTime_.stop();
+    const double t = totalTime_.elapsed_time();
+    totalTime_.start();
+    return t;
+  }
+
 };
 
 
