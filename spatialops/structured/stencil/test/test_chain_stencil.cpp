@@ -34,9 +34,6 @@
 #include <string>
 #include <stdexcept>
 #include "ReferenceStencil.h"
-
-#include <util/TimeLogger.h>
-
 using namespace SpatialOps;
 using std::cout;
 using std::endl;
@@ -109,24 +106,25 @@ template<typename FirstOpType,
                               DestType>(opdb, npts, bc),
            str);
  }
+int main(int iarg, char * carg[]) {
+   int nx;
 
-int main(int iarg, char * carg[])
-{
-   int nx, ny, nz;
+   int ny;
+
+   int nz;
+
    bool bc[] = {false, false, false};
-   std::string timingFileName;
 
    po::options_description desc("Supported Options");
 
    desc.add_options()
-       ("help", "print help message\n")
-       ("nx", po::value<int>(&nx)->default_value(11), "number of points in x-dir for base mesh")
-       ("ny", po::value<int>(&ny)->default_value(11), "number of points in y-dir for base mesh")
-       ("nz", po::value<int>(&nz)->default_value(11), "number of points in z-dir for base mesh")
-       ("bcx", "physical boundary on +x side?")
-       ("bcy", "physical boundary on +y side?")
-       ("bcz", "physical boundary on +z side?")
-       ("logfile-name",po::value<std::string>(&timingFileName)->default_value("chain_stencil_timings.log"),"Name for the timing log file");
+   ("help", "print help message\n")
+   ("nx", po::value<int>(&nx)->default_value(11), "number of points in x-dir for base mesh")
+   ("ny", po::value<int>(&ny)->default_value(11), "number of points in y-dir for base mesh")
+   ("nz", po::value<int>(&nz)->default_value(11), "number of points in z-dir for base mesh")
+   ("bcx", "physical boundary on +x side?")
+   ("bcy", "physical boundary on +y side?")
+   ("bcz", "physical boundary on +z side?");
 
    po::variables_map args;
 
@@ -166,8 +164,6 @@ int main(int iarg, char * carg[])
    OperatorDatabase opdb;
 
    build_stencils(npts[0], npts[1], npts[2], length, length, length, opdb);
-
-   TimeLogger timer(timingFileName);
 
    try{
       /* Test for chains starting with "Interpolant (SVolField->SSurfXField)" */
@@ -771,7 +767,6 @@ int main(int iarg, char * carg[])
                                      SVolField,
                                      SVolField>(status, opdb, npts, bc, "Interpolant (SVolField->SVolField) -> Interpolant (SVolField->SVolField)");
 
-      std::cout << "Time: " << timer.total_time() << std::endl;
       if(status.ok()) { cout << "ALL TESTS PASSED :)" << endl; return 0; };
    }
    catch(std::runtime_error & e){ cout << e.what() << endl; };
