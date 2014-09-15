@@ -14687,7 +14687,7 @@
              inline SeqWalkType init(IntVec const & extents,
                                      GhostData const & ghosts,
                                      IntVec const & hasBC) const {
-                return SeqWalkType(operand_.init(extents, ghosts, hasBC), exp);
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC), exp_);
              }
 
             private:

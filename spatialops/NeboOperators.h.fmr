@@ -691,7 +691,7 @@
                                  null
                                  constructor
                                  (list (val-member-call 'operand_ 'init init-arg)
-                                       'exp)
+                                       'exp_)
                                  null
                                  privates)
                 (bs-SeqWalk-rhs (stmt-typedef (typename (scope 'Operand vt-chunk))
