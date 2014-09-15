@@ -501,6 +501,9 @@ void* CUDADeviceInterface::get_pinned_pointer(unsigned long int N,
 
 void CUDADeviceInterface::memcpy_to(CUDASharedPointer& dest, const void* src,
     const size_t sz, cudaStream_t stream) {
+# ifdef NEBO_REPORT_BACKEND
+  std::cout << "Copy memory from CPU to GPU" << std::endl;
+# endif
   CudaMemcpy(dest.ptr_, src, sz, (*dest.deviceID_), cudaMemcpyHostToDevice, stream);
 }
 
@@ -508,6 +511,9 @@ void CUDADeviceInterface::memcpy_to(CUDASharedPointer& dest, const void* src,
 
 void CUDADeviceInterface::memcpy_to(void* dest, const void* src, const size_t sz,
    const unsigned int deviceID, cudaStream_t stream) {
+# ifdef NEBO_REPORT_BACKEND
+  std::cout << "Copy memory from CPU to GPU" << std::endl;
+# endif
   CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyHostToDevice, stream);
 }
 
@@ -515,6 +521,9 @@ void CUDADeviceInterface::memcpy_to(void* dest, const void* src, const size_t sz
 
 void CUDADeviceInterface::memcpy_from(void* dest, const CUDASharedPointer& src,
     const size_t sz, cudaStream_t stream) {
+# ifdef NEBO_REPORT_BACKEND
+  std::cout << "Copy memory from GPU to CPU" << std::endl;
+# endif
   CudaMemcpy(dest, src.ptr_, sz, (*src.deviceID_), cudaMemcpyDeviceToHost, stream);
 }
 
@@ -522,13 +531,19 @@ void CUDADeviceInterface::memcpy_from(void* dest, const CUDASharedPointer& src,
 
 void CUDADeviceInterface::memcpy_from(void* dest, const void* src, const size_t sz,
     const unsigned int deviceID, cudaStream_t stream) {
-	CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost, stream);
+# ifdef NEBO_REPORT_BACKEND
+  std::cout << "Copy memory from GPU to CPU" << std::endl;
+# endif
+  CudaMemcpy(dest, src, sz, deviceID, cudaMemcpyDeviceToHost, stream);
 }
 
 /*---------------------------------------------------------------------*/
 
 void CUDADeviceInterface::memcpy_peer(void* dest, const int dID, const void* src,
 		const int sID, const size_t sz) {
+# ifdef NEBO_REPORT_BACKEND
+  std::cout << "Copy memory from GPU to GPU" << std::endl;
+# endif
   CudaMemcpyPeer(dest, dID, src, sID, sz );
 }
 

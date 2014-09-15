@@ -119,8 +119,10 @@ Pool<T>::get( const short int deviceLocation, const size_t _n )
     FieldQueue& fq = ifq->second;
     if( fq.empty() ){
       ++pool.cpuhighWater_;
+#     ifdef NEBO_REPORT_BACKEND
+      std::cout << "Allocating CPU memory" << std::endl;
+#     endif
       try{
-
 #       ifdef ENABLE_CUDA
         /* Pinned Memory Mode
          * As the Pinned memory allocation and deallocation has higher overhead
@@ -155,6 +157,9 @@ Pool<T>::get( const short int deviceLocation, const size_t _n )
 
     FieldQueue& fq = ifq->second;
     if( fq.empty() ) {
+#     ifdef NEBO_REPORT_BACKEND
+      std::cout << "Allocating GPU memory" << std::endl;
+#     endif
       ++pool.gpuhighWater_;
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
       field = (T*)CDI.get_raw_pointer( n*sizeof(T), deviceLocation );
