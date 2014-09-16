@@ -14,6 +14,8 @@ set( SO_HEADERS
   NeboLhs.h
   NeboAssignment.h
   NeboReductions.h
+  NeboTypeInference.h
+  NeboApplyPointwise.h
   FieldFunctions.h
   OperatorDatabase.h
   SpatialOpsDefs.h
