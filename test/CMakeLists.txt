@@ -14,4 +14,11 @@ nebo_add_executable( test_pointwise_simple SimplePointwiseTest.cpp )
 target_link_libraries( test_pointwise_simple ${libs} )
 add_test( test_pointwise_simple test_pointwise_simple )
 
+nebo_add_executable( cond_test CondTest.cpp )
+target_link_libraries( cond_test ${libs} )
+add_test( cond_test cond_test )
+
+nebo_add_executable( test_pow PowTest.cpp )
+target_link_libraries( test_pow ${libs} )
+
 add_subdirectory( heatEqn )

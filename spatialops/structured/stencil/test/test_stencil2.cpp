@@ -8,6 +8,7 @@
 
 #include "test_stencil_helper.h"
 #include <test/TestHelper.h>
+#include <util/TimeLogger.h>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
@@ -56,8 +57,11 @@ run_variants( const IntVec npts,
 //--------------------------------------------------------------------
 
 int main( int iarg, char* carg[] )
-{ int nx, ny, nz;
+{
+  int nx, ny, nz;
   bool bcplus[] = { false, false, false };
+  std::string timingFileName;
+
   {
     po::options_description desc("Supported Options");
     desc.add_options()
@@ -67,7 +71,8 @@ int main( int iarg, char* carg[] )
       ( "nz",   po::value<int>(&nz)->default_value(11), "number of points in z-dir for base mesh" )
       ( "bcx",  "physical boundary on +x side?" )
       ( "bcy",  "physical boundary on +y side?" )
-      ( "bcz",  "physical boundary on +z side?" );
+      ( "bcz",  "physical boundary on +z side?" )
+      ("logfile-name",po::value<std::string>(&timingFileName)->default_value("stencil2_timings.log"),"Name for the timing log file");
 
     po::variables_map args;
     po::store( po::parse_command_line(iarg,carg,desc), args );
@@ -105,6 +110,8 @@ int main( int iarg, char* carg[] )
   const double length = 10.0;
 
   try{
+
+    TimeLogger timer( timingFileName );
 
     status( run_variants< SVolField >( npts, bcplus ), "SVol operators" );
 
@@ -175,6 +182,8 @@ int main( int iarg, char* carg[] )
     if( npts[0]>1 )             status( run_convergence< GradientX,    ZVolField,  ZVolField,   XDIR >( npts, bcplus, length, 2.0 ), "Grad ZVol->ZVol (X)" );
     if( npts[1]>1 )             status( run_convergence< GradientY,    ZVolField,  ZVolField,   YDIR >( npts, bcplus, length, 2.0 ), "Grad ZVol->ZVol (Y)" );
     if( npts[2]>1 )             status( run_convergence< GradientZ,    ZVolField,  ZVolField,   ZDIR >( npts, bcplus, length, 2.0 ), "Grad ZVol->ZVol (Z)" );
+
+    std::cout << "Time: " << timer.total_time() << std::endl;
 
     if( status.ok() ){
       cout << "ALL TESTS PASSED :)" << endl;

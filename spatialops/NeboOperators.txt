@@ -58,6 +58,8 @@ natural logarithm                    | `log`      | `result <<= log(arg)`      |
 base 10 logarithm                    | `log10`    | `result <<= log10(arg)`    | SpatialOps::Log10Fcn       
 exponentiation                       | `pow`      | `result <<= pow(arg,val)`  | SpatialOps::PowFcn
 square root                          | `sqrt`     | `result <<= sqrt(arg)`     | SpatialOps::SqrtFcn
+square                               | `square`   | `result <<= square(arg)`   | SpatialOps::SquareFcn
+cube                                 | `cube`     | `result <<= cube(arg)`     | SpatialOps::CubeFcn
 absolute value                       | `abs`      | `result <<= abs(arg)`      | SpatialOps::AbsFcn
 
 

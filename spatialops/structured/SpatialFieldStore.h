@@ -26,6 +26,7 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/structured/SpatialField.h>
 #include <spatialops/structured/IndexTriplet.h>
+#include <spatialops/SpatialOpsTools.h>
 
 #include <stack>
 #include <map>
@@ -238,10 +239,17 @@ public:
    */
   template< typename FieldT, typename ProtoT >
   inline static SpatFldPtr<FieldT>
-  get( const ProtoT& f,
-       short int deviceIndex = -9999 )
+  get( const ProtoT& f, short int deviceIndex = -9999 )
   {
     if( deviceIndex == -9999 ) deviceIndex = f.active_device_index();
+
+    if( is_same_type<FieldT,SpatialField<SingleValue> >() ){
+      return get_from_window<FieldT>( MemoryWindow( IntVec(1,1,1) ),
+                                      BoundaryCellInfo::build<SpatialField<SingleValue> >(),
+                                      GhostData(0),
+                                      deviceIndex );
+    }
+
     return get_from_window<FieldT>( create_new_memory_window<FieldT,ProtoT>(f),
                                     create_new_boundary_cell_info<FieldT,ProtoT>(f),
                                     f.get_ghost_data(),

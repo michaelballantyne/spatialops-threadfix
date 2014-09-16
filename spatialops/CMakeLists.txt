@@ -33,7 +33,7 @@ if( ENABLE_THREADS )
     add_subdirectory( threadpool )
 endif( ENABLE_THREADS )
 
-nebo_add_library( spatialops SO_Sources )
+nebo_add_library( spatialops ${SO_Sources} )
 
 target_link_libraries( spatialops ${TPL_LIBRARIES} )
 target_link_libraries( spatialops spatialops-structured )

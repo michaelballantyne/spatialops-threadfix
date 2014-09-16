@@ -6551,6 +6551,418 @@
           return ReturnTerm(ReturnType(arg.expr()));
        };
 
+      template<typename CurrentMode, typename Operand>
+       struct SquareFcn;
+      template<typename Operand>
+       struct SquareFcn<Initial, Operand> {
+         public:
+          SquareFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
+
+          #ifdef ENABLE_THREADS
+             SquareFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             SquareFcn<GPUWalk, typename Operand::GPUWalkType> typedef
+             GPUWalkType;
+          #endif
+          /* __CUDACC__ */
+
+          SquareFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
+          }
+
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
+          }
+
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
+
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(operand_.resize());
+             }
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+         private:
+          Operand const operand_;
+      };
+      #ifdef ENABLE_THREADS
+         template<typename Operand>
+          struct SquareFcn<Resize, Operand> {
+            public:
+             SquareFcn<SeqWalk, typename Operand::SeqWalkType> typedef
+             SeqWalkType;
+
+             SquareFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+             }
+
+            private:
+             Operand const operand_;
+         }
+      #endif
+      /* ENABLE_THREADS */;
+      template<typename Operand>
+       struct SquareFcn<SeqWalk, Operand> {
+         public:
+          typename Operand::value_type typedef value_type;
+
+          SquareFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             double const result = operand_.eval(x, y, z);;
+
+             return result * result;
+          }
+
+         private:
+          Operand operand_;
+      };
+      #ifdef __CUDACC__
+         template<typename Operand>
+          struct SquareFcn<GPUWalk, Operand> {
+            public:
+             typename Operand::value_type typedef value_type;
+
+             SquareFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                double const result = operand_.eval(x, y, z);;
+
+                return result * result;
+             }
+
+            private:
+             Operand operand_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      /* Field */
+      template<typename FieldType>
+       inline NeboExpression<SquareFcn<Initial,
+                                       NeboConstField<Initial,
+                                                      typename NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                      Result> >,
+                             FieldType> square(FieldType const & arg) {
+          SquareFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
+       }
+
+      /* SubExpr */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<SquareFcn<Initial, SubExpr>, FieldType> square(NeboExpression<SubExpr,
+                                                                                           FieldType>
+                                                                            const
+                                                                            &
+                                                                            arg) {
+          SquareFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<SquareFcn<Initial,
+                                                  NeboConstSingleValueField<Initial,
+                                                                            T> >,
+                                        T> square(SpatialOps::SpatialField<SpatialOps::
+                                                                           SingleValue,
+                                                                           T>
+                                                  const & arg) {
+          SquareFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<SquareFcn<Initial, SubExpr>, T> square(NeboSingleValueExpression<SubExpr,
+                                                                                                         T>
+                                                                               const
+                                                                               &
+                                                                               arg) {
+          SquareFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       };
+
+      template<typename CurrentMode, typename Operand>
+       struct CubeFcn;
+      template<typename Operand>
+       struct CubeFcn<Initial, Operand> {
+         public:
+          CubeFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
+
+          #ifdef ENABLE_THREADS
+             CubeFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             CubeFcn<GPUWalk, typename Operand::GPUWalkType> typedef GPUWalkType
+             ;
+          #endif
+          /* __CUDACC__ */
+
+          CubeFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
+          }
+
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
+          }
+
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
+          }
+
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(operand_.resize());
+             }
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return (operand_.gpu_ready(deviceIndex));
+             }
+
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+         private:
+          Operand const operand_;
+      };
+      #ifdef ENABLE_THREADS
+         template<typename Operand>
+          struct CubeFcn<Resize, Operand> {
+            public:
+             CubeFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType
+             ;
+
+             CubeFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+             }
+
+            private:
+             Operand const operand_;
+         }
+      #endif
+      /* ENABLE_THREADS */;
+      template<typename Operand>
+       struct CubeFcn<SeqWalk, Operand> {
+         public:
+          typename Operand::value_type typedef value_type;
+
+          CubeFcn(Operand const & operand)
+          : operand_(operand)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             double const result = operand_.eval(x, y, z);;
+
+             return result * result * result;
+          }
+
+         private:
+          Operand operand_;
+      };
+      #ifdef __CUDACC__
+         template<typename Operand>
+          struct CubeFcn<GPUWalk, Operand> {
+            public:
+             typename Operand::value_type typedef value_type;
+
+             CubeFcn(Operand const & operand)
+             : operand_(operand)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                double const result = operand_.eval(x, y, z);;
+
+                return result * result * result;
+             }
+
+            private:
+             Operand operand_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      /* Field */
+      template<typename FieldType>
+       inline NeboExpression<CubeFcn<Initial,
+                                     NeboConstField<Initial,
+                                                    typename NeboFieldCheck<typename
+                                                                            FieldType::
+                                                                            field_type,
+                                                                            FieldType>::
+                                                    Result> >,
+                             FieldType> cube(FieldType const & arg) {
+          CubeFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg)));
+       }
+
+      /* SubExpr */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<CubeFcn<Initial, SubExpr>, FieldType> cube(NeboExpression<SubExpr,
+                                                                                       FieldType>
+                                                                        const &
+                                                                        arg) {
+          CubeFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       }
+
+      /* SingleValue */
+      template<typename T>
+       inline NeboSingleValueExpression<CubeFcn<Initial,
+                                                NeboConstSingleValueField<Initial,
+                                                                          T> >,
+                                        T> cube(SpatialOps::SpatialField<SpatialOps::
+                                                                         SingleValue,
+                                                                         T>
+                                                const & arg) {
+          CubeFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg)));
+       }
+
+      /* SingleValueExpr */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<CubeFcn<Initial, SubExpr>, T> cube(NeboSingleValueExpression<SubExpr,
+                                                                                                     T>
+                                                                           const
+                                                                           & arg) {
+          CubeFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr()));
+       };
+
       template<typename CurrentMode, typename Operand1, typename Operand2>
        struct EqualCmp;
       template<typename Operand1, typename Operand2>
@@ -11721,6 +12133,23 @@
                                        NeboMask<Initial, FieldType>(arg2)));
        }
 
+      /* Boolean X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<AndOp<Initial,
+                                                     NeboScalar<Initial, bool>,
+                                                     SubBoolSingleValueExpr2>,
+                                               T> operator &&(bool const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          AndOp<Initial, NeboScalar<Initial, bool>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
+       }
+
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<AndOp<Initial,
@@ -11775,6 +12204,29 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          SubBoolExpr1,
+                                          SubBoolSingleValueExpr2>,
+                                    FieldType> operator &&(NeboBooleanExpression<SubBoolExpr1,
+                                                                                 FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          AndOp<Initial, SubBoolExpr1, SubBoolSingleValueExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        }
 
       /* Mask X Boolean */
@@ -11850,6 +12302,117 @@
 
           return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
                                        NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* Mask X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result>,
+                                          SubBoolSingleValueExpr2>,
+                                    FieldType> operator &&(SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          AndOp<Initial, NeboMask<Initial, FieldType>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Boolean */
+      template<typename SubBoolSingleValueExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<AndOp<Initial,
+                                                     SubBoolSingleValueExpr1,
+                                                     NeboScalar<Initial, bool> >,
+                                               T> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              bool const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, NeboScalar<Initial, bool> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, bool>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          SubBoolSingleValueExpr1,
+                                          SubBoolExpr2>,
+                                    FieldType> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           NeboBooleanExpression<SubBoolExpr2,
+                                                                                 FieldType>
+                                                           const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, SubBoolExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Mask */
+      template<typename SubBoolSingleValueExpr1, typename FieldType>
+       inline NeboBooleanExpression<AndOp<Initial,
+                                          SubBoolSingleValueExpr1,
+                                          NeboMask<Initial,
+                                                   typename NeboFieldCheck<typename
+                                                                           FieldType::
+                                                                           field_type,
+                                                                           FieldType>::
+                                                   Result> >,
+                                    FieldType> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, NeboMask<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename T>
+       inline NeboBooleanSingleValueExpression<AndOp<Initial,
+                                                     SubBoolSingleValueExpr1,
+                                                     SubBoolSingleValueExpr2>,
+                                               T> operator &&(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          AndOp<Initial, SubBoolSingleValueExpr1, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
       template<typename CurrentMode, typename Operand1, typename Operand2>
@@ -12073,6 +12636,23 @@
                                        NeboMask<Initial, FieldType>(arg2)));
        }
 
+      /* Boolean X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename T>
+       inline NeboBooleanSingleValueExpression<OrOp<Initial,
+                                                    NeboScalar<Initial, bool>,
+                                                    SubBoolSingleValueExpr2>,
+                                               T> operator ||(bool const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          OrOp<Initial, NeboScalar<Initial, bool>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboScalar<Initial, bool>(arg1), arg2.expr()));
+       }
+
       /* SubBoolExpr X Boolean */
       template<typename SubBoolExpr1, typename FieldType>
        inline NeboBooleanExpression<OrOp<Initial,
@@ -12127,6 +12707,29 @@
           NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         SubBoolExpr1,
+                                         SubBoolSingleValueExpr2>,
+                                    FieldType> operator ||(NeboBooleanExpression<SubBoolExpr1,
+                                                                                 FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          OrOp<Initial, SubBoolExpr1, SubBoolSingleValueExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        }
 
       /* Mask X Boolean */
@@ -12201,6 +12804,117 @@
 
           return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1),
                                        NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* Mask X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr2, typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result>,
+                                         SubBoolSingleValueExpr2>,
+                                    FieldType> operator ||(SpatialMask<FieldType>
+                                                           const & arg1,
+                                                           NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg2) {
+          OrOp<Initial, NeboMask<Initial, FieldType>, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboMask<Initial, FieldType>(arg1), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Boolean */
+      template<typename SubBoolSingleValueExpr1, typename T>
+       inline NeboBooleanSingleValueExpression<OrOp<Initial,
+                                                    SubBoolSingleValueExpr1,
+                                                    NeboScalar<Initial, bool> >,
+                                               T> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              bool const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, NeboScalar<Initial, bool> >
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboScalar<Initial, bool>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolExpr2,
+               typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         SubBoolSingleValueExpr1,
+                                         SubBoolExpr2>,
+                                    FieldType> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           NeboBooleanExpression<SubBoolExpr2,
+                                                                                 FieldType>
+                                                           const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, SubBoolExpr2> typedef
+          ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       }
+
+      /* SubBoolSingleValueExpr X Mask */
+      template<typename SubBoolSingleValueExpr1, typename FieldType>
+       inline NeboBooleanExpression<OrOp<Initial,
+                                         SubBoolSingleValueExpr1,
+                                         NeboMask<Initial,
+                                                  typename NeboFieldCheck<typename
+                                                                          FieldType::
+                                                                          field_type,
+                                                                          FieldType>::
+                                                  Result> >,
+                                    FieldType> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                            typename
+                                                                                            FieldType::
+                                                                                            value_type>
+                                                           const & arg1,
+                                                           SpatialMask<FieldType>
+                                                           const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, NeboMask<Initial, FieldType> >
+          typedef ReturnType;
+
+          NeboBooleanExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), NeboMask<Initial, FieldType>(arg2)));
+       }
+
+      /* SubBoolSingleValueExpr X SubBoolSingleValueExpr */
+      template<typename SubBoolSingleValueExpr1,
+               typename SubBoolSingleValueExpr2,
+               typename T>
+       inline NeboBooleanSingleValueExpression<OrOp<Initial,
+                                                    SubBoolSingleValueExpr1,
+                                                    SubBoolSingleValueExpr2>,
+                                               T> operator ||(NeboBooleanSingleValueExpression<SubBoolSingleValueExpr1,
+                                                                                               T>
+                                                              const & arg1,
+                                                              NeboBooleanSingleValueExpression<SubBoolSingleValueExpr2,
+                                                                                               T>
+                                                              const & arg2) {
+          OrOp<Initial, SubBoolSingleValueExpr1, SubBoolSingleValueExpr2>
+          typedef ReturnType;
+
+          NeboBooleanSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
        };
 
       template<typename CurrentMode, typename Operand>
@@ -13876,6 +14590,224 @@
           NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
 
           return ReturnTerm(ReturnType(arg1.expr(), arg2.expr()));
+       };
+
+      template<typename CurrentMode, typename Operand>
+       struct PowIntFcn;
+      template<typename Operand>
+       struct PowIntFcn<Initial, Operand> {
+         public:
+          PowIntFcn<SeqWalk, typename Operand::SeqWalkType> typedef SeqWalkType;
+
+          #ifdef ENABLE_THREADS
+             PowIntFcn<Resize, typename Operand::ResizeType> typedef ResizeType;
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             PowIntFcn<GPUWalk, typename Operand::GPUWalkType> typedef
+             GPUWalkType;
+          #endif
+          /* __CUDACC__ */
+
+          PowIntFcn(Operand const & operand, int const exp)
+          : operand_(operand), exp_(exp)
+          {}
+
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
+          }
+
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
+          }
+
+          inline bool has_extents(void) const { return operand_.has_extents(); }
+
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC), exp_);
+          }
+
+          #ifdef ENABLE_THREADS
+             inline ResizeType resize(void) const {
+                return ResizeType(operand_.resize(), exp_);
+             }
+          #endif
+          /* ENABLE_THREADS */
+
+          #ifdef __CUDACC__
+             inline bool cpu_ready(void) const { return operand_.cpu_ready(); }
+
+             inline bool gpu_ready(int const deviceIndex) const {
+                return operand_.gpu_ready(deviceIndex);
+             }
+
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex),
+                                   exp_);
+             }
+
+             #ifdef NEBO_GPU_TEST
+                inline void gpu_prep(int const deviceIndex) const {
+                   operand_.gpu_prep(deviceIndex);
+                }
+             #endif
+             /* NEBO_GPU_TEST */
+          #endif
+          /* __CUDACC__ */
+
+         private:
+          Operand const operand_;
+
+          int const exp_;
+      };
+      #ifdef ENABLE_THREADS
+         template<typename Operand>
+          struct PowIntFcn<Resize, Operand> {
+            public:
+             PowIntFcn<SeqWalk, typename Operand::SeqWalkType> typedef
+             SeqWalkType;
+
+             PowIntFcn(Operand const & operand, int const exp)
+             : operand_(operand), exp_(exp)
+             {}
+
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC), exp_);
+             }
+
+            private:
+             Operand const operand_;
+
+             int const exp_;
+         }
+      #endif
+      /* ENABLE_THREADS */;
+      template<typename Operand>
+       struct PowIntFcn<SeqWalk, Operand> {
+         public:
+          typename Operand::value_type typedef value_type;
+
+          PowIntFcn(Operand const & operand, int const exp)
+          : operand_(operand), exp_(exp)
+          {}
+
+          inline value_type eval(int const x, int const y, int const z) const {
+             return std::pow(operand_.eval(x, y, z), exp_);
+          }
+
+         private:
+          Operand const operand_;
+
+          int const exp_;
+      };
+      #ifdef __CUDACC__
+         template<typename Operand>
+          struct PowIntFcn<GPUWalk, Operand> {
+            public:
+             typename Operand::value_type typedef value_type;
+
+             PowIntFcn(Operand const & operand, int const exp)
+             : operand_(operand), exp_(exp)
+             {}
+
+             __device__ inline value_type eval(int const x,
+                                               int const y,
+                                               int const z) const {
+                return std::pow(operand_.eval(x, y, z), exp_);
+             }
+
+            private:
+             Operand const operand_;
+
+             int const exp_;
+         }
+      #endif
+      /* __CUDACC__ */;
+
+      /* Field X int */
+      template<typename FieldType>
+       inline NeboExpression<PowIntFcn<Initial,
+                                       NeboConstField<Initial,
+                                                      typename NeboFieldCheck<typename
+                                                                              FieldType::
+                                                                              field_type,
+                                                                              FieldType>::
+                                                      Result> >,
+                             FieldType> pow(FieldType const & arg, int const exp) {
+          PowIntFcn<Initial, NeboConstField<Initial, FieldType> > typedef
+          ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstField<Initial, FieldType>(arg),
+                                       exp));
+       }
+
+      /* SubExpr X int */
+      template<typename SubExpr, typename FieldType>
+       inline NeboExpression<PowIntFcn<Initial, SubExpr>, FieldType> pow(NeboExpression<SubExpr,
+                                                                                        FieldType>
+                                                                         const &
+                                                                         arg,
+                                                                         int
+                                                                         const
+                                                                         exp) {
+          PowIntFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboExpression<ReturnType, FieldType> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr(), exp));
+       }
+
+      /* SingleValue X int */
+      template<typename T>
+       inline NeboSingleValueExpression<PowIntFcn<Initial,
+                                                  NeboConstSingleValueField<Initial,
+                                                                            T> >,
+                                        T> pow(SpatialOps::SpatialField<SpatialOps::
+                                                                        SingleValue,
+                                                                        T> const
+                                               & arg,
+                                               int const exp) {
+          PowIntFcn<Initial, NeboConstSingleValueField<Initial, T> > typedef
+          ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(NeboConstSingleValueField<Initial, T>(arg),
+                                       exp));
+       }
+
+      /* SingleValueExpr X int */
+      template<typename SubExpr, typename T>
+       inline NeboSingleValueExpression<PowIntFcn<Initial, SubExpr>, T> pow(NeboSingleValueExpression<SubExpr,
+                                                                                                      T>
+                                                                            const
+                                                                            &
+                                                                            arg,
+                                                                            int
+                                                                            const
+                                                                            exp) {
+          PowIntFcn<Initial, SubExpr> typedef ReturnType;
+
+          NeboSingleValueExpression<ReturnType, T> typedef ReturnTerm;
+
+          return ReturnTerm(ReturnType(arg.expr(), exp));
        };
    } /* SpatialOps */
 

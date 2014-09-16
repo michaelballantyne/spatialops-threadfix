@@ -66,8 +66,7 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex,
-                                                     extents,
+                return GPUWalkType(operand_.gpu_init(extents,
                                                      ghosts,
                                                      hasBC,
                                                      deviceIndex));
@@ -137,9 +136,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -147,7 +144,7 @@
              Operand operand_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand>
        struct FindFieldType1 {
@@ -266,13 +263,11 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -354,9 +349,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z), operand2_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -366,7 +359,7 @@
              Operand2 operand2_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1, typename Operand2>
        struct FindFieldType2 {
@@ -526,18 +519,15 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -643,11 +633,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -659,7 +645,7 @@
              Operand3 operand3_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1, typename Operand2, typename Operand3>
        struct FindFieldType3 {
@@ -867,23 +853,19 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand4_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand4_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -1028,12 +1010,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z),
-                                operand4_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -1047,7 +1024,7 @@
              Operand4 operand4_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1,
                typename Operand2,
@@ -1306,28 +1283,23 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand4_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand4_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand5_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand5_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -1494,13 +1466,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z),
-                                operand4_.eval(x, y, z),
-                                operand5_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -1516,7 +1482,7 @@
              Operand5 operand5_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1,
                typename Operand2,
@@ -1818,33 +1784,27 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand4_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand4_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand5_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand5_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand6_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand6_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -2032,14 +1992,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z),
-                                operand4_.eval(x, y, z),
-                                operand5_.eval(x, y, z),
-                                operand6_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -2057,7 +2010,7 @@
              Operand6 operand6_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1,
                typename Operand2,
@@ -2407,38 +2360,31 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand4_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand4_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand5_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand5_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand6_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand6_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand7_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand7_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -2648,15 +2594,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z),
-                                operand4_.eval(x, y, z),
-                                operand5_.eval(x, y, z),
-                                operand6_.eval(x, y, z),
-                                operand7_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -2676,7 +2614,7 @@
              Operand7 operand7_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1,
                typename Operand2,
@@ -3069,43 +3007,35 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand4_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand4_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand5_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand5_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand6_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand6_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand7_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand7_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand8_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand8_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -3336,16 +3266,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z),
-                                operand4_.eval(x, y, z),
-                                operand5_.eval(x, y, z),
-                                operand6_.eval(x, y, z),
-                                operand7_.eval(x, y, z),
-                                operand8_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -3367,7 +3288,7 @@
              Operand8 operand8_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1,
                typename Operand2,
@@ -3806,48 +3727,39 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand4_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand4_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand5_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand5_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand6_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand6_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand7_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand7_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand8_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand8_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand9_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand9_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex));
@@ -4100,17 +4012,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z),
-                                operand4_.eval(x, y, z),
-                                operand5_.eval(x, y, z),
-                                operand6_.eval(x, y, z),
-                                operand7_.eval(x, y, z),
-                                operand8_.eval(x, y, z),
-                                operand9_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -4134,7 +4036,7 @@
              Operand9 operand9_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1,
                typename Operand2,
@@ -4619,53 +4521,43 @@
                                          GhostData const & ghosts,
                                          IntVec const & hasBC,
                                          int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex,
-                                                      extents,
+                return GPUWalkType(operand1_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand2_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand2_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand3_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand3_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand4_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand4_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand5_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand5_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand6_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand6_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand7_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand7_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand8_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand8_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand9_.gpu_init(deviceIndex,
-                                                      extents,
+                                   operand9_.gpu_init(extents,
                                                       ghosts,
                                                       hasBC,
                                                       deviceIndex),
-                                   operand10_.gpu_init(deviceIndex,
-                                                       extents,
+                                   operand10_.gpu_init(extents,
                                                        ghosts,
                                                        hasBC,
                                                        deviceIndex));
@@ -4939,18 +4831,7 @@
 
              __device__ inline value_type eval(int const x,
                                                int const y,
-                                               int const z) const {
-                return functor_(operand1_.eval(x, y, z),
-                                operand2_.eval(x, y, z),
-                                operand3_.eval(x, y, z),
-                                operand4_.eval(x, y, z),
-                                operand5_.eval(x, y, z),
-                                operand6_.eval(x, y, z),
-                                operand7_.eval(x, y, z),
-                                operand8_.eval(x, y, z),
-                                operand9_.eval(x, y, z),
-                                operand10_.eval(x, y, z));
-             }
+                                               int const z) const { return 0; }
 
             private:
              Functor functor_;
@@ -4976,7 +4857,7 @@
              Operand10 operand10_;
          }
       #endif
-      /* __CUDACC__ */
+      /* __CUDACC__ */;
 
       template<typename Operand1,
                typename Operand2,

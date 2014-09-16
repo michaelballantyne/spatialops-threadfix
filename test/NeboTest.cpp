@@ -279,6 +279,36 @@ class Pow
 };
 
 /**
+ *  @class Square
+ *
+ *  @brief Functor which squares argument
+ *
+ */
+class Square
+{
+  public:
+    double operator() (double a) const
+    {
+      return a * a;
+    }
+};
+
+/**
+ *  @class Cube
+ *
+ *  @brief Functor which cubes argument
+ *
+ */
+class Cube
+{
+  public:
+    double operator() (double a) const
+    {
+      return a * a * a;
+    }
+};
+
+/**
  *  @class Max_Functor
  *
  *  @brief Functor which calls \c std::max on \c a and \c b
@@ -377,6 +407,7 @@ class TestContext
   Field input2;
   Field input3;
   Field input4; //This field is only positive
+  Field field2; //This field is full of 2's
   SVField SVinput1;
   SVField SVinput2;
 
@@ -416,6 +447,7 @@ class TestContext
     input2( window, bcinfo, ghost, NULL ),
     input3( window, bcinfo, ghost, NULL ),
     input4( window, bcinfo, ghost, NULL ),
+    field2( window, bcinfo, ghost, NULL ),
     test  ( window, bcinfo, ghost, NULL ),
     ref   ( window, bcinfo, ghost, NULL ),
     SVinput1( SVwindow, SVbcinfo, SVghost, NULL ),
@@ -443,6 +475,7 @@ class TestContext
     initialize_field(input4, 3 * total);
     //make input4 positive only:
     input4 <<= abs(input4);
+    field2 <<= 2;
 
     //Same for single value fields
     initialize_field(SVinput1, 0.0);
@@ -478,6 +511,9 @@ class TestContext
     status(run_test_ignore_nan_ulp(test <<= log(input1), (unary_lambda<double(*)(double), Field>(std::log, input1)), 1), "log test");
     //documentation says with 1 ulp, empirically found to be 2
     status(run_test_ignore_nan_ulp(test <<= log10(input1), (unary_lambda<double(*)(double), Field>(std::log10, input1)), 2), "log10 test");
+    status(run_test(test <<= square(input1), (unary_lambda<Square, Field>(Square(), input1))), "square test");
+    status(run_test(test <<= cube(input1), (unary_lambda<Cube, Field>(Cube(), input1))), "cube test");
+    status(run_test(test <<= pow(input1, 2), (binary_lambda<Pow, Field, Field>(input1, field2))), "pow with int test");
 
     //erf
     status(run_test_ulp(test <<= erf(input1), (unary_lambda<double(*)(double), Field>(boost::math::erf, input1)), 2), "erf test");

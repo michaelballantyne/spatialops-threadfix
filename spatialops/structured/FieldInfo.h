@@ -78,7 +78,7 @@ namespace SpatialOps{
    * FieldInfo abstracts the low-level details of a field, mainly memory management
    * and synchronization of memory between devices.
    *
-   * \tparam T - the underlying datatype (defaults to \c double)
+   * \tparam T - the underlying data type (defaults to \c double)
    *
    * \par Related classes:
    *  - \ref MemoryWindow
@@ -133,7 +133,7 @@ namespace SpatialOps{
     typedef typename DeviceMemoryMap::const_iterator ConstMapIter;
     typedef typename DeviceMemoryMap::iterator       MapIter;
 
-    DeviceMemoryMap deviceMap_;     ///< Map from device indicies to DeviceMemorys
+    DeviceMemoryMap deviceMap_;     ///< Map from device indices to DeviceMemorys
     MemoryWindow wholeWindow_;      ///< Representation of the largest valid window for this field (includes ghost cells)
     const BoundaryCellInfo bcInfo_; ///< Information about this field's behavior on a boundary
     const GhostData totalGhosts_;   ///< The total number of ghost cells on each face of this field
@@ -175,12 +175,12 @@ namespace SpatialOps{
      * \param mode        either InternalStorage or ExternalStorage (default: InternalStorage)
      * \param devIdx      device index of originally active device (default: CPU_INDEX)
      */
-    FieldInfo(const MemoryWindow& window,
-              const BoundaryCellInfo& bc,
-              const GhostData& ghosts,
-              T* const fieldValues = NULL,
-              const StorageMode mode = InternalStorage,
-              const short int devIdx = CPU_INDEX);
+    FieldInfo( const MemoryWindow& window,
+               const BoundaryCellInfo& bc,
+               const GhostData& ghosts,
+               T* const fieldValues = NULL,
+               const StorageMode mode = InternalStorage,
+               const short int devIdx = CPU_INDEX );
 
     /**
      * \brief FieldInfo destructor
@@ -384,9 +384,16 @@ namespace SpatialOps{
     /**
      * \brief check if the device (deviceIndex) is available and valid
      *
-     * \param deviceIndex index ofdevice to check
+     * \param deviceIndex index of device to check
      */
     bool is_valid( const short int deviceIndex ) const;
+
+    /**
+     * \brief check if the device (deviceIndex) is available
+     *
+     * \param deviceIndex index of device to check
+     */
+    bool is_available( const short int deviceIndex ) const;
 
     /**
      * \brief return a non-constant pointer to memory on the given device
@@ -399,6 +406,9 @@ namespace SpatialOps{
 
     /**
      * \brief return a constant pointer to memory on the given device
+     *
+     * NOTE: no check is performed to determine if the memory returned is valid.
+     * See the is_valid() method to perform that check.
      *
      * \param deviceIndex device index for device memory to return (defaults to CPU_INDEX)
      */
@@ -680,7 +690,7 @@ namespace SpatialOps{
     DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
-#   ifndef NDEBUG
+#   ifndef DEBUG_SF_ALL
     if( iter == deviceMap_.end() )
       std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description( deviceIndex )
                 << " is not allocated. " << std::endl;
@@ -689,6 +699,27 @@ namespace SpatialOps{
                 << " is not valid. " << std::endl;
 #   endif
     return ( iter != deviceMap_.end() && iter->second.isValid_ );
+  }
+
+//------------------------------------------------------------------
+
+  template<typename T>
+  bool FieldInfo<T>::is_available( const short int deviceIndex ) const
+  {
+#   ifdef DEBUG_SF_ALL
+    std::cout << "Call to SpatialField::is_available() for device : "
+              << DeviceTypeTools::get_memory_type_description(deviceIndex) << std::endl;
+#   endif
+
+    DeviceTypeTools::check_valid_index( deviceIndex, __FILE__, __LINE__ );
+
+    ConstMapIter iter = deviceMap_.find( deviceIndex );
+#   ifndef DEBUG_SF_ALL
+    if( iter == deviceMap_.end() )
+      std::cout << "Field Location " << DeviceTypeTools::get_memory_type_description( deviceIndex )
+                << " is not allocated. " << std::endl;
+#   endif
+    return ( iter != deviceMap_.end() );
   }
 
 //------------------------------------------------------------------
@@ -739,11 +770,7 @@ namespace SpatialOps{
 
     ConstMapIter iter = deviceMap_.find( deviceIndex );
 
-    //check device exists and is valid
-    if( iter != deviceMap_.end() && iter->second.isValid_ ){
-      return iter->second.field_;
-    }
-    else if( iter == deviceMap_.end() ) {
+    if( iter == deviceMap_.end() ) {
       //device is not available
       std::ostringstream msg;
       msg << "Request for const field pointer on a device for which it has not been allocated\n"
@@ -751,13 +778,14 @@ namespace SpatialOps{
           << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
       throw(std::runtime_error(msg.str()));
     }
-    else {
-      //device is available but not valid
-      std::ostringstream msg;
-      msg << "Requested const field pointer on a device is not valid! \n"
-          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
-      throw(std::runtime_error(msg.str()));
-    }
+//    else {
+//      //device is available but not valid
+//      std::ostringstream msg;
+//      msg << "Requested const field pointer on a device is not valid! \n"
+//          << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
+//      throw(std::runtime_error(msg.str()));
+//    }
+    return iter->second.field_;
   }
 
 //------------------------------------------------------------------

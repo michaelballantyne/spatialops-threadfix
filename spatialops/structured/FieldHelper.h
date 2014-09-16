@@ -20,6 +20,9 @@
  * IN THE SOFTWARE.
  */
 
+#ifndef SpatialOps_FieldHelper_h
+#define SpatialOps_FieldHelper_h
+
 #include<spatialops/structured/MemoryWindow.h>
 
 #include <ostream>
@@ -700,3 +703,5 @@ void write_matlab( const FieldT& field,
 
 
 } // namespace SpatialOps
+
+#endif

@@ -12,6 +12,8 @@ using std::endl;
 #include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
 #include <spatialops/structured/stencil/StencilBuilder.h>
 
+#include <util/TimeLogger.h>
+
 typedef SpatialOps::SVolField   CellField;
 typedef SpatialOps::SSurfXField XSideField;
 typedef SpatialOps::SSurfYField YSideField;
@@ -35,7 +37,6 @@ typedef SpatialOps::BasicOpTypes<CellField>::DivZ       DivZ;
 
 //-- boost includes ---//
 #include <boost/program_options.hpp>
-#include <boost/date_time/posix_time/posix_time.hpp>
 
 namespace po = boost::program_options;
 using namespace SpatialOps;
@@ -45,6 +46,7 @@ int main( int iarg, char* carg[] )
   size_t ntime;
   IntVec npts;
   DoubleVec length;
+  std::string logFileName;
 
   // parse the command line options input describing the problem
   {
@@ -58,7 +60,8 @@ int main( int iarg, char* carg[] )
       ( "nz", po::value<int>(&npts[2])->default_value(10), "Grid in z" )
       ( "Lx", po::value<double>(&length[0])->default_value(1.0),"Length in x")
       ( "Ly", po::value<double>(&length[1])->default_value(1.0),"Length in y")
-      ( "Lz", po::value<double>(&length[2])->default_value(1.0),"Length in z");
+      ( "Lz", po::value<double>(&length[2])->default_value(1.0),"Length in z")
+      ( "timings-file-name", po::value<std::string>(&logFileName)->default_value("timings.log"), "Name for performance timings file" );
 
     po::variables_map args;
     po::store( po::parse_command_line(iarg,carg,desc), args );
@@ -139,38 +142,36 @@ int main( int iarg, char* carg[] )
   try{
     cout << "beginning 'timestepping'" << endl;
 
-    const boost::posix_time::ptime time_start( boost::posix_time::microsec_clock::universal_time() );
+    TimeLogger logger(logFileName);
 
     // mimic the effects of solving this PDE in time.
     for( size_t itime=0; itime<ntime; ++itime ){
 
       using namespace SpatialOps;
 
+      logger.start("flux");
       if( npts[0]>1 ) calculate_flux( *gradx, *interpx, temperature, thermCond, xflux );
       if( npts[1]>1 ) calculate_flux( *grady, *interpy, temperature, thermCond, yflux );
       if( npts[2]>1 ) calculate_flux( *gradz, *interpz, temperature, thermCond, zflux );
+      logger.stop("flux");
 
       rhs <<= 0.0;
+
+      logger.start("rhs");
       if( npts[0]>1 ) calculate_rhs( *divx, xflux, rhoCp, rhs );
       if( npts[1]>1 ) calculate_rhs( *divy, yflux, rhoCp, rhs );
       if( npts[2]>1 ) calculate_rhs( *divz, zflux, rhoCp, rhs );
+      logger.stop("rhs");
 
       // ordinarily at this point we would use rhs to update
       // temperature.  however, there are some other complicating
       // factors like setting boundary conditions that we have neglected
       // here to simplify things.
-
-      //    cout << itime+1 << " of " << ntime << endl;
     }
 
-    const boost::posix_time::ptime time_end( boost::posix_time::microsec_clock::universal_time() );
-    const boost::posix_time::time_duration time_dur = time_end - time_start;
-
     cout << "done" << endl << endl
-         << "time taken: "
-         << time_dur.total_microseconds()*1e-6
+         << "time taken: " << logger.total_time()
          << endl << endl;
-
 
     return 0;
   }

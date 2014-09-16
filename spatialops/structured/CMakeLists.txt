@@ -10,7 +10,7 @@ if( ENABLE_CUDA )
         )
 endif( ENABLE_CUDA )
 
-nebo_add_library( spatialops-structured src )
+nebo_add_library( spatialops-structured ${src} )
 
 if( ENABLE_TESTS )
     add_subdirectory( test )

@@ -11,7 +11,6 @@ option( ENABLE_EXAMPLES "Enable building of examples tests" ON )
 option( ENABLE_THREADS "Enable multi-threaded support for stencil operations" OFF )
 option( ENABLE_CUDA   "Build Spatial Ops with CUDA support" OFF )
 option( NEBO_REPORT_BACKEND "Require Nebo to report what backend it is using" OFF )
-option( USE_CLANG "Build with clang" OFF)
 
 set( NTHREADS 1 CACHE STRING "Number of threads to use if ENABLE_THREADS is ON" )
 
@@ -37,13 +36,13 @@ set( SpatialOps_CONFIG_INSTALL
   "Location to install configuration files"
   )
 
-
+include( NeboBuildTools.cmake )
 
 #--------------------------------------
 # resolve required libraries
 
 # setup the boost library
-set( boost_comps "program_options" )
+set( boost_comps "program_options;date_time" )
 
 if( ENABLE_THREADS )
   find_package( Threads REQUIRED )
@@ -90,30 +89,21 @@ endif( boost_comps )
 #-- CUDA
 if( ENABLE_CUDA )
   message( STATUS "SpatialOps will be compiled with CUDA Support" )
-  FIND_PACKAGE( CUDA REQUIRED )
-  SET( CUDA_ARCHITECTURE "3.0" CACHE STRING "3.0" )
-  STRING( REGEX REPLACE "([1-9])\\.([0-9])" "\\1\\2" CUDA_ARCH_STR ${CUDA_ARCHITECTURE} )
-  SET( CUDA_NVCC_FLAGS "-arch=sm_${CUDA_ARCH_STR}" CACHE STRING "Compiler flags passed to NVCC" FORCE )
-  SET( CUDA_NVCC_FLAGS_RELEASE "--optimize=03" CACHE STRING "Release build compiler flags" FORCE )
+  find_package( CUDA REQUIRED )
+  set( CUDA_ARCHITECTURE "3.0" CACHE STRING "CUDA compute capability" )
+  string( REGEX REPLACE "([1-9])\\.([0-9])" "\\1\\2" CUDA_ARCH_STR ${CUDA_ARCHITECTURE} )
+  set( CUDA_NVCC_FLAGS "-arch=sm_${CUDA_ARCH_STR}" CACHE STRING "Compiler flags passed to NVCC" FORCE )
+  set( CUDA_NVCC_FLAGS_RELEASE "--optimize=03" CACHE STRING "Release build compiler flags" FORCE )
   option( NEBO_GPU_TEST "Require Nebo to handle data transfer between CPU and GPU" OFF )
-  include_directories( ${CUDA_INCLUDE_DIRS} )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CUDA_LIBRARIES} )
+  set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} )
 else( ENABLE_CUDA )
   # avoids confusion if someone tries to build with cuda support enabled and then
   # reverts without clearing the build directory
   SET( CUDA_CUDA_LIBRARY OFF )
 endif( ENABLE_CUDA )
 
-#--CLANG
-if( USE_CLANG )
-  message( STATUS "SpatialOps will be compiled with Clang" )
-  SET (CMAKE_CXX_COMPILER "clang++" )
-  SET (CMAKE_BUILD_TYPE "Debug" )
-  SET (CMAKE_CXX_FLAGS "-Wall" )
-endif( USE_CLANG )
-
 #--------------------------------------
-
 
 include_directories(
   ${PROJECT_SOURCE_DIR}
@@ -159,51 +149,8 @@ if( ENABLE_TESTS )
   enable_testing()
 endif( ENABLE_TESTS )
 
-macro( nebo_cuda_prep_dir )
-  if( ENABLE_CUDA )
-    include_directories( ${CMAKE_CURRENT_SOURCE_DIR} )
-  endif( ENABLE_CUDA )
-endmacro( nebo_cuda_prep_dir )
-
-macro( nebo_cuda_prep_file file )
-  add_custom_command( OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${file}.cu
-                      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}
-                      COMMAND ${CMAKE_COMMAND} -E rename ${CMAKE_CURRENT_BINARY_DIR}/${file} ${CMAKE_CURRENT_BINARY_DIR}/${file}.cu
-                      DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${file}
-                     )
-  set_source_files_properties( ${CMAKE_CURRENT_BINARY_DIR}/${file}.cu
-                               PROPERTIES GENERATED TRUE
-                              )
-endmacro( nebo_cuda_prep_file )
-
-macro( nebo_add_executable name file )
-  if( ENABLE_CUDA )
-    nebo_cuda_prep_file( ${file} )
-    cuda_add_executable( ${name} ${CMAKE_CURRENT_BINARY_DIR}/${file}.cu )
-  else( ENABLE_CUDA )
-    add_executable( ${name} ${file} )
-  endif( ENABLE_CUDA )
-endmacro( nebo_add_executable )
-
-macro( nebo_set_add_file var file )
-  if( ENABLE_CUDA )
-    nebo_cuda_prep_file( ${file} )
-    set( ${var} ${${var}} ${CMAKE_CURRENT_BINARY_DIR}/${file}.cu )
-  else( ENABLE_CUDA )
-    set( ${var} ${${var}} ${file} )
-  endif( ENABLE_CUDA )
-endmacro( nebo_set_add_file )
-
-macro( nebo_add_library name args )
-  if( ENABLE_CUDA )
-    cuda_add_library( ${name} STATIC ${${args}} )
-  else( ENABLE_CUDA )
-    add_library( ${name} STATIC ${${args}} )
-  endif( ENABLE_CUDA )
-endmacro( nebo_add_library )
-
 add_subdirectory( spatialops )
-
+add_subdirectory( util )
 
 if( ENABLE_EXAMPLES )
   add_subdirectory( examples )
@@ -248,6 +195,7 @@ configure_file(
 # install all of these files into the spatial ops lib dir
 install( FILES
   ${PROJECT_BINARY_DIR}/config/SpatialOpsConfig.cmake
+  ${PROJECT_SOURCE_DIR}/NeboBuildTools.cmake
    DESTINATION ${SpatialOps_CONFIG_INSTALL}
    )
 #-----------------------------------------------------------------

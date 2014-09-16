@@ -30,6 +30,7 @@
 (define (build-Nary-struct name
                            number
                            eval-return-type
+                           eval-body
                            CPU-internal-use
                            GPU-internal-use)
   (define num-lst
@@ -139,20 +140,25 @@
                                (op_-mfc 'init init-arg)
                                null
                                gen-data-mems)
-                (bs-SeqWalk-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
-                                              vt-chunk)
-                                gen-constructor
-                                eval-return-type
-                                (CPU-internal-use index-arg)
-                                null
-                                exec-data-mems)
-                (bs-gpu-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
-                                          vt-chunk)
-                            gen-constructor
-                            eval-return-type
-                            (GPU-internal-use index-arg)
-                            null
-                            exec-data-mems)))
+                (bs-SeqWalk-rhs-with-eval-body (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                                             vt-chunk)
+                                               gen-constructor
+                                               eval-return-type
+                                               (eval-body index-arg)
+                                               (CPU-internal-use index-arg)
+                                               null
+                                               exec-data-mems)
+                (bs-gpu-rhs-with-eval-body (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                                         vt-chunk)
+                                           gen-constructor
+                                           eval-return-type
+                                           (eval-body index-arg)
+                                           (GPU-internal-use index-arg)
+                                           null
+                                           exec-data-mems)))
+
+(define (return-null args)
+  null)
 
 (define (build-binary-function-struct name internal-name)
   (let ([internal-use (lambda (args)
@@ -162,6 +168,7 @@
     (build-Nary-struct name
                        2
                        vt-chunk
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -173,6 +180,7 @@
     (build-Nary-struct name
                        2
                        vt-chunk
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -183,8 +191,21 @@
   (build-Nary-struct name
                      1
                      vt-chunk
+                     return-null
                      (internal-use CPU-internal-name)
                      (internal-use GPU-internal-name)))
+
+(define (build-unary-function-struct-with-reuse name internal-name)
+  (define internal-use (lambda (args) (internal-name 'result)))
+  (build-Nary-struct name
+                     1
+                     vt-chunk
+                     (lambda (args)
+                       (stmt-typed-assign (const 'double)
+                                          'result
+                                          (val-member-call 'operand_ 'eval args)))
+                     internal-use
+                     internal-use))
 
 (define (build-comparison-struct name internal-name)
   (let ([internal-use (lambda (args)
@@ -194,6 +215,7 @@
     (build-Nary-struct name
                        2
                        'bool
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -204,6 +226,7 @@
     (build-Nary-struct name
                        1
                        'bool
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -215,6 +238,7 @@
     (build-Nary-struct name
                        2
                        'bool
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -228,6 +252,7 @@
     (build-Nary-struct name
                        2
                        vt-chunk
+                       return-null
                        internal-use
                        internal-use)))
 
@@ -371,12 +396,12 @@
 (define if-arg-SubBoolSingleValueExpr
   (list 'atomic-only
         (lambda (num value-type checked-value-type)
-          (let ([type (literal 'SubBoolExpr num)]
+          (let ([type (literal 'SubBoolSingleValueExpr num)]
                 [arg (literal 'arg num)])
             (list 'SubBoolSingleValueExpr
                   #false
                   #true
-                  null
+                  type
                   ignore-spacing-check
                   type
                   type
@@ -502,7 +527,7 @@
 
 (define binary-expr-arg-lst (list if-arg-Scalar if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
 (define unary-expr-arg-lst (list if-arg-Field if-arg-SubExpr if-arg-SingleValue if-arg-SubSingleValueExpr))
-(define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr if-arg-Mask))
+(define binary-logical-expr-arg-lst (list if-arg-Boolean if-arg-SubBoolExpr if-arg-Mask if-arg-SubBoolSingleValueExpr))
 (define unary-logical-expr-arg-lst (list if-arg-SubBoolExpr if-arg-Mask))
 (define (build-binary-function name internal-name external-name)
   (internal-smt-list blank-line
@@ -515,6 +540,17 @@
 (define (build-unary-function name CPU-internal-name GPU-internal-name external-name)
   (internal-smt-list blank-line
                      (build-unary-function-struct name CPU-internal-name GPU-internal-name)
+                     (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
+(define (build-unary-function-with-reuse name external-name count)
+  (define (internal-expr count)
+    (lambda (result)
+      (if (= 1 count)
+          result
+          (val-multiply result
+                        ((internal-expr (- count 1))
+                         result)))))
+  (internal-smt-list blank-line
+                     (build-unary-function-struct-with-reuse name (internal-expr count))
                      (build-unary-interface name external-name 'scalar unary-expr-arg-lst)))
 (define (build-comparison-operator name internal-name external-name)
   (internal-smt-list blank-line
@@ -604,6 +640,8 @@
                         (scope 'boost (scope 'math 'erfc_inv))
                         'erfcinv
                         'inv_erfc)
+  (build-unary-function-with-reuse 'SquareFcn 'square 2)
+  (build-unary-function-with-reuse 'CubeFcn 'cube 3)
   (build-comparison-operator 'EqualCmp '== (add-spaces 'operator '==))
   (build-comparison-operator 'InequalCmp '!= (add-spaces 'operator '!=))
   (build-comparison-operator 'LessThanCmp '< (add-spaces 'operator '<))
@@ -615,8 +653,109 @@
   (build-unary-logical-function 'NotOp '! (add-spaces 'operator '!))
   (build-extremum-function 'MaxFcn '> 'max)
   (build-extremum-function 'MinFcn '< 'min)
-                                        ; commented out isnan because nvcc has some weird problem with it
-                                        ;   (build-unary-to-logical-function 'IsNanFcn
-                                        ;                                    (scope 'std 'isnan)
-                                        ;                                    'isnan)
+
+  ;pow with int function definition:
+  (let ([constructor (bm-constructor (list (function-pmtr (ref (const 'Operand)) 'operand)
+                                                      (function-pmtr (const 'int) 'exp))
+                                                (list (val-construct 'operand_ 'operand)
+                                                      (val-construct 'exp_ 'exp))
+                                                null)]
+        [privates (list (stmt-dcl-variable (const 'Operand) 'operand_)
+                        (stmt-dcl-variable (const 'int) 'exp_))])
+    (build-struct 'PowIntFcn
+                  no-FT
+                  null
+                  'Operand
+                  (bs-Initial-rhs null
+                                  null
+                                  constructor
+                                  (val-member-call 'operand_ 'ghosts_with_bc)
+                                  (val-member-call 'operand_ 'ghosts_without_bc)
+                                  (val-member-call 'operand_ 'has_extents)
+                                  null
+                                  (val-member-call 'operand_ 'extents)
+                                  null
+                                  (val-member-call 'operand_ 'has_bc)
+                                  (list (val-member-call 'operand_ 'init init-arg)
+                                        'exp_)
+                                  (list (val-member-call 'operand_ 'resize)
+                                        'exp_)
+                                  (val-member-call 'operand_ 'cpu_ready)
+                                  (val-member-call 'operand_ 'gpu_ready DI-chunk)
+                                  (list (val-member-call 'operand_ 'gpu_init gpu-init-arg)
+                                        'exp_)
+                                  (val-member-call 'operand_ 'gpu_prep DI-chunk)
+                                  null
+                                  privates)
+                  (bs-Resize-rhs null
+                                 null
+                                 constructor
+                                 (list (val-member-call 'operand_ 'init init-arg)
+                                       'exp_)
+                                 null
+                                 privates)
+                (bs-SeqWalk-rhs (stmt-typedef (typename (scope 'Operand vt-chunk))
+                                              vt-chunk)
+                                constructor
+                                vt-chunk
+                                (val-call (scope 'std 'pow)
+                                          (val-member-call 'operand_ 'eval index-arg)
+                                          'exp_)
+                                null
+                                privates)
+                (bs-gpu-rhs (stmt-typedef (typename (scope 'Operand vt-chunk))
+                                          vt-chunk)
+                            constructor
+                            vt-chunk
+                            (val-call (scope 'std 'pow)
+                                      (val-member-call 'operand_ 'eval index-arg)
+                                      'exp_)
+                            null
+                            privates)))
+  (let ([build-interface-case-for-pow-int
+         (lambda (input-arg-info)
+           (let* ([style (first input-arg-info)]
+                  [value-type (if (equal? 'atomic-only style)
+                                  'T
+                                  (typename (scope FT-chunk vt-chunk)))]
+                  [checked-value-type (if (equal? 'T value-type)
+                                          (typename (scope SVFT-def-chunk vt-chunk))
+                                          value-type)]
+                  [arg-info ((second input-arg-info)
+                             ""
+                             value-type
+                             checked-value-type)]
+                  [description (first arg-info)]
+                  [include-tpl (cond [(second arg-info)
+                                      FT-chunk]
+                                     [(third arg-info)
+                                      'T]
+                                     [else
+                                      null])]
+                  [tpl-arg (fourth arg-info)]
+                  [last-spacing (fifth arg-info)]
+                  [return-type (lambda (arg)
+                                 (cond [(equal? 'field style)
+                                        (type-template NE-chunk arg FT-chunk)]
+                                       [(equal? 'atomic-only style)
+                                        (type-template NSVE-chunk arg 'T)]
+                                       [else
+                                        (error "Trying to build an operator that has an unclear return structure: " style)]))]
+                  [construct-return-type (lambda (arg)
+                                           (type-template 'PowIntFcn 'Initial (last-spacing arg)))]
+                  [result-type-type (construct-return-type (sixth arg-info))]
+                  [return-tpl-type (construct-return-type (seventh arg-info))]
+                  [parameter (eighth arg-info)]
+                  [arg-use (ninth arg-info)])
+             (described-smts (concat description space 'X space 'int)
+                             (def-template (map typename (flatten* tpl-arg include-tpl))
+                               (def-returning-function (dcl-function 'pow
+                                                                     (return-type result-type-type)
+                                                                     (list parameter
+                                                                           (function-pmtr (const 'int) 'exp)))
+                                 (list (typedef return-tpl-type 'ReturnType)
+                                       (typedef (return-type 'ReturnType)
+                                                'ReturnTerm))
+                                 (val-call 'ReturnTerm (val-call 'ReturnType arg-use 'exp)))))))])
+    (add-blank-lines (map build-interface-case-for-pow-int unary-expr-arg-lst)))
   ))

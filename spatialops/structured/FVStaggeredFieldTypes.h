@@ -54,7 +54,7 @@ namespace SpatialOps{
      Z-Surface | `SSurfZField` | `XSurfZField` | `YSurfZField` | `ZSurfZField`
 
 
-     \section svol The Scalar (non-staggerd) Volume
+     \section svol The Scalar (non-staggered) Volume
 
      The following image illustrates a scalar mesh in 2D with the associated
      field locations.  Filled circles indicate volume centroids for cells within

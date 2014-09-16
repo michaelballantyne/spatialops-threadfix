@@ -117,48 +117,49 @@
                      (val-member-call operand 'eval args))
                    op_-lst)))
 
-  (build-struct name
-                no-FT
-                'Functor ; changed
-                Op-lst
-                (bs-Initial-rhs null
-                                '(Functor Functor Functor Functor) ; changed
+  (stmt
+   (build-struct name
+                 no-FT
+                 'Functor ; changed
+                 Op-lst
+                 (bs-Initial-rhs null
+                                 '(Functor Functor Functor Functor) ; changed
+                                 gen-constructor
+                                 (ghosts 'ghosts_with_bc)
+                                 (ghosts 'ghosts_without_bc)
+                                 (exec-or-check 'has_extents)
+                                 (assign-check-IntVec 'extents)
+                                 (return-IntVec 'extents op_-lst)
+                                 null
+                                 (return-IntVec 'has_bc op_-lst)
+                                 (op_-mfc 'init init-arg)
+                                 (op_-mfc 'resize)
+                                 (exec-and-check 'cpu_ready)
+                                 'false
+                                 (op_-mfc 'gpu_init gpu-init-arg)
+                                 (between/attach ";" space (op_-mfc 'gpu_prep DI-chunk))
+                                 null
+                                 gen-data-mems)
+                 (bs-Resize-rhs null
+                                'Functor ; changed
                                 gen-constructor
-                                (ghosts 'ghosts_with_bc)
-                                (ghosts 'ghosts_without_bc)
-                                (exec-or-check 'has_extents)
-                                (assign-check-IntVec 'extents)
-                                (return-IntVec 'extents op_-lst)
-                                null
-                                (return-IntVec 'has_bc op_-lst)
                                 (op_-mfc 'init init-arg)
-                                (op_-mfc 'resize)
-                                (exec-and-check 'cpu_ready)
-                                'false
-                                (op_-mfc 'gpu_init DI-chunk gpu-init-arg)
-                                (between/attach ";" space (op_-mfc 'gpu_prep DI-chunk))
                                 null
                                 gen-data-mems)
-                (bs-Resize-rhs null
-                               'Functor ; changed
-                               gen-constructor
-                               (op_-mfc 'init init-arg)
-                               null
-                               gen-data-mems)
-                (bs-SeqWalk-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
-                                              vt-chunk)
-                                gen-constructor
-                                eval-return-type
-                                (internal-use index-arg) ; changed
-                                null
-                                (cons (stmt-dcl-variable 'Functor 'functor_) exec-data-mems)) ;changed
-                (bs-gpu-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
-                                          vt-chunk)
-                            gen-constructor
-                            eval-return-type
-                            (internal-use index-arg); changed
-                            null
-                            (cons (stmt-dcl-variable 'Functor 'functor_) exec-data-mems))))
+                 (bs-SeqWalk-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                               vt-chunk)
+                                 gen-constructor
+                                 eval-return-type
+                                 (internal-use index-arg) ; changed
+                                 null
+                                 (cons (stmt-dcl-variable 'Functor 'functor_) exec-data-mems)) ;changed
+                 (bs-gpu-rhs (stmt-typedef (typename (scope (first Op-lst) vt-chunk))
+                                           vt-chunk)
+                             gen-constructor
+                             eval-return-type
+                             0 ; changed
+                             null
+                             (cons (stmt-dcl-variable 'Functor 'functor_) exec-data-mems)))))
 
 ; typename MetaFn<MetaArgs, ...>::Result
 (define (meta-eval meta-fn . meta-args)

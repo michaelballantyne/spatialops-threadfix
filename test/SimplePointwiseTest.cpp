@@ -52,7 +52,9 @@ int main( int iarg, char* carg[] )
 
     test <<= apply_pointwise<FTest>(input1 + input2, input3, 5.0, 6.0);
 
+#ifndef NEBO_GPU_TEST
     status(field_equal(ref, test, 0.0), "simple pointwise");
+#endif
 
     if( status.ok() ) {
       cout << "ALL TESTS PASSED :)" << endl;
