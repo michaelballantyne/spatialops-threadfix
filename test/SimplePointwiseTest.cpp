@@ -1,5 +1,4 @@
 #include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/structured/FVTools.h>
 
 #include <spatialops/Nebo.h>
 #include <test/TestHelper.h>
@@ -10,7 +9,6 @@
 #include <iostream>
 
 using namespace SpatialOps;
-using namespace structured;
 using std::cout;
 using std::endl;
 

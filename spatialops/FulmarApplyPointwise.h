@@ -12,11 +12,11 @@
           ApplyPointwise1<SeqWalk, Functor, typename Operand::SeqWalkType>
           typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise1<Resize, Functor, typename Operand::ResizeType>
              typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise1<GPUWalk, Functor, typename Operand::GPUWalkType>
@@ -28,36 +28,49 @@
           : operand_(operand)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return operand_.possible_ghosts();
+          inline GhostData ghosts_with_bc(void) const {
+             return operand_.ghosts_with_bc();
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return operand_.minimum_ghosts();
+          inline GhostData ghosts_without_bc(void) const {
+             return operand_.ghosts_without_bc();
           }
 
-          inline bool has_extent(void) const { return (operand_.has_extent()); }
-
-          inline int extent(int const dir) const { return operand_.extent(dir); }
-
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand_.init());
+          inline bool has_extents(void) const {
+             return (operand_.has_extents());
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline IntVec extents(void) const { return operand_.extents(); }
+
+          inline IntVec has_bc(void) const { return operand_.has_bc(); }
+
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const { return (operand_.cpu_ready()); }
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand_.gpu_init(deviceIndex,
+                                                     extents,
+                                                     ghosts,
+                                                     hasBC,
+                                                     deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -72,7 +85,7 @@
          private:
           Operand const operand_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor, typename Operand>
           struct ApplyPointwise1<Resize, Functor, Operand> {
             public:
@@ -83,15 +96,17 @@
              : operand_(operand)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand_.init(extents, ghosts, hasBC));
              }
 
             private:
              Operand const operand_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor, typename Operand>
        struct ApplyPointwise1<SeqWalk, Functor, Operand> {
          public:
@@ -167,13 +182,13 @@
                           typename Operand1::SeqWalkType,
                           typename Operand2::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise2<Resize,
                              Functor,
                              typename Operand1::ResizeType,
                              typename Operand2::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise2<GPUWalk,
@@ -188,50 +203,57 @@
           : operand1_(operand1), operand2_(operand2)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(), operand2_.possible_ghosts());
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(), operand2_.ghosts_with_bc());
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(), operand2_.minimum_ghosts());
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(), operand2_.ghosts_without_bc());
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
-                   else { extent = operand2_.extent(dir); };
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
+                   else { extents = operand2_.extents(); };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : (operand2_.extent(dir)));
+             return (operand1_.has_extents() ? operand1_.extents() : (operand2_.extents()));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : (operand2_.has_bc()));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(), operand2_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -240,8 +262,20 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex), operand2_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -258,7 +292,7 @@
 
           Operand2 const operand2_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor, typename Operand1, typename Operand2>
           struct ApplyPointwise2<Resize, Functor, Operand1, Operand2> {
             public:
@@ -273,8 +307,11 @@
              : operand1_(operand1), operand2_(operand2)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -283,7 +320,7 @@
              Operand2 const operand2_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor, typename Operand1, typename Operand2>
        struct ApplyPointwise2<SeqWalk, Functor, Operand1, Operand2> {
          public:
@@ -378,14 +415,14 @@
                           typename Operand2::SeqWalkType,
                           typename Operand3::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise3<Resize,
                              Functor,
                              typename Operand1::ResizeType,
                              typename Operand2::ResizeType,
                              typename Operand3::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise3<GPUWalk,
@@ -403,68 +440,79 @@
           : operand1_(operand1), operand2_(operand2), operand3_(operand3)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(), operand3_.possible_ghosts()));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(), operand3_.ghosts_with_bc()));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(), operand3_.minimum_ghosts()));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(), operand3_.ghosts_without_bc()));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
-                      else { extent = operand3_.extent(dir); };
+                      else { extents = operand3_.extents(); };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : (operand3_.extent(dir)))));
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : (operand3_.extents()))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(), operand2_.init(), operand3_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : (operand3_.has_bc()))));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
                                   operand3_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -474,10 +522,25 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -497,7 +560,7 @@
 
           Operand3 const operand3_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -517,8 +580,12 @@
              : operand1_(operand1), operand2_(operand2), operand3_(operand3)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(), operand2_.init(), operand3_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -529,7 +596,7 @@
              Operand3 const operand3_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
@@ -664,7 +731,7 @@
                           typename Operand3::SeqWalkType,
                           typename Operand4::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise4<Resize,
                              Functor,
                              typename Operand1::ResizeType,
@@ -672,7 +739,7 @@
                              typename Operand3::ResizeType,
                              typename Operand4::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise4<GPUWalk,
@@ -695,78 +762,90 @@
             operand4_(operand4)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(),
-                            min(operand3_.possible_ghosts(), operand4_.possible_ghosts())));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(),
+                            min(operand3_.ghosts_with_bc(), operand4_.ghosts_with_bc())));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(),
-                            min(operand3_.minimum_ghosts(), operand4_.minimum_ghosts())));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(),
+                            min(operand3_.ghosts_without_bc(), operand4_.ghosts_without_bc())));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent() || operand4_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents() || operand4_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent() || operand4_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents() || operand4_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
                       else {
-                         if(operand3_.has_extent()) {
-                            extent = operand3_.extent(dir);
+                         if(operand3_.has_extents()) {
+                            extents = operand3_.extents();
                          }
-                         else { extent = operand4_.extent(dir); };
+                         else { extents = operand4_.extents(); };
                       };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
 
-                   if(operand4_.has_extent()) {
-                      assert(extent == operand4_.extent(dir));
+                   if(operand4_.has_extents()) {
+                      assert(extents == operand4_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : ((operand3_.has_extent()
-                                                                            ?
-                                                                            operand3_.extent(dir)
-                                                                            : (operand4_.extent(dir)))))));
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : ((operand3_.has_extents()
+                                                                           ?
+                                                                           operand3_.extents()
+                                                                           : (operand4_.extents()))))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(),
-                                operand2_.init(),
-                                operand3_.init(),
-                                operand4_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : ((operand3_.has_extents()
+                                                                          ?
+                                                                          operand3_.has_bc()
+                                                                          : (operand4_.has_bc()))))));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC),
+                                operand4_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
@@ -774,7 +853,7 @@
                                   operand4_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -784,11 +863,30 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex),
-                                   operand4_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand4_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -810,7 +908,7 @@
 
           Operand4 const operand4_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -841,11 +939,13 @@
                operand4_(operand4)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(),
-                                   operand2_.init(),
-                                   operand3_.init(),
-                                   operand4_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC),
+                                   operand4_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -858,7 +958,7 @@
              Operand4 const operand4_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
@@ -1043,7 +1143,7 @@
                           typename Operand4::SeqWalkType,
                           typename Operand5::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise5<Resize,
                              Functor,
                              typename Operand1::ResizeType,
@@ -1052,7 +1152,7 @@
                              typename Operand4::ResizeType,
                              typename Operand5::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise5<GPUWalk,
@@ -1078,96 +1178,111 @@
             operand5_(operand5)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(),
-                            min(operand3_.possible_ghosts(),
-                                min(operand4_.possible_ghosts(), operand5_.possible_ghosts()))));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(),
+                            min(operand3_.ghosts_with_bc(),
+                                min(operand4_.ghosts_with_bc(), operand5_.ghosts_with_bc()))));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(),
-                            min(operand3_.minimum_ghosts(),
-                                min(operand4_.minimum_ghosts(), operand5_.minimum_ghosts()))));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(),
+                            min(operand3_.ghosts_without_bc(),
+                                min(operand4_.ghosts_without_bc(), operand5_.ghosts_without_bc()))));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent() || operand4_.has_extent() ||
-                     operand5_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents() || operand4_.has_extents() ||
+                     operand5_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent() || operand4_.has_extent() ||
-                    operand5_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents() || operand4_.has_extents() ||
+                    operand5_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
                       else {
-                         if(operand3_.has_extent()) {
-                            extent = operand3_.extent(dir);
+                         if(operand3_.has_extents()) {
+                            extents = operand3_.extents();
                          }
                          else {
-                            if(operand4_.has_extent()) {
-                               extent = operand4_.extent(dir);
+                            if(operand4_.has_extents()) {
+                               extents = operand4_.extents();
                             }
-                            else { extent = operand5_.extent(dir); };
+                            else { extents = operand5_.extents(); };
                          };
                       };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
 
-                   if(operand4_.has_extent()) {
-                      assert(extent == operand4_.extent(dir));
+                   if(operand4_.has_extents()) {
+                      assert(extents == operand4_.extents());
                    };
 
-                   if(operand5_.has_extent()) {
-                      assert(extent == operand5_.extent(dir));
+                   if(operand5_.has_extents()) {
+                      assert(extents == operand5_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : ((operand3_.has_extent()
-                                                                            ?
-                                                                            operand3_.extent(dir)
-                                                                            : ((operand4_.has_extent()
-                                                                                ?
-                                                                                operand4_.extent(dir)
-                                                                                :
-                                                                                (operand5_.extent(dir)))))))));
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : ((operand3_.has_extents()
+                                                                           ?
+                                                                           operand3_.extents()
+                                                                           : ((operand4_.has_extents()
+                                                                               ?
+                                                                               operand4_.extents()
+                                                                               :
+                                                                               (operand5_.extents()))))))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(),
-                                operand2_.init(),
-                                operand3_.init(),
-                                operand4_.init(),
-                                operand5_.init());
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : ((operand3_.has_extents()
+                                                                          ?
+                                                                          operand3_.has_bc()
+                                                                          : ((operand4_.has_extents()
+                                                                              ?
+                                                                              operand4_.has_bc()
+                                                                              : (operand5_.has_bc()))))))));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC),
+                                operand4_.init(extents, ghosts, hasBC),
+                                operand5_.init(extents, ghosts, hasBC));
+          }
+
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
@@ -1176,7 +1291,7 @@
                                   operand5_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -1187,12 +1302,35 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex),
-                                   operand4_.gpu_init(deviceIndex),
-                                   operand5_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand4_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand5_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -1217,7 +1355,7 @@
 
           Operand5 const operand5_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -1253,12 +1391,14 @@
                operand5_(operand5)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(),
-                                   operand2_.init(),
-                                   operand3_.init(),
-                                   operand4_.init(),
-                                   operand5_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC),
+                                   operand4_.init(extents, ghosts, hasBC),
+                                   operand5_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -1273,7 +1413,7 @@
              Operand5 const operand5_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
@@ -1490,7 +1630,7 @@
                           typename Operand5::SeqWalkType,
                           typename Operand6::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise6<Resize,
                              Functor,
                              typename Operand1::ResizeType,
@@ -1500,7 +1640,7 @@
                              typename Operand5::ResizeType,
                              typename Operand6::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise6<GPUWalk,
@@ -1529,112 +1669,131 @@
             operand6_(operand6)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(),
-                            min(operand3_.possible_ghosts(),
-                                min(operand4_.possible_ghosts(),
-                                    min(operand5_.possible_ghosts(), operand6_.possible_ghosts())))));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(),
+                            min(operand3_.ghosts_with_bc(),
+                                min(operand4_.ghosts_with_bc(),
+                                    min(operand5_.ghosts_with_bc(), operand6_.ghosts_with_bc())))));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(),
-                            min(operand3_.minimum_ghosts(),
-                                min(operand4_.minimum_ghosts(),
-                                    min(operand5_.minimum_ghosts(), operand6_.minimum_ghosts())))));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(),
+                            min(operand3_.ghosts_without_bc(),
+                                min(operand4_.ghosts_without_bc(),
+                                    min(operand5_.ghosts_without_bc(), operand6_.ghosts_without_bc())))));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent() || operand4_.has_extent() ||
-                     operand5_.has_extent() || operand6_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents() || operand4_.has_extents() ||
+                     operand5_.has_extents() || operand6_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent() || operand4_.has_extent() ||
-                    operand5_.has_extent() || operand6_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents() || operand4_.has_extents() ||
+                    operand5_.has_extents() || operand6_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
                       else {
-                         if(operand3_.has_extent()) {
-                            extent = operand3_.extent(dir);
+                         if(operand3_.has_extents()) {
+                            extents = operand3_.extents();
                          }
                          else {
-                            if(operand4_.has_extent()) {
-                               extent = operand4_.extent(dir);
+                            if(operand4_.has_extents()) {
+                               extents = operand4_.extents();
                             }
                             else {
-                               if(operand5_.has_extent()) {
-                                  extent = operand5_.extent(dir);
+                               if(operand5_.has_extents()) {
+                                  extents = operand5_.extents();
                                }
-                               else { extent = operand6_.extent(dir); };
+                               else { extents = operand6_.extents(); };
                             };
                          };
                       };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
 
-                   if(operand4_.has_extent()) {
-                      assert(extent == operand4_.extent(dir));
+                   if(operand4_.has_extents()) {
+                      assert(extents == operand4_.extents());
                    };
 
-                   if(operand5_.has_extent()) {
-                      assert(extent == operand5_.extent(dir));
+                   if(operand5_.has_extents()) {
+                      assert(extents == operand5_.extents());
                    };
 
-                   if(operand6_.has_extent()) {
-                      assert(extent == operand6_.extent(dir));
+                   if(operand6_.has_extents()) {
+                      assert(extents == operand6_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : ((operand3_.has_extent()
-                                                                            ?
-                                                                            operand3_.extent(dir)
-                                                                            : ((operand4_.has_extent()
-                                                                                ?
-                                                                                operand4_.extent(dir)
-                                                                                :
-                                                                                ((operand5_.has_extent()
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : ((operand3_.has_extents()
+                                                                           ?
+                                                                           operand3_.extents()
+                                                                           : ((operand4_.has_extents()
+                                                                               ?
+                                                                               operand4_.extents()
+                                                                               :
+                                                                               ((operand5_.has_extents()
+                                                                                 ?
+                                                                                 operand5_.extents()
+                                                                                 :
+                                                                                 (operand6_.extents()))))))))));
+          }
+
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : ((operand3_.has_extents()
+                                                                          ?
+                                                                          operand3_.has_bc()
+                                                                          : ((operand4_.has_extents()
+                                                                              ?
+                                                                              operand4_.has_bc()
+                                                                              : ((operand5_.has_extents()
                                                                                   ?
-                                                                                  operand5_.extent(dir)
+                                                                                  operand5_.has_bc()
                                                                                   :
-                                                                                  (operand6_.extent(dir)))))))))));
+                                                                                  (operand6_.has_bc()))))))))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(),
-                                operand2_.init(),
-                                operand3_.init(),
-                                operand4_.init(),
-                                operand5_.init(),
-                                operand6_.init());
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC),
+                                operand4_.init(extents, ghosts, hasBC),
+                                operand5_.init(extents, ghosts, hasBC),
+                                operand6_.init(extents, ghosts, hasBC));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
@@ -1644,7 +1803,7 @@
                                   operand6_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -1655,13 +1814,40 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex),
-                                   operand4_.gpu_init(deviceIndex),
-                                   operand5_.gpu_init(deviceIndex),
-                                   operand6_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand4_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand5_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand6_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -1688,7 +1874,7 @@
 
           Operand6 const operand6_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -1729,13 +1915,15 @@
                operand6_(operand6)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(),
-                                   operand2_.init(),
-                                   operand3_.init(),
-                                   operand4_.init(),
-                                   operand5_.init(),
-                                   operand6_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC),
+                                   operand4_.init(extents, ghosts, hasBC),
+                                   operand5_.init(extents, ghosts, hasBC),
+                                   operand6_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -1752,7 +1940,7 @@
              Operand6 const operand6_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
@@ -2001,7 +2189,7 @@
                           typename Operand6::SeqWalkType,
                           typename Operand7::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise7<Resize,
                              Functor,
                              typename Operand1::ResizeType,
@@ -2012,7 +2200,7 @@
                              typename Operand6::ResizeType,
                              typename Operand7::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise7<GPUWalk,
@@ -2044,132 +2232,155 @@
             operand7_(operand7)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(),
-                            min(operand3_.possible_ghosts(),
-                                min(operand4_.possible_ghosts(),
-                                    min(operand5_.possible_ghosts(),
-                                        min(operand6_.possible_ghosts(),
-                                            operand7_.possible_ghosts()))))));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(),
+                            min(operand3_.ghosts_with_bc(),
+                                min(operand4_.ghosts_with_bc(),
+                                    min(operand5_.ghosts_with_bc(),
+                                        min(operand6_.ghosts_with_bc(),
+                                            operand7_.ghosts_with_bc()))))));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(),
-                            min(operand3_.minimum_ghosts(),
-                                min(operand4_.minimum_ghosts(),
-                                    min(operand5_.minimum_ghosts(),
-                                        min(operand6_.minimum_ghosts(),
-                                            operand7_.minimum_ghosts()))))));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(),
+                            min(operand3_.ghosts_without_bc(),
+                                min(operand4_.ghosts_without_bc(),
+                                    min(operand5_.ghosts_without_bc(),
+                                        min(operand6_.ghosts_without_bc(),
+                                            operand7_.ghosts_without_bc()))))));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent() || operand4_.has_extent() ||
-                     operand5_.has_extent() || operand6_.has_extent() ||
-                     operand7_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents() || operand4_.has_extents() ||
+                     operand5_.has_extents() || operand6_.has_extents() ||
+                     operand7_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent() || operand4_.has_extent() ||
-                    operand5_.has_extent() || operand6_.has_extent() ||
-                    operand7_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents() || operand4_.has_extents() ||
+                    operand5_.has_extents() || operand6_.has_extents() ||
+                    operand7_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
                       else {
-                         if(operand3_.has_extent()) {
-                            extent = operand3_.extent(dir);
+                         if(operand3_.has_extents()) {
+                            extents = operand3_.extents();
                          }
                          else {
-                            if(operand4_.has_extent()) {
-                               extent = operand4_.extent(dir);
+                            if(operand4_.has_extents()) {
+                               extents = operand4_.extents();
                             }
                             else {
-                               if(operand5_.has_extent()) {
-                                  extent = operand5_.extent(dir);
+                               if(operand5_.has_extents()) {
+                                  extents = operand5_.extents();
                                }
                                else {
-                                  if(operand6_.has_extent()) {
-                                     extent = operand6_.extent(dir);
+                                  if(operand6_.has_extents()) {
+                                     extents = operand6_.extents();
                                   }
-                                  else { extent = operand7_.extent(dir); };
+                                  else { extents = operand7_.extents(); };
                                };
                             };
                          };
                       };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
 
-                   if(operand4_.has_extent()) {
-                      assert(extent == operand4_.extent(dir));
+                   if(operand4_.has_extents()) {
+                      assert(extents == operand4_.extents());
                    };
 
-                   if(operand5_.has_extent()) {
-                      assert(extent == operand5_.extent(dir));
+                   if(operand5_.has_extents()) {
+                      assert(extents == operand5_.extents());
                    };
 
-                   if(operand6_.has_extent()) {
-                      assert(extent == operand6_.extent(dir));
+                   if(operand6_.has_extents()) {
+                      assert(extents == operand6_.extents());
                    };
 
-                   if(operand7_.has_extent()) {
-                      assert(extent == operand7_.extent(dir));
+                   if(operand7_.has_extents()) {
+                      assert(extents == operand7_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : ((operand3_.has_extent()
-                                                                            ?
-                                                                            operand3_.extent(dir)
-                                                                            : ((operand4_.has_extent()
-                                                                                ?
-                                                                                operand4_.extent(dir)
-                                                                                :
-                                                                                ((operand5_.has_extent()
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : ((operand3_.has_extents()
+                                                                           ?
+                                                                           operand3_.extents()
+                                                                           : ((operand4_.has_extents()
+                                                                               ?
+                                                                               operand4_.extents()
+                                                                               :
+                                                                               ((operand5_.has_extents()
+                                                                                 ?
+                                                                                 operand5_.extents()
+                                                                                 :
+                                                                                 ((operand6_.has_extents()
+                                                                                   ?
+                                                                                   operand6_.extents()
+                                                                                   :
+                                                                                   (operand7_.extents()))))))))))));
+          }
+
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : ((operand3_.has_extents()
+                                                                          ?
+                                                                          operand3_.has_bc()
+                                                                          : ((operand4_.has_extents()
+                                                                              ?
+                                                                              operand4_.has_bc()
+                                                                              : ((operand5_.has_extents()
                                                                                   ?
-                                                                                  operand5_.extent(dir)
+                                                                                  operand5_.has_bc()
                                                                                   :
-                                                                                  ((operand6_.has_extent()
+                                                                                  ((operand6_.has_extents()
                                                                                     ?
-                                                                                    operand6_.extent(dir)
+                                                                                    operand6_.has_bc()
                                                                                     :
-                                                                                    (operand7_.extent(dir)))))))))))));
+                                                                                    (operand7_.has_bc()))))))))))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(),
-                                operand2_.init(),
-                                operand3_.init(),
-                                operand4_.init(),
-                                operand5_.init(),
-                                operand6_.init(),
-                                operand7_.init());
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC),
+                                operand4_.init(extents, ghosts, hasBC),
+                                operand5_.init(extents, ghosts, hasBC),
+                                operand6_.init(extents, ghosts, hasBC),
+                                operand7_.init(extents, ghosts, hasBC));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
@@ -2180,7 +2391,7 @@
                                   operand7_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -2192,14 +2403,45 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex),
-                                   operand4_.gpu_init(deviceIndex),
-                                   operand5_.gpu_init(deviceIndex),
-                                   operand6_.gpu_init(deviceIndex),
-                                   operand7_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand4_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand5_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand6_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand7_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -2229,7 +2471,7 @@
 
           Operand7 const operand7_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -2275,14 +2517,16 @@
                operand7_(operand7)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(),
-                                   operand2_.init(),
-                                   operand3_.init(),
-                                   operand4_.init(),
-                                   operand5_.init(),
-                                   operand6_.init(),
-                                   operand7_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC),
+                                   operand4_.init(extents, ghosts, hasBC),
+                                   operand5_.init(extents, ghosts, hasBC),
+                                   operand6_.init(extents, ghosts, hasBC),
+                                   operand7_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -2301,7 +2545,7 @@
              Operand7 const operand7_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
@@ -2582,7 +2826,7 @@
                           typename Operand7::SeqWalkType,
                           typename Operand8::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise8<Resize,
                              Functor,
                              typename Operand1::ResizeType,
@@ -2594,7 +2838,7 @@
                              typename Operand7::ResizeType,
                              typename Operand8::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise8<GPUWalk,
@@ -2629,69 +2873,69 @@
             operand8_(operand8)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(),
-                            min(operand3_.possible_ghosts(),
-                                min(operand4_.possible_ghosts(),
-                                    min(operand5_.possible_ghosts(),
-                                        min(operand6_.possible_ghosts(),
-                                            min(operand7_.possible_ghosts(),
-                                                operand8_.possible_ghosts())))))));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(),
+                            min(operand3_.ghosts_with_bc(),
+                                min(operand4_.ghosts_with_bc(),
+                                    min(operand5_.ghosts_with_bc(),
+                                        min(operand6_.ghosts_with_bc(),
+                                            min(operand7_.ghosts_with_bc(),
+                                                operand8_.ghosts_with_bc())))))));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(),
-                            min(operand3_.minimum_ghosts(),
-                                min(operand4_.minimum_ghosts(),
-                                    min(operand5_.minimum_ghosts(),
-                                        min(operand6_.minimum_ghosts(),
-                                            min(operand7_.minimum_ghosts(),
-                                                operand8_.minimum_ghosts())))))));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(),
+                            min(operand3_.ghosts_without_bc(),
+                                min(operand4_.ghosts_without_bc(),
+                                    min(operand5_.ghosts_without_bc(),
+                                        min(operand6_.ghosts_without_bc(),
+                                            min(operand7_.ghosts_without_bc(),
+                                                operand8_.ghosts_without_bc())))))));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent() || operand4_.has_extent() ||
-                     operand5_.has_extent() || operand6_.has_extent() ||
-                     operand7_.has_extent() || operand8_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents() || operand4_.has_extents() ||
+                     operand5_.has_extents() || operand6_.has_extents() ||
+                     operand7_.has_extents() || operand8_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent() || operand4_.has_extent() ||
-                    operand5_.has_extent() || operand6_.has_extent() ||
-                    operand7_.has_extent() || operand8_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents() || operand4_.has_extents() ||
+                    operand5_.has_extents() || operand6_.has_extents() ||
+                    operand7_.has_extents() || operand8_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
                       else {
-                         if(operand3_.has_extent()) {
-                            extent = operand3_.extent(dir);
+                         if(operand3_.has_extents()) {
+                            extents = operand3_.extents();
                          }
                          else {
-                            if(operand4_.has_extent()) {
-                               extent = operand4_.extent(dir);
+                            if(operand4_.has_extents()) {
+                               extents = operand4_.extents();
                             }
                             else {
-                               if(operand5_.has_extent()) {
-                                  extent = operand5_.extent(dir);
+                               if(operand5_.has_extents()) {
+                                  extents = operand5_.extents();
                                }
                                else {
-                                  if(operand6_.has_extent()) {
-                                     extent = operand6_.extent(dir);
+                                  if(operand6_.has_extents()) {
+                                     extents = operand6_.extents();
                                   }
                                   else {
-                                     if(operand7_.has_extent()) {
-                                        extent = operand7_.extent(dir);
+                                     if(operand7_.has_extents()) {
+                                        extents = operand7_.extents();
                                      }
-                                     else { extent = operand8_.extent(dir); };
+                                     else { extents = operand8_.extents(); };
                                   };
                                };
                             };
@@ -2699,78 +2943,105 @@
                       };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
 
-                   if(operand4_.has_extent()) {
-                      assert(extent == operand4_.extent(dir));
+                   if(operand4_.has_extents()) {
+                      assert(extents == operand4_.extents());
                    };
 
-                   if(operand5_.has_extent()) {
-                      assert(extent == operand5_.extent(dir));
+                   if(operand5_.has_extents()) {
+                      assert(extents == operand5_.extents());
                    };
 
-                   if(operand6_.has_extent()) {
-                      assert(extent == operand6_.extent(dir));
+                   if(operand6_.has_extents()) {
+                      assert(extents == operand6_.extents());
                    };
 
-                   if(operand7_.has_extent()) {
-                      assert(extent == operand7_.extent(dir));
+                   if(operand7_.has_extents()) {
+                      assert(extents == operand7_.extents());
                    };
 
-                   if(operand8_.has_extent()) {
-                      assert(extent == operand8_.extent(dir));
+                   if(operand8_.has_extents()) {
+                      assert(extents == operand8_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : ((operand3_.has_extent()
-                                                                            ?
-                                                                            operand3_.extent(dir)
-                                                                            : ((operand4_.has_extent()
-                                                                                ?
-                                                                                operand4_.extent(dir)
-                                                                                :
-                                                                                ((operand5_.has_extent()
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : ((operand3_.has_extents()
+                                                                           ?
+                                                                           operand3_.extents()
+                                                                           : ((operand4_.has_extents()
+                                                                               ?
+                                                                               operand4_.extents()
+                                                                               :
+                                                                               ((operand5_.has_extents()
+                                                                                 ?
+                                                                                 operand5_.extents()
+                                                                                 :
+                                                                                 ((operand6_.has_extents()
+                                                                                   ?
+                                                                                   operand6_.extents()
+                                                                                   :
+                                                                                   ((operand7_.has_extents()
+                                                                                     ?
+                                                                                     operand7_.extents()
+                                                                                     :
+                                                                                     (operand8_.extents()))))))))))))));
+          }
+
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : ((operand3_.has_extents()
+                                                                          ?
+                                                                          operand3_.has_bc()
+                                                                          : ((operand4_.has_extents()
+                                                                              ?
+                                                                              operand4_.has_bc()
+                                                                              : ((operand5_.has_extents()
                                                                                   ?
-                                                                                  operand5_.extent(dir)
+                                                                                  operand5_.has_bc()
                                                                                   :
-                                                                                  ((operand6_.has_extent()
+                                                                                  ((operand6_.has_extents()
                                                                                     ?
-                                                                                    operand6_.extent(dir)
+                                                                                    operand6_.has_bc()
                                                                                     :
-                                                                                    ((operand7_.has_extent()
+                                                                                    ((operand7_.has_extents()
                                                                                       ?
-                                                                                      operand7_.extent(dir)
+                                                                                      operand7_.has_bc()
                                                                                       :
-                                                                                      (operand8_.extent(dir)))))))))))))));
+                                                                                      (operand8_.has_bc()))))))))))))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(),
-                                operand2_.init(),
-                                operand3_.init(),
-                                operand4_.init(),
-                                operand5_.init(),
-                                operand6_.init(),
-                                operand7_.init(),
-                                operand8_.init());
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC),
+                                operand4_.init(extents, ghosts, hasBC),
+                                operand5_.init(extents, ghosts, hasBC),
+                                operand6_.init(extents, ghosts, hasBC),
+                                operand7_.init(extents, ghosts, hasBC),
+                                operand8_.init(extents, ghosts, hasBC));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
@@ -2782,7 +3053,7 @@
                                   operand8_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -2794,15 +3065,50 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex),
-                                   operand4_.gpu_init(deviceIndex),
-                                   operand5_.gpu_init(deviceIndex),
-                                   operand6_.gpu_init(deviceIndex),
-                                   operand7_.gpu_init(deviceIndex),
-                                   operand8_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand4_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand5_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand6_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand7_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand8_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -2834,7 +3140,7 @@
 
           Operand8 const operand8_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -2885,15 +3191,17 @@
                operand8_(operand8)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(),
-                                   operand2_.init(),
-                                   operand3_.init(),
-                                   operand4_.init(),
-                                   operand5_.init(),
-                                   operand6_.init(),
-                                   operand7_.init(),
-                                   operand8_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC),
+                                   operand4_.init(extents, ghosts, hasBC),
+                                   operand5_.init(extents, ghosts, hasBC),
+                                   operand6_.init(extents, ghosts, hasBC),
+                                   operand7_.init(extents, ghosts, hasBC),
+                                   operand8_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -2914,7 +3222,7 @@
              Operand8 const operand8_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
@@ -3227,7 +3535,7 @@
                           typename Operand8::SeqWalkType,
                           typename Operand9::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise9<Resize,
                              Functor,
                              typename Operand1::ResizeType,
@@ -3240,7 +3548,7 @@
                              typename Operand8::ResizeType,
                              typename Operand9::ResizeType> typedef ResizeType;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise9<GPUWalk,
@@ -3278,77 +3586,77 @@
             operand9_(operand9)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(),
-                            min(operand3_.possible_ghosts(),
-                                min(operand4_.possible_ghosts(),
-                                    min(operand5_.possible_ghosts(),
-                                        min(operand6_.possible_ghosts(),
-                                            min(operand7_.possible_ghosts(),
-                                                min(operand8_.possible_ghosts(),
-                                                    operand9_.possible_ghosts()))))))));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(),
+                            min(operand3_.ghosts_with_bc(),
+                                min(operand4_.ghosts_with_bc(),
+                                    min(operand5_.ghosts_with_bc(),
+                                        min(operand6_.ghosts_with_bc(),
+                                            min(operand7_.ghosts_with_bc(),
+                                                min(operand8_.ghosts_with_bc(),
+                                                    operand9_.ghosts_with_bc()))))))));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(),
-                            min(operand3_.minimum_ghosts(),
-                                min(operand4_.minimum_ghosts(),
-                                    min(operand5_.minimum_ghosts(),
-                                        min(operand6_.minimum_ghosts(),
-                                            min(operand7_.minimum_ghosts(),
-                                                min(operand8_.minimum_ghosts(),
-                                                    operand9_.minimum_ghosts()))))))));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(),
+                            min(operand3_.ghosts_without_bc(),
+                                min(operand4_.ghosts_without_bc(),
+                                    min(operand5_.ghosts_without_bc(),
+                                        min(operand6_.ghosts_without_bc(),
+                                            min(operand7_.ghosts_without_bc(),
+                                                min(operand8_.ghosts_without_bc(),
+                                                    operand9_.ghosts_without_bc()))))))));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent() || operand4_.has_extent() ||
-                     operand5_.has_extent() || operand6_.has_extent() ||
-                     operand7_.has_extent() || operand8_.has_extent() ||
-                     operand9_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents() || operand4_.has_extents() ||
+                     operand5_.has_extents() || operand6_.has_extents() ||
+                     operand7_.has_extents() || operand8_.has_extents() ||
+                     operand9_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent() || operand4_.has_extent() ||
-                    operand5_.has_extent() || operand6_.has_extent() ||
-                    operand7_.has_extent() || operand8_.has_extent() ||
-                    operand9_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents() || operand4_.has_extents() ||
+                    operand5_.has_extents() || operand6_.has_extents() ||
+                    operand7_.has_extents() || operand8_.has_extents() ||
+                    operand9_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
                       else {
-                         if(operand3_.has_extent()) {
-                            extent = operand3_.extent(dir);
+                         if(operand3_.has_extents()) {
+                            extents = operand3_.extents();
                          }
                          else {
-                            if(operand4_.has_extent()) {
-                               extent = operand4_.extent(dir);
+                            if(operand4_.has_extents()) {
+                               extents = operand4_.extents();
                             }
                             else {
-                               if(operand5_.has_extent()) {
-                                  extent = operand5_.extent(dir);
+                               if(operand5_.has_extents()) {
+                                  extents = operand5_.extents();
                                }
                                else {
-                                  if(operand6_.has_extent()) {
-                                     extent = operand6_.extent(dir);
+                                  if(operand6_.has_extents()) {
+                                     extents = operand6_.extents();
                                   }
                                   else {
-                                     if(operand7_.has_extent()) {
-                                        extent = operand7_.extent(dir);
+                                     if(operand7_.has_extents()) {
+                                        extents = operand7_.extents();
                                      }
                                      else {
-                                        if(operand8_.has_extent()) {
-                                           extent = operand8_.extent(dir);
+                                        if(operand8_.has_extents()) {
+                                           extents = operand8_.extents();
                                         }
-                                        else { extent = operand9_.extent(dir); };
+                                        else { extents = operand9_.extents(); };
                                      };
                                   };
                                };
@@ -3357,87 +3665,118 @@
                       };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
 
-                   if(operand4_.has_extent()) {
-                      assert(extent == operand4_.extent(dir));
+                   if(operand4_.has_extents()) {
+                      assert(extents == operand4_.extents());
                    };
 
-                   if(operand5_.has_extent()) {
-                      assert(extent == operand5_.extent(dir));
+                   if(operand5_.has_extents()) {
+                      assert(extents == operand5_.extents());
                    };
 
-                   if(operand6_.has_extent()) {
-                      assert(extent == operand6_.extent(dir));
+                   if(operand6_.has_extents()) {
+                      assert(extents == operand6_.extents());
                    };
 
-                   if(operand7_.has_extent()) {
-                      assert(extent == operand7_.extent(dir));
+                   if(operand7_.has_extents()) {
+                      assert(extents == operand7_.extents());
                    };
 
-                   if(operand8_.has_extent()) {
-                      assert(extent == operand8_.extent(dir));
+                   if(operand8_.has_extents()) {
+                      assert(extents == operand8_.extents());
                    };
 
-                   if(operand9_.has_extent()) {
-                      assert(extent == operand9_.extent(dir));
+                   if(operand9_.has_extents()) {
+                      assert(extents == operand9_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : ((operand3_.has_extent()
-                                                                            ?
-                                                                            operand3_.extent(dir)
-                                                                            : ((operand4_.has_extent()
-                                                                                ?
-                                                                                operand4_.extent(dir)
-                                                                                :
-                                                                                ((operand5_.has_extent()
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : ((operand3_.has_extents()
+                                                                           ?
+                                                                           operand3_.extents()
+                                                                           : ((operand4_.has_extents()
+                                                                               ?
+                                                                               operand4_.extents()
+                                                                               :
+                                                                               ((operand5_.has_extents()
+                                                                                 ?
+                                                                                 operand5_.extents()
+                                                                                 :
+                                                                                 ((operand6_.has_extents()
+                                                                                   ?
+                                                                                   operand6_.extents()
+                                                                                   :
+                                                                                   ((operand7_.has_extents()
+                                                                                     ?
+                                                                                     operand7_.extents()
+                                                                                     :
+                                                                                     ((operand8_.has_extents()
+                                                                                       ?
+                                                                                       operand8_.extents()
+                                                                                       :
+                                                                                       (operand9_.extents()))))))))))))))));
+          }
+
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : ((operand3_.has_extents()
+                                                                          ?
+                                                                          operand3_.has_bc()
+                                                                          : ((operand4_.has_extents()
+                                                                              ?
+                                                                              operand4_.has_bc()
+                                                                              : ((operand5_.has_extents()
                                                                                   ?
-                                                                                  operand5_.extent(dir)
+                                                                                  operand5_.has_bc()
                                                                                   :
-                                                                                  ((operand6_.has_extent()
+                                                                                  ((operand6_.has_extents()
                                                                                     ?
-                                                                                    operand6_.extent(dir)
+                                                                                    operand6_.has_bc()
                                                                                     :
-                                                                                    ((operand7_.has_extent()
+                                                                                    ((operand7_.has_extents()
                                                                                       ?
-                                                                                      operand7_.extent(dir)
+                                                                                      operand7_.has_bc()
                                                                                       :
-                                                                                      ((operand8_.has_extent()
+                                                                                      ((operand8_.has_extents()
                                                                                         ?
-                                                                                        operand8_.extent(dir)
+                                                                                        operand8_.has_bc()
                                                                                         :
-                                                                                        (operand9_.extent(dir)))))))))))))))));
+                                                                                        (operand9_.has_bc()))))))))))))))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(),
-                                operand2_.init(),
-                                operand3_.init(),
-                                operand4_.init(),
-                                operand5_.init(),
-                                operand6_.init(),
-                                operand7_.init(),
-                                operand8_.init(),
-                                operand9_.init());
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC),
+                                operand4_.init(extents, ghosts, hasBC),
+                                operand5_.init(extents, ghosts, hasBC),
+                                operand6_.init(extents, ghosts, hasBC),
+                                operand7_.init(extents, ghosts, hasBC),
+                                operand8_.init(extents, ghosts, hasBC),
+                                operand9_.init(extents, ghosts, hasBC));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
@@ -3450,7 +3789,7 @@
                                   operand9_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -3463,16 +3802,55 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex),
-                                   operand4_.gpu_init(deviceIndex),
-                                   operand5_.gpu_init(deviceIndex),
-                                   operand6_.gpu_init(deviceIndex),
-                                   operand7_.gpu_init(deviceIndex),
-                                   operand8_.gpu_init(deviceIndex),
-                                   operand9_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand4_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand5_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand6_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand7_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand8_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand9_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -3507,7 +3885,7 @@
 
           Operand9 const operand9_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -3563,16 +3941,18 @@
                operand9_(operand9)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(),
-                                   operand2_.init(),
-                                   operand3_.init(),
-                                   operand4_.init(),
-                                   operand5_.init(),
-                                   operand6_.init(),
-                                   operand7_.init(),
-                                   operand8_.init(),
-                                   operand9_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC),
+                                   operand4_.init(extents, ghosts, hasBC),
+                                   operand5_.init(extents, ghosts, hasBC),
+                                   operand6_.init(extents, ghosts, hasBC),
+                                   operand7_.init(extents, ghosts, hasBC),
+                                   operand8_.init(extents, ghosts, hasBC),
+                                   operand9_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -3595,7 +3975,7 @@
              Operand9 const operand9_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
@@ -3940,7 +4320,7 @@
                            typename Operand9::SeqWalkType,
                            typename Operand10::SeqWalkType> typedef SeqWalkType;
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              ApplyPointwise10<Resize,
                               Functor,
                               typename Operand1::ResizeType,
@@ -3955,7 +4335,7 @@
                               typename Operand10::ResizeType> typedef ResizeType
              ;
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              ApplyPointwise10<GPUWalk,
@@ -3996,84 +4376,84 @@
             operand10_(operand10)
           {}
 
-          inline structured::GhostData possible_ghosts(void) const {
-             return min(operand1_.possible_ghosts(),
-                        min(operand2_.possible_ghosts(),
-                            min(operand3_.possible_ghosts(),
-                                min(operand4_.possible_ghosts(),
-                                    min(operand5_.possible_ghosts(),
-                                        min(operand6_.possible_ghosts(),
-                                            min(operand7_.possible_ghosts(),
-                                                min(operand8_.possible_ghosts(),
-                                                    min(operand9_.possible_ghosts(),
-                                                        operand10_.possible_ghosts())))))))));
+          inline GhostData ghosts_with_bc(void) const {
+             return min(operand1_.ghosts_with_bc(),
+                        min(operand2_.ghosts_with_bc(),
+                            min(operand3_.ghosts_with_bc(),
+                                min(operand4_.ghosts_with_bc(),
+                                    min(operand5_.ghosts_with_bc(),
+                                        min(operand6_.ghosts_with_bc(),
+                                            min(operand7_.ghosts_with_bc(),
+                                                min(operand8_.ghosts_with_bc(),
+                                                    min(operand9_.ghosts_with_bc(),
+                                                        operand10_.ghosts_with_bc())))))))));
           }
 
-          inline structured::GhostData minimum_ghosts(void) const {
-             return min(operand1_.minimum_ghosts(),
-                        min(operand2_.minimum_ghosts(),
-                            min(operand3_.minimum_ghosts(),
-                                min(operand4_.minimum_ghosts(),
-                                    min(operand5_.minimum_ghosts(),
-                                        min(operand6_.minimum_ghosts(),
-                                            min(operand7_.minimum_ghosts(),
-                                                min(operand8_.minimum_ghosts(),
-                                                    min(operand9_.minimum_ghosts(),
-                                                        operand10_.minimum_ghosts())))))))));
+          inline GhostData ghosts_without_bc(void) const {
+             return min(operand1_.ghosts_without_bc(),
+                        min(operand2_.ghosts_without_bc(),
+                            min(operand3_.ghosts_without_bc(),
+                                min(operand4_.ghosts_without_bc(),
+                                    min(operand5_.ghosts_without_bc(),
+                                        min(operand6_.ghosts_without_bc(),
+                                            min(operand7_.ghosts_without_bc(),
+                                                min(operand8_.ghosts_without_bc(),
+                                                    min(operand9_.ghosts_without_bc(),
+                                                        operand10_.ghosts_without_bc())))))))));
           }
 
-          inline bool has_extent(void) const {
-             return (operand1_.has_extent() || operand2_.has_extent() ||
-                     operand3_.has_extent() || operand4_.has_extent() ||
-                     operand5_.has_extent() || operand6_.has_extent() ||
-                     operand7_.has_extent() || operand8_.has_extent() ||
-                     operand9_.has_extent() || operand10_.has_extent());
+          inline bool has_extents(void) const {
+             return (operand1_.has_extents() || operand2_.has_extents() ||
+                     operand3_.has_extents() || operand4_.has_extents() ||
+                     operand5_.has_extents() || operand6_.has_extents() ||
+                     operand7_.has_extents() || operand8_.has_extents() ||
+                     operand9_.has_extents() || operand10_.has_extents());
           }
 
-          inline int extent(int const dir) const {
+          inline IntVec extents(void) const {
              #ifndef NDEBUG
-                if((operand1_.has_extent() || operand2_.has_extent() ||
-                    operand3_.has_extent() || operand4_.has_extent() ||
-                    operand5_.has_extent() || operand6_.has_extent() ||
-                    operand7_.has_extent() || operand8_.has_extent() ||
-                    operand9_.has_extent() || operand10_.has_extent())) {
-                   int extent;
+                if((operand1_.has_extents() || operand2_.has_extents() ||
+                    operand3_.has_extents() || operand4_.has_extents() ||
+                    operand5_.has_extents() || operand6_.has_extents() ||
+                    operand7_.has_extents() || operand8_.has_extents() ||
+                    operand9_.has_extents() || operand10_.has_extents())) {
+                   IntVec extents;
 
-                   if(operand1_.has_extent()) { extent = operand1_.extent(dir); }
+                   if(operand1_.has_extents()) { extents = operand1_.extents(); }
                    else {
-                      if(operand2_.has_extent()) {
-                         extent = operand2_.extent(dir);
+                      if(operand2_.has_extents()) {
+                         extents = operand2_.extents();
                       }
                       else {
-                         if(operand3_.has_extent()) {
-                            extent = operand3_.extent(dir);
+                         if(operand3_.has_extents()) {
+                            extents = operand3_.extents();
                          }
                          else {
-                            if(operand4_.has_extent()) {
-                               extent = operand4_.extent(dir);
+                            if(operand4_.has_extents()) {
+                               extents = operand4_.extents();
                             }
                             else {
-                               if(operand5_.has_extent()) {
-                                  extent = operand5_.extent(dir);
+                               if(operand5_.has_extents()) {
+                                  extents = operand5_.extents();
                                }
                                else {
-                                  if(operand6_.has_extent()) {
-                                     extent = operand6_.extent(dir);
+                                  if(operand6_.has_extents()) {
+                                     extents = operand6_.extents();
                                   }
                                   else {
-                                     if(operand7_.has_extent()) {
-                                        extent = operand7_.extent(dir);
+                                     if(operand7_.has_extents()) {
+                                        extents = operand7_.extents();
                                      }
                                      else {
-                                        if(operand8_.has_extent()) {
-                                           extent = operand8_.extent(dir);
+                                        if(operand8_.has_extents()) {
+                                           extents = operand8_.extents();
                                         }
                                         else {
-                                           if(operand9_.has_extent()) {
-                                              extent = operand9_.extent(dir);
+                                           if(operand9_.has_extents()) {
+                                              extents = operand9_.extents();
                                            }
                                            else {
-                                              extent = operand10_.extent(dir);
+                                              extents = operand10_.extents();
                                            };
                                         };
                                      };
@@ -4084,96 +4464,131 @@
                       };
                    };
 
-                   if(operand1_.has_extent()) {
-                      assert(extent == operand1_.extent(dir));
+                   if(operand1_.has_extents()) {
+                      assert(extents == operand1_.extents());
                    };
 
-                   if(operand2_.has_extent()) {
-                      assert(extent == operand2_.extent(dir));
+                   if(operand2_.has_extents()) {
+                      assert(extents == operand2_.extents());
                    };
 
-                   if(operand3_.has_extent()) {
-                      assert(extent == operand3_.extent(dir));
+                   if(operand3_.has_extents()) {
+                      assert(extents == operand3_.extents());
                    };
 
-                   if(operand4_.has_extent()) {
-                      assert(extent == operand4_.extent(dir));
+                   if(operand4_.has_extents()) {
+                      assert(extents == operand4_.extents());
                    };
 
-                   if(operand5_.has_extent()) {
-                      assert(extent == operand5_.extent(dir));
+                   if(operand5_.has_extents()) {
+                      assert(extents == operand5_.extents());
                    };
 
-                   if(operand6_.has_extent()) {
-                      assert(extent == operand6_.extent(dir));
+                   if(operand6_.has_extents()) {
+                      assert(extents == operand6_.extents());
                    };
 
-                   if(operand7_.has_extent()) {
-                      assert(extent == operand7_.extent(dir));
+                   if(operand7_.has_extents()) {
+                      assert(extents == operand7_.extents());
                    };
 
-                   if(operand8_.has_extent()) {
-                      assert(extent == operand8_.extent(dir));
+                   if(operand8_.has_extents()) {
+                      assert(extents == operand8_.extents());
                    };
 
-                   if(operand9_.has_extent()) {
-                      assert(extent == operand9_.extent(dir));
+                   if(operand9_.has_extents()) {
+                      assert(extents == operand9_.extents());
                    };
 
-                   if(operand10_.has_extent()) {
-                      assert(extent == operand10_.extent(dir));
+                   if(operand10_.has_extents()) {
+                      assert(extents == operand10_.extents());
                    };
                 }
              #endif
              /* NDEBUG */;
 
-             return (operand1_.has_extent() ? operand1_.extent(dir) : ((operand2_.has_extent()
-                                                                        ?
-                                                                        operand2_.extent(dir)
-                                                                        : ((operand3_.has_extent()
-                                                                            ?
-                                                                            operand3_.extent(dir)
-                                                                            : ((operand4_.has_extent()
-                                                                                ?
-                                                                                operand4_.extent(dir)
-                                                                                :
-                                                                                ((operand5_.has_extent()
+             return (operand1_.has_extents() ? operand1_.extents() : ((operand2_.has_extents()
+                                                                       ?
+                                                                       operand2_.extents()
+                                                                       : ((operand3_.has_extents()
+                                                                           ?
+                                                                           operand3_.extents()
+                                                                           : ((operand4_.has_extents()
+                                                                               ?
+                                                                               operand4_.extents()
+                                                                               :
+                                                                               ((operand5_.has_extents()
+                                                                                 ?
+                                                                                 operand5_.extents()
+                                                                                 :
+                                                                                 ((operand6_.has_extents()
+                                                                                   ?
+                                                                                   operand6_.extents()
+                                                                                   :
+                                                                                   ((operand7_.has_extents()
+                                                                                     ?
+                                                                                     operand7_.extents()
+                                                                                     :
+                                                                                     ((operand8_.has_extents()
+                                                                                       ?
+                                                                                       operand8_.extents()
+                                                                                       :
+                                                                                       ((operand9_.has_extents()
+                                                                                         ?
+                                                                                         operand9_.extents()
+                                                                                         :
+                                                                                         (operand10_.extents()))))))))))))))))));
+          }
+
+          inline IntVec has_bc(void) const {
+             return (operand1_.has_extents() ? operand1_.has_bc() : ((operand2_.has_extents()
+                                                                      ?
+                                                                      operand2_.has_bc()
+                                                                      : ((operand3_.has_extents()
+                                                                          ?
+                                                                          operand3_.has_bc()
+                                                                          : ((operand4_.has_extents()
+                                                                              ?
+                                                                              operand4_.has_bc()
+                                                                              : ((operand5_.has_extents()
                                                                                   ?
-                                                                                  operand5_.extent(dir)
+                                                                                  operand5_.has_bc()
                                                                                   :
-                                                                                  ((operand6_.has_extent()
+                                                                                  ((operand6_.has_extents()
                                                                                     ?
-                                                                                    operand6_.extent(dir)
+                                                                                    operand6_.has_bc()
                                                                                     :
-                                                                                    ((operand7_.has_extent()
+                                                                                    ((operand7_.has_extents()
                                                                                       ?
-                                                                                      operand7_.extent(dir)
+                                                                                      operand7_.has_bc()
                                                                                       :
-                                                                                      ((operand8_.has_extent()
+                                                                                      ((operand8_.has_extents()
                                                                                         ?
-                                                                                        operand8_.extent(dir)
+                                                                                        operand8_.has_bc()
                                                                                         :
-                                                                                        ((operand9_.has_extent()
+                                                                                        ((operand9_.has_extents()
                                                                                           ?
-                                                                                          operand9_.extent(dir)
+                                                                                          operand9_.has_bc()
                                                                                           :
-                                                                                          (operand10_.extent(dir)))))))))))))))))));
+                                                                                          (operand10_.has_bc()))))))))))))))))));
           }
 
-          inline SeqWalkType init(void) const {
-             return SeqWalkType(operand1_.init(),
-                                operand2_.init(),
-                                operand3_.init(),
-                                operand4_.init(),
-                                operand5_.init(),
-                                operand6_.init(),
-                                operand7_.init(),
-                                operand8_.init(),
-                                operand9_.init(),
-                                operand10_.init());
+          inline SeqWalkType init(IntVec const & extents,
+                                  GhostData const & ghosts,
+                                  IntVec const & hasBC) const {
+             return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                operand2_.init(extents, ghosts, hasBC),
+                                operand3_.init(extents, ghosts, hasBC),
+                                operand4_.init(extents, ghosts, hasBC),
+                                operand5_.init(extents, ghosts, hasBC),
+                                operand6_.init(extents, ghosts, hasBC),
+                                operand7_.init(extents, ghosts, hasBC),
+                                operand8_.init(extents, ghosts, hasBC),
+                                operand9_.init(extents, ghosts, hasBC),
+                                operand10_.init(extents, ghosts, hasBC));
           }
 
-          #ifdef FIELD_EXPRESSION_THREADS
+          #ifdef ENABLE_THREADS
              inline ResizeType resize(void) const {
                 return ResizeType(operand1_.resize(),
                                   operand2_.resize(),
@@ -4187,7 +4602,7 @@
                                   operand10_.resize());
              }
           #endif
-          /* FIELD_EXPRESSION_THREADS */
+          /* ENABLE_THREADS */
 
           #ifdef __CUDACC__
              inline bool cpu_ready(void) const {
@@ -4200,17 +4615,60 @@
 
              inline bool gpu_ready(int const deviceIndex) const { return false; }
 
-             inline GPUWalkType gpu_init(int const deviceIndex) const {
-                return GPUWalkType(operand1_.gpu_init(deviceIndex),
-                                   operand2_.gpu_init(deviceIndex),
-                                   operand3_.gpu_init(deviceIndex),
-                                   operand4_.gpu_init(deviceIndex),
-                                   operand5_.gpu_init(deviceIndex),
-                                   operand6_.gpu_init(deviceIndex),
-                                   operand7_.gpu_init(deviceIndex),
-                                   operand8_.gpu_init(deviceIndex),
-                                   operand9_.gpu_init(deviceIndex),
-                                   operand10_.gpu_init(deviceIndex));
+             inline GPUWalkType gpu_init(IntVec const & extents,
+                                         GhostData const & ghosts,
+                                         IntVec const & hasBC,
+                                         int const deviceIndex) const {
+                return GPUWalkType(operand1_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand2_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand3_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand4_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand5_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand6_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand7_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand8_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand9_.gpu_init(deviceIndex,
+                                                      extents,
+                                                      ghosts,
+                                                      hasBC,
+                                                      deviceIndex),
+                                   operand10_.gpu_init(deviceIndex,
+                                                       extents,
+                                                       ghosts,
+                                                       hasBC,
+                                                       deviceIndex));
              }
 
              #ifdef NEBO_GPU_TEST
@@ -4247,7 +4705,7 @@
 
           Operand10 const operand10_;
       };
-      #ifdef FIELD_EXPRESSION_THREADS
+      #ifdef ENABLE_THREADS
          template<typename Functor,
                   typename Operand1,
                   typename Operand2,
@@ -4308,17 +4766,19 @@
                operand10_(operand10)
              {}
 
-             inline SeqWalkType init(void) const {
-                return SeqWalkType(operand1_.init(),
-                                   operand2_.init(),
-                                   operand3_.init(),
-                                   operand4_.init(),
-                                   operand5_.init(),
-                                   operand6_.init(),
-                                   operand7_.init(),
-                                   operand8_.init(),
-                                   operand9_.init(),
-                                   operand10_.init());
+             inline SeqWalkType init(IntVec const & extents,
+                                     GhostData const & ghosts,
+                                     IntVec const & hasBC) const {
+                return SeqWalkType(operand1_.init(extents, ghosts, hasBC),
+                                   operand2_.init(extents, ghosts, hasBC),
+                                   operand3_.init(extents, ghosts, hasBC),
+                                   operand4_.init(extents, ghosts, hasBC),
+                                   operand5_.init(extents, ghosts, hasBC),
+                                   operand6_.init(extents, ghosts, hasBC),
+                                   operand7_.init(extents, ghosts, hasBC),
+                                   operand8_.init(extents, ghosts, hasBC),
+                                   operand9_.init(extents, ghosts, hasBC),
+                                   operand10_.init(extents, ghosts, hasBC));
              }
 
             private:
@@ -4343,7 +4803,7 @@
              Operand10 const operand10_;
          }
       #endif
-      /* FIELD_EXPRESSION_THREADS */;
+      /* ENABLE_THREADS */;
       template<typename Functor,
                typename Operand1,
                typename Operand2,
