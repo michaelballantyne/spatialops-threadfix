@@ -275,7 +275,7 @@ namespace SpatialOps{
     inline void wait_for_synchronization() {
 #     ifdef ENABLE_CUDA
       ema::cuda::CUDADeviceInterface& CDI = ema::cuda::CUDADeviceInterface::self();
-      if( get_stream() != NULL ) CDI.sync_stream( get_stream() );
+      CDI.sync_stream( get_stream() );
 #     endif
     }
 
