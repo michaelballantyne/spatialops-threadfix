@@ -67,7 +67,8 @@
               low-high-arg))
   (define (assign-error standard message)
     (build-error (list 'Nebo 'Assignment)
-                 (list '(Left-hand side of assignment allocated on)
+                 (list '(Left-hand side of assignment allocated)
+                       (cout-break 'on)
                        (if standard
                            (list (cout-break message '(but right-hand side is not))
                                  (cout-break '\(completely\) 'accessible 'on 'the 'same message))

@@ -108,7 +108,8 @@
                              std::ostringstream msg;
                              msg << "Nebo error in " << "Nebo Assignment" <<
                              ":\n";
-                             msg << "Left-hand side of assignment allocated on ";
+                             msg << "Left-hand side of assignment allocated ";
+                             msg << "on ";
                              msg << "GPU but right-hand side is not ";
                              msg << "(completely) accessible on the same GPU";
                              msg << "\n";
@@ -129,8 +130,8 @@
                                 std::ostringstream msg;
                                 msg << "Nebo error in " << "Nebo Assignment" <<
                                 ":\n";
-                                msg << "Left-hand side of assignment allocated
-                                on ";
+                                msg << "Left-hand side of assignment allocated ";
+                                msg << "on ";
                                 msg << "CPU but right-hand side is not ";
                                 msg << "(completely) accessible on the same CPU"
                                 ;
@@ -143,7 +144,8 @@
                              std::ostringstream msg;
                              msg << "Nebo error in " << "Nebo Assignment" <<
                              ":\n";
-                             msg << "Left-hand side of assignment allocated on ";
+                             msg << "Left-hand side of assignment allocated ";
+                             msg << "on ";
                              msg << "unknown device - not on CPU or GPU";
                              msg << "\n";
                              msg << "\t - " << __FILE__ << " : " << __LINE__;
@@ -229,7 +231,8 @@
                        else {
                           std::ostringstream msg;
                           msg << "Nebo error in " << "Nebo Assignment" << ":\n";
-                          msg << "Left-hand side of assignment allocated on ";
+                          msg << "Left-hand side of assignment allocated ";
+                          msg << "on ";
                           msg << "CPU but right-hand side is not ";
                           msg << "(completely) accessible on the same CPU";
                           msg << "\n";
@@ -240,7 +243,8 @@
                     else {
                        std::ostringstream msg;
                        msg << "Nebo error in " << "Nebo Assignment" << ":\n";
-                       msg << "Left-hand side of assignment allocated on ";
+                       msg << "Left-hand side of assignment allocated ";
+                       msg << "on ";
                        msg << "unknown device - not on CPU or GPU";
                        msg << "\n";
                        msg << "\t - " << __FILE__ << " : " << __LINE__;
