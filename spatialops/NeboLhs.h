@@ -71,8 +71,6 @@
                                                               field_.boundary_info(),
                                                               rhs.ghosts_with_bc());
 
-              /* field_.reset_valid_ghosts(ghosts) */;
-
               IntVec const extents = field_.window_with_ghost().extent() -
               field_.get_valid_ghost_data().get_minus() - field_.get_valid_ghost_data().get_plus();
 
@@ -85,33 +83,22 @@
                                                  - ghosts.get_minus(2),
                                                  extents[2] + ghosts.get_plus(2));
 
-              #ifdef __CUDACC__
-                 #ifdef NEBO_GPU_TEST
-                    gpu_test_assign<RhsType>(rhs, extents, ghosts, hasBC, limits)
-                 #else
-                    if(gpu_ready()) {
-                       if(rhs.gpu_ready(gpu_device_index())) {
-                          gpu_assign<RhsType>(rhs,
-                                              extents,
-                                              ghosts,
-                                              hasBC,
-                                              limits);
-                       }
-                       else {
-                          std::ostringstream msg;
-                          msg << "Nebo error in " << "Nebo Assignment" << ":\n";
-                          msg << "Left-hand side of assignment allocated on ";
-                          msg << "GPU but right-hand side is not ";
-                          msg << "(completely) accessible on the same GPU";
-                          msg << "\n";
-                          msg << "\t - " << __FILE__ << " : " << __LINE__;
-                          throw(std::runtime_error(msg.str()));
-                       };
-                    }
-                    else {
-                       if(cpu_ready()) {
-                          if(rhs.cpu_ready()) {
-                             cpu_assign<RhsType>(rhs,
+              if(limits.get_plus(0) - limits.get_minus(0) > 0 &&
+                 limits.get_plus(1) - limits.get_minus(1) > 0 &&
+                 limits.get_plus(2) - limits.get_minus(2) > 0) {
+                 /* field_.reset_valid_ghosts(ghosts) */;
+
+                 #ifdef __CUDACC__
+                    #ifdef NEBO_GPU_TEST
+                       gpu_test_assign<RhsType>(rhs,
+                                                extents,
+                                                ghosts,
+                                                hasBC,
+                                                limits)
+                    #else
+                       if(gpu_ready()) {
+                          if(rhs.gpu_ready(gpu_device_index())) {
+                             gpu_assign<RhsType>(rhs,
                                                  extents,
                                                  ghosts,
                                                  hasBC,
@@ -122,29 +109,54 @@
                              msg << "Nebo error in " << "Nebo Assignment" <<
                              ":\n";
                              msg << "Left-hand side of assignment allocated on ";
-                             msg << "CPU but right-hand side is not ";
-                             msg << "(completely) accessible on the same CPU";
+                             msg << "GPU but right-hand side is not ";
+                             msg << "(completely) accessible on the same GPU";
                              msg << "\n";
                              msg << "\t - " << __FILE__ << " : " << __LINE__;
                              throw(std::runtime_error(msg.str()));
                           };
                        }
                        else {
-                          std::ostringstream msg;
-                          msg << "Nebo error in " << "Nebo Assignment" << ":\n";
-                          msg << "Left-hand side of assignment allocated on ";
-                          msg << "unknown device - not on CPU or GPU";
-                          msg << "\n";
-                          msg << "\t - " << __FILE__ << " : " << __LINE__;
-                          throw(std::runtime_error(msg.str()));
-                       };
-                    }
+                          if(cpu_ready()) {
+                             if(rhs.cpu_ready()) {
+                                cpu_assign<RhsType>(rhs,
+                                                    extents,
+                                                    ghosts,
+                                                    hasBC,
+                                                    limits);
+                             }
+                             else {
+                                std::ostringstream msg;
+                                msg << "Nebo error in " << "Nebo Assignment" <<
+                                ":\n";
+                                msg << "Left-hand side of assignment allocated
+                                on ";
+                                msg << "CPU but right-hand side is not ";
+                                msg << "(completely) accessible on the same CPU"
+                                ;
+                                msg << "\n";
+                                msg << "\t - " << __FILE__ << " : " << __LINE__;
+                                throw(std::runtime_error(msg.str()));
+                             };
+                          }
+                          else {
+                             std::ostringstream msg;
+                             msg << "Nebo error in " << "Nebo Assignment" <<
+                             ":\n";
+                             msg << "Left-hand side of assignment allocated on ";
+                             msg << "unknown device - not on CPU or GPU";
+                             msg << "\n";
+                             msg << "\t - " << __FILE__ << " : " << __LINE__;
+                             throw(std::runtime_error(msg.str()));
+                          };
+                       }
+                    #endif
+                    /* NEBO_GPU_TEST */
+                 #else
+                    cpu_assign<RhsType>(rhs, extents, ghosts, hasBC, limits)
                  #endif
-                 /* NEBO_GPU_TEST */
-              #else
-                 cpu_assign<RhsType>(rhs, extents, ghosts, hasBC, limits)
-              #endif
-              /* __CUDACC__ */;
+                 /* __CUDACC__ */;
+              };
            }
 
           template<typename RhsType>
