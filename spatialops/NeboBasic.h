@@ -61,9 +61,9 @@
       struct InteriorOnly;
 
       inline GhostData calculate_actual_ghost(bool const useGhost,
-                                                          GhostData const & lhs,
-                                                          BoundaryCellInfo const & bc,
-                                                          GhostData const & rhs) {
+                                              GhostData const & lhs,
+                                              BoundaryCellInfo const & bc,
+                                              GhostData const & rhs) {
         if(bc.has_bc(0) && rhs.get_plus(0) < bc.has_extra(0)) {
           std::ostringstream msg;
           msg << "Nebo error in " << "Nebo Ghost Checking" << ":\n";
@@ -112,7 +112,7 @@
        struct NeboFieldCheck<Type, Type> { Type typedef Result; };
 
       inline IntVec nebo_find_partition(IntVec const & extent,
-                                                    int const thread_count) {
+                                        int const thread_count) {
          int x = 1;
          int y = 1;
          int z = 1;
@@ -172,15 +172,15 @@
 
         //shift back to indexing from DLow rather than zero
         localLimits = GhostData(low[0] + limits.get_minus(0),
-                                            high[0] + limits.get_minus(0),
-                                            low[1] + limits.get_minus(1),
-                                            high[1] + limits.get_minus(1),
-                                            low[2] + limits.get_minus(2),
-                                            high[2] + limits.get_minus(2));
+                                high[0] + limits.get_minus(0),
+                                low[1] + limits.get_minus(1),
+                                high[1] + limits.get_minus(1),
+                                low[2] + limits.get_minus(2),
+                                high[2] + limits.get_minus(2));
       };
 
       inline IntVec nebo_next_partition(IntVec const & current,
-                                                    IntVec const & split) {
+                                        IntVec const & split) {
         IntVec result;
 
         if(current[2] < split[2] - 1)
