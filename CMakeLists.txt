@@ -90,13 +90,31 @@ endif( boost_comps )
 if( ENABLE_CUDA )
   message( STATUS "SpatialOps will be compiled with CUDA Support" )
   find_package( CUDA REQUIRED )
-  set( CUDA_ARCHITECTURE "3.0" CACHE STRING "CUDA compute capability" )
+  set( CUDA_ARCHITECTURE_MINIMUM "3.0" CACHE STRING "Minimum required CUDA compute capability" )
+  try_run( RUN_RESULT_VAR COMPILE_RESULT_VAR
+      ${CMAKE_BINARY_DIR} 
+      ${CMAKE_SOURCE_DIR}/cudaComputeCapability.cpp
+      CMAKE_FLAGS 
+      -DINCLUDE_DIRECTORIES:STRING=${CUDA_TOOLKIT_INCLUDE}
+      -DLINK_LIBRARIES:STRING=${CUDA_CUDART_LIBRARY}
+      COMPILE_OUTPUT_VARIABLE COMPILE_OUTPUT_VAR
+      RUN_OUTPUT_VARIABLE RUN_OUTPUT_VAR
+      ARGS ${CUDA_ARCHITECTURE_MINIMUM} )
+      message( STATUS ${COMPILE_OUTPUT_VAR} )
+  if( NOT ${RUN_RESULT_VAR} EQUAL 0 OR NOT ${COMPILE_RESULT_VAR} )
+    message( FATAL_ERROR "Problem determining an appropriate CUDA architecture\n"
+    ${RUN_OUTPUT_VAR}
+    ${RUN_RESULT_VAR} )
+  endif()
+  message(STATUS "CUDA COMPUTE CAPABILITY: ${RUN_OUTPUT_VAR}")
+  set( CUDA_ARCHITECTURE ${RUN_OUTPUT_VAR} CACHE STRING "CUDA compute capability" )
   string( REGEX REPLACE "([1-9])\\.([0-9])" "\\1\\2" CUDA_ARCH_STR ${CUDA_ARCHITECTURE} )
   set( CUDA_NVCC_FLAGS "-arch=sm_${CUDA_ARCH_STR}" CACHE STRING "Compiler flags passed to NVCC" FORCE )
   set( CUDA_NVCC_FLAGS_RELEASE "--optimize=03" CACHE STRING "Release build compiler flags" FORCE )
   option( NEBO_GPU_TEST "Require Nebo to handle data transfer between CPU and GPU" OFF )
   set( TPL_LIBRARIES ${TPL_LIBRARIES} ${CUDA_LIBRARIES} )
   set( TPL_INCLUDE_DIRS ${TPL_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS} )
+  
 else( ENABLE_CUDA )
   # avoids confusion if someone tries to build with cuda support enabled and then
   # reverts without clearing the build directory
