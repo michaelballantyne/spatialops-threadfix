@@ -179,6 +179,8 @@ namespace SpatialOps{
       std::ostringstream msg;
       msg << "IndexTriplet value() given bad direction; given: " << direction << "\n";
       throw(std::runtime_error(msg.str()));
+#     else
+      return 0; // should not get here. This just helps eliminate compiler warnings.
 #     endif
     };
 

@@ -415,20 +415,20 @@ namespace SpatialOps{
      */
     inline bool operator()(const IntVec& point) const
     {
-      if(bitValues_ != NULL) {
-        const int position = find_position(point);
-        unsigned int * const block = bitValues_ + find_block(position);
-        const int bitPosition = find_bit_position(position);
-        //update block with new point
-        return !!(*block & (1 << bitPosition));
-      }
-      else {
+#     ifndef NDEBUG
+      if( bitValues_ == NULL ){
         std::ostringstream msg;
         msg << "Unsupported attempt to add points to a mask of type ( "
             << DeviceTypeTools::get_memory_type_description(deviceIndex_)
             << " )\n" << "\t - " << __FILE__ << " : " << __LINE__ << std::endl;
         throw(std::runtime_error(msg.str()));
       }
+#     endif
+      const int position = find_position(point);
+      unsigned int * const block = bitValues_ + find_block(position);
+      const int bitPosition = find_bit_position(position);
+      //update block with new point
+      return !!(*block & (1 << bitPosition));
     }
 
     /**
