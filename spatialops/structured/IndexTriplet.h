@@ -170,17 +170,16 @@ namespace SpatialOps{
     static inline int z_value(){ return int(Z); }
 
     static inline int value(int const direction) {
-      if(direction == 0)
-        return int(X);
-      else if(direction == 1)
-        return int(Y);
-      else if(direction == 2)
-        return int(Z);
-      else {
-        std::ostringstream msg;
-        msg << "IndexTriplet value() given bad direction; given: " << direction << "\n";
-        throw(std::runtime_error(msg.str()));
+      switch( direction ){
+        case 0: return int(X);
+        case 1: return int(Y);
+        case 2: return int(Z);
       }
+#     ifndef NDEBUG
+      std::ostringstream msg;
+      msg << "IndexTriplet value() given bad direction; given: " << direction << "\n";
+      throw(std::runtime_error(msg.str()));
+#     endif
     };
 
     static inline IntVec int_vec(){
