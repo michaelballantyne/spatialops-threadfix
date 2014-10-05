@@ -1,16 +1,14 @@
 #include <iostream>
+#include <iomanip>
 using std::cout;
 using std::endl;
 
 //--- SpatialOps includes ---//
-#include <spatialops/SpatialOpsConfigure.h>
-#include <spatialops/OperatorDatabase.h>
-#include <spatialops/structured/FVStaggeredFieldTypes.h>
-#include <spatialops/Nebo.h>
+#include <spatialops/structured/FVStaggered.h>
 #include <spatialops/structured/Grid.h>
-
-#include <spatialops/structured/stencil/FVStaggeredOperatorTypes.h>
-#include <spatialops/structured/stencil/StencilBuilder.h>
+#ifdef ENABLE_THREADS
+#include <spatialops/ThreadPool.h>
+#endif
 
 #include <util/TimeLogger.h>
 
@@ -32,18 +30,49 @@ typedef SpatialOps::BasicOpTypes<CellField>::InterpC2FZ InterpZ;
 typedef SpatialOps::BasicOpTypes<CellField>::DivZ       DivZ;
 
 
-//--- local includes ---//
-#include "tools.h"
-
 //-- boost includes ---//
 #include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 using namespace SpatialOps;
 
+//==============================================================================
+
+void
+initialize_mask_points( const Grid& grid,
+                        std::vector<IntVec>& xminus,
+                        std::vector<IntVec>& xplus,
+                        std::vector<IntVec>& yminus,
+                        std::vector<IntVec>& yplus,
+                        std::vector<IntVec>& zminus,
+                        std::vector<IntVec>& zplus )
+{
+  for( size_t k=-1; k<grid.extent(2); ++k ){
+    for( size_t  j=-1; j<=grid.extent(1); ++j ){
+      xminus.push_back( IntVec(-1, j, k) );
+      xplus .push_back( IntVec(grid.extent(0), j, k) );
+    }
+  }
+  for( size_t k=-1; k<grid.extent(2); ++k ){
+    for( int i=-1; i<=grid.extent(0); ++i ){
+      xminus.push_back( IntVec(i,-1,k) );
+      xplus .push_back( IntVec(i,grid.extent(1), k) );
+    }
+  }
+  for( size_t j=-1; j<grid.extent(1); ++j ){
+    for( size_t i=-1; i<=grid.extent(0); ++i ){
+      xminus.push_back( IntVec(i,j,-1) );
+      xplus .push_back( IntVec(i,j,grid.extent(2)) );
+    }
+  }
+}
+
+//==============================================================================
+
 int main( int iarg, char* carg[] )
 {
-  size_t ntime;
+  double dt, tend;
+  int nthreads;
   IntVec npts;
   DoubleVec length;
   std::string logFileName;
@@ -53,14 +82,15 @@ int main( int iarg, char* carg[] )
     po::options_description desc("Supported Options");
     desc.add_options()
       ( "help", "print help message" )
-      ( "ntime", po::value<size_t>(&ntime)->default_value(1000), "number of 'iterations'" )
-      //( "ntime", po::value<size_t>(&ntime), "number of 'iterations'" )
-      ( "nx", po::value<int>(&npts[0])->default_value(10), "Grid in x" )
-      ( "ny", po::value<int>(&npts[1])->default_value(10), "Grid in y" )
-      ( "nz", po::value<int>(&npts[2])->default_value(10), "Grid in z" )
+      ( "dt",   po::value<double>(&dt  )->default_value(0.01), "timestep" )
+      ( "tend", po::value<double>(&tend)->default_value(10  ), "end time" )
+      ( "nx", po::value<int>(&npts[0])->default_value(32), "nx" )
+      ( "ny", po::value<int>(&npts[1])->default_value(32), "ny" )
+      ( "nz", po::value<int>(&npts[2])->default_value(32), "nz" )
       ( "Lx", po::value<double>(&length[0])->default_value(1.0),"Length in x")
       ( "Ly", po::value<double>(&length[1])->default_value(1.0),"Length in y")
       ( "Lz", po::value<double>(&length[2])->default_value(1.0),"Length in z")
+      ( "nthreads", po::value<int>(&nthreads)->default_value(NTHREADS),"Number of threads (no effect unless configured with threads enabled)" )
       ( "timings-file-name", po::value<std::string>(&logFileName)->default_value("timings.log"), "Name for performance timings file" );
 
     po::variables_map args;
@@ -68,15 +98,20 @@ int main( int iarg, char* carg[] )
     po::notify(args);
 
     if (args.count("help")) {
-      cout << desc << "\n";
+      cout << "\nSolves the 3D transient diffusion equation\n\n" << desc << "\n";
       return 1;
     }
   }
 
+# ifdef ENABLE_THREADS
+  ThreadPool::resize_pool( nthreads );
+# endif
+
   cout << " [nx,ny,nz] = [" << npts[0] << "," << npts[1] << "," << npts[2] << "]" << endl
-       << " ntime = " << ntime << endl
+       << " dt   = " << dt << endl
+       << " tend = " << tend << endl
 #      ifdef ENABLE_THREADS
-       << " NTHREADS = " << NTHREADS << endl
+       << " NTHREADS = " << ThreadPool::get_pool_size() << endl
 #      endif
        << endl;
 
@@ -89,18 +124,17 @@ int main( int iarg, char* carg[] )
   SpatialOps::OperatorDatabase sodb;
   SpatialOps::build_stencils( grid, sodb );
 
-  // grab pointers to the operators
-  const GradX* const gradx = sodb.retrieve_operator<GradX>();
-  const GradY* const grady = sodb.retrieve_operator<GradY>();
-  const GradZ* const gradz = sodb.retrieve_operator<GradZ>();
+  const GradX& gradx = *sodb.retrieve_operator<GradX>();
+  const GradY& grady = *sodb.retrieve_operator<GradY>();
+  const GradZ& gradz = *sodb.retrieve_operator<GradZ>();
 
-  const DivX* const divx = sodb.retrieve_operator<DivX>();
-  const DivY* const divy = sodb.retrieve_operator<DivY>();
-  const DivZ* const divz = sodb.retrieve_operator<DivZ>();
+  const DivX& divx = *sodb.retrieve_operator<DivX>();
+  const DivY& divy = *sodb.retrieve_operator<DivY>();
+  const DivZ& divz = *sodb.retrieve_operator<DivZ>();
 
-  const InterpX* const interpx = sodb.retrieve_operator<InterpX>();
-  const InterpY* const interpy = sodb.retrieve_operator<InterpY>();
-  const InterpZ* const interpz = sodb.retrieve_operator<InterpZ>();
+  const InterpX& interpx = *sodb.retrieve_operator<InterpX>();
+  const InterpY& interpy = *sodb.retrieve_operator<InterpY>();
+  const InterpZ& interpz = *sodb.retrieve_operator<InterpZ>();
 
   // build fields
   const GhostData ghost(1);
@@ -132,45 +166,96 @@ int main( int iarg, char* carg[] )
   YSideField yflux( ywindow, yBC, ghost, NULL );
   ZSideField zflux( zwindow, zBC, ghost, NULL );
 
-  {
-    using namespace SpatialOps;
-    temperature <<= sin( xcoord ) + cos( ycoord ) + sin( zcoord );
-    thermCond <<= xcoord + ycoord + zcoord;
-    rhoCp <<= 1.0;
-  }
+  //----------------------------------------------------------------------------
+  // Build and initialize masks:
+  std::vector<IntVec> xminusPts, xplusPts, yminusPts, yplusPts, zminusPts, zplusPts;
+
+  initialize_mask_points( grid, xminusPts, xplusPts, yminusPts, yplusPts, zminusPts, zplusPts );
+
+  SpatialMask<CellField> xminus( temperature, xminusPts );
+  SpatialMask<CellField> xplus ( temperature, xplusPts  );
+  SpatialMask<CellField> yminus( temperature, yminusPts );
+  SpatialMask<CellField> yplus ( temperature, yplusPts  );
+  SpatialMask<CellField> zminus( temperature, zminusPts );
+  SpatialMask<CellField> zplus ( temperature, zplusPts  );
+
+# ifdef ENABLE_CUDA
+  // Masks are created on CPU so we need to explicitly transfer them to GPU
+  xminus.add_consumer( GPU_INDEX );
+  xplus .add_consumer( GPU_INDEX );
+  yminus.add_consumer( GPU_INDEX );
+  yplus .add_consumer( GPU_INDEX );
+  zminus.add_consumer( GPU_INDEX );
+  zplus .add_consumer( GPU_INDEX );
+# endif
+  //----------------------------------------------------------------------------
+
+  //----------------------------------------------------------------------------
+  // initial conditions
+  thermCond   <<= xcoord + ycoord + zcoord;
+  rhoCp       <<= 1.0;
+  temperature <<= cond( xminus, 1.0 )( xplus, -1.0 )
+                      ( yminus, 1.0 )( yplus, -1.0 )
+                      ( zminus, 1.0 )( zplus, -1.0 )
+                      ( sin( xcoord ) + cos( ycoord ) + sin( zcoord ) );
+  //----------------------------------------------------------------------------
 
   try{
-    cout << "beginning 'timestepping'" << endl;
+    cout << "beginning timestepping" << endl;
 
     TimeLogger logger(logFileName);
 
     // mimic the effects of solving this PDE in time.
-    for( size_t itime=0; itime<ntime; ++itime ){
-
-      using namespace SpatialOps;
+    double t = 0;
+    while( t < tend ){
 
       logger.start("flux");
-      if( npts[0]>1 ) calculate_flux( *gradx, *interpx, temperature, thermCond, xflux );
-      if( npts[1]>1 ) calculate_flux( *grady, *interpy, temperature, thermCond, yflux );
-      if( npts[2]>1 ) calculate_flux( *gradz, *interpz, temperature, thermCond, zflux );
+      if( npts[0]>1 ) xflux <<= -interpx(thermCond) * gradx(temperature);
+      if( npts[1]>1 ) yflux <<= -interpy(thermCond) * grady(temperature);
+      if( npts[2]>1 ) zflux <<= -interpz(thermCond) * gradz(temperature);
       logger.stop("flux");
 
       rhs <<= 0.0;
 
       logger.start("rhs");
-      if( npts[0]>1 ) calculate_rhs( *divx, xflux, rhoCp, rhs );
-      if( npts[1]>1 ) calculate_rhs( *divy, yflux, rhoCp, rhs );
-      if( npts[2]>1 ) calculate_rhs( *divz, zflux, rhoCp, rhs );
+//      if( npts[0]>1 ) rhs <<= rhs + divx( interpx(thermCond) * gradx(temperature) ) / rhoCp;
+//      if( npts[1]>1 ) rhs <<= rhs + divy( interpy(thermCond) * grady(temperature) ) / rhoCp;
+//      if( npts[2]>1 ) rhs <<= rhs + divz( interpz(thermCond) * gradz(temperature) ) / rhoCp;
+      if( npts[0]>1 ) rhs <<= rhs - divx( xflux ) / rhoCp;
+      if( npts[1]>1 ) rhs <<= rhs - divy( yflux ) / rhoCp;
+      if( npts[2]>1 ) rhs <<= rhs - divz( zflux ) / rhoCp;
       logger.stop("rhs");
 
-      // ordinarily at this point we would use rhs to update
-      // temperature.  however, there are some other complicating
-      // factors like setting boundary conditions that we have neglected
-      // here to simplify things.
+      logger.start("update");
+      temperature <<= temperature + dt * rhs;
+      logger.stop("update");
+
+      logger.start("bc");
+      temperature <<= cond( xminus, 1.0 )( xplus, -1.0 )
+                          ( yminus, 1.0 )( yplus, -1.0 )
+                          ( zminus, 1.0 )( zplus, -1.0 )
+                          ( temperature );
+      logger.stop("bc");
+
+      t += dt;
     }
 
     cout << "done" << endl << endl
-         << "time taken: " << logger.total_time()
+         << "\n------------------------------------------------------------------\n"
+         << "Timing Summary:\n"
+         << "---------------\n"
+         << std::setw(10) << "Flux"
+         << std::setw(10)  << "RHS"
+         << std::setw(10)  << "update"
+         << std::setw(10)  << "bc"
+         << std::setw(10) << "TOTAL"
+         << std::endl
+         << std::setw(10) << logger.timer("flux").elapsed_time()
+         << std::setw(10) << logger.timer("rhs").elapsed_time()
+         << std::setw(10) << logger.timer("update").elapsed_time()
+         << std::setw(10) << logger.timer("bc").elapsed_time()
+         << std::setw(10) << logger.total_time()
+         << "\n------------------------------------------------------------------\n"
          << endl << endl;
 
     return 0;

@@ -96,14 +96,14 @@ initialize_mask_points( const Grid& grid,
                         std::vector<IntVec>& topSet,
                         std::vector<IntVec>& bottomSet )
 {
-  for( int i=-1; i<=grid.extent()[1]; ++i ){
+  for( int i=-1; i<=grid.extent(1); ++i ){
     leftSet .push_back( IntVec(-1, i, 0) );
-    rightSet.push_back( IntVec(grid.extent()[0], i, 0) );
+    rightSet.push_back( IntVec(grid.extent(0), i, 0) );
   }
 
-  for(int i = -1; i <= grid.extent()[0]; i++){
+  for(int i = -1; i <= grid.extent(0); i++){
     topSet   .push_back( IntVec(i, -1, 0) );
-    bottomSet.push_back( IntVec(i, grid.extent()[1], 0) );
+    bottomSet.push_back( IntVec(i, grid.extent(1), 0) );
   }
 }
 
