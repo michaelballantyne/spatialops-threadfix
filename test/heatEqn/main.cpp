@@ -29,6 +29,14 @@ typedef SpatialOps::BasicOpTypes<CellField>::GradZ      GradZ;
 typedef SpatialOps::BasicOpTypes<CellField>::InterpC2FZ InterpZ;
 typedef SpatialOps::BasicOpTypes<CellField>::DivZ       DivZ;
 
+// If we are compiling with GPU CUDA support, create fields on the device.
+// Otherwise, create them on the host.
+#ifdef ENABLE_CUDA
+# define LOCATION GPU_INDEX
+#else
+# define LOCATION CPU_INDEX
+#endif
+
 
 //-- boost includes ---//
 #include <boost/program_options.hpp>
@@ -143,13 +151,13 @@ int main( int iarg, char* carg[] )
 
   const MemoryWindow vwindow( get_window_with_ghost(npts,ghost,cellBC) );
 
-  CellField temperature( vwindow, cellBC, ghost, NULL );
-  CellField thermCond  ( vwindow, cellBC, ghost, NULL );
-  CellField rhoCp      ( vwindow, cellBC, ghost, NULL );
-  CellField xcoord     ( vwindow, cellBC, ghost, NULL );
-  CellField ycoord     ( vwindow, cellBC, ghost, NULL );
-  CellField zcoord     ( vwindow, cellBC, ghost, NULL );
-  CellField rhs        ( vwindow, cellBC, ghost, NULL );
+  CellField temperature( vwindow, cellBC, ghost, NULL, InternalStorage, LOCATION );
+  CellField thermCond  ( vwindow, cellBC, ghost, NULL, InternalStorage, LOCATION );
+  CellField rhoCp      ( vwindow, cellBC, ghost, NULL, InternalStorage, LOCATION );
+  CellField xcoord     ( vwindow, cellBC, ghost, NULL, InternalStorage, LOCATION );
+  CellField ycoord     ( vwindow, cellBC, ghost, NULL, InternalStorage, LOCATION );
+  CellField zcoord     ( vwindow, cellBC, ghost, NULL, InternalStorage, LOCATION );
+  CellField rhs        ( vwindow, cellBC, ghost, NULL, InternalStorage, LOCATION );
 
   grid.set_coord<SpatialOps::XDIR>( xcoord );
   grid.set_coord<SpatialOps::YDIR>( ycoord );
@@ -162,9 +170,9 @@ int main( int iarg, char* carg[] )
   const MemoryWindow ywindow( get_window_with_ghost(npts,ghost,yBC) );
   const MemoryWindow zwindow( get_window_with_ghost(npts,ghost,zBC) );
 
-  XSideField xflux( xwindow, xBC, ghost, NULL );
-  YSideField yflux( ywindow, yBC, ghost, NULL );
-  ZSideField zflux( zwindow, zBC, ghost, NULL );
+  XSideField xflux( xwindow, xBC, ghost, NULL, InternalStorage, LOCATION  );
+  YSideField yflux( ywindow, yBC, ghost, NULL, InternalStorage, LOCATION  );
+  ZSideField zflux( zwindow, zBC, ghost, NULL, InternalStorage, LOCATION  );
 
   //----------------------------------------------------------------------------
   // Build and initialize masks:
