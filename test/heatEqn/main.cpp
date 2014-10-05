@@ -90,8 +90,6 @@ int main( int iarg, char* carg[] )
       ( "Lx", po::value<double>(&length[0])->default_value(1.0),"Length in x")
       ( "Ly", po::value<double>(&length[1])->default_value(1.0),"Length in y")
       ( "Lz", po::value<double>(&length[2])->default_value(1.0),"Length in z")
-      // jcs note that the thread count adjustment doesn't seem to work properly, so
-      //     I am disabling the ability to alter thread counts from the command line
       ( "nthreads", po::value<int>(&nthreads)->default_value(NTHREADS),"Number of threads (no effect unless configured with threads enabled)" )
       ( "timings-file-name", po::value<std::string>(&logFileName)->default_value("timings.log"), "Name for performance timings file" );
 
