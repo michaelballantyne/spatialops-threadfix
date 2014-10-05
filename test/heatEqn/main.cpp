@@ -72,7 +72,7 @@ initialize_mask_points( const Grid& grid,
 int main( int iarg, char* carg[] )
 {
   double dt, tend;
-  int nthreads;
+  int nthreads = NTHREADS;
   IntVec npts;
   DoubleVec length;
   std::string logFileName;
@@ -90,6 +90,8 @@ int main( int iarg, char* carg[] )
       ( "Lx", po::value<double>(&length[0])->default_value(1.0),"Length in x")
       ( "Ly", po::value<double>(&length[1])->default_value(1.0),"Length in y")
       ( "Lz", po::value<double>(&length[2])->default_value(1.0),"Length in z")
+      // jcs note that the thread count adjustment doesn't seem to work properly, so
+      //     I am disabling the ability to alter thread counts from the command line
       ( "nthreads", po::value<int>(&nthreads)->default_value(NTHREADS),"Number of threads (no effect unless configured with threads enabled)" )
       ( "timings-file-name", po::value<std::string>(&logFileName)->default_value("timings.log"), "Name for performance timings file" );
 
@@ -104,14 +106,14 @@ int main( int iarg, char* carg[] )
   }
 
 # ifdef ENABLE_THREADS
-  ThreadPool::resize_pool( nthreads );
+  set_soft_thread_count( nthreads );
 # endif
 
   cout << " [nx,ny,nz] = [" << npts[0] << "," << npts[1] << "," << npts[2] << "]" << endl
        << " dt   = " << dt << endl
        << " tend = " << tend << endl
 #      ifdef ENABLE_THREADS
-       << " NTHREADS = " << ThreadPool::get_pool_size() << endl
+       << " NTHREADS = " << get_soft_thread_count() << endl
 #      endif
        << endl;
 
