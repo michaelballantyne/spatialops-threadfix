@@ -47,20 +47,20 @@ initialize_mask_points( const Grid& grid,
                         std::vector<IntVec>& zminus,
                         std::vector<IntVec>& zplus )
 {
-  for( size_t k=-1; k<grid.extent(2); ++k ){
-    for( size_t  j=-1; j<=grid.extent(1); ++j ){
+  for( int k=-1; k<grid.extent(2); ++k ){
+    for( int  j=-1; j<=grid.extent(1); ++j ){
       xminus.push_back( IntVec(-1, j, k) );
       xplus .push_back( IntVec(grid.extent(0), j, k) );
     }
   }
-  for( size_t k=-1; k<grid.extent(2); ++k ){
+  for( int k=-1; k<grid.extent(2); ++k ){
     for( int i=-1; i<=grid.extent(0); ++i ){
       xminus.push_back( IntVec(i,-1,k) );
       xplus .push_back( IntVec(i,grid.extent(1), k) );
     }
   }
-  for( size_t j=-1; j<grid.extent(1); ++j ){
-    for( size_t i=-1; i<=grid.extent(0); ++i ){
+  for( int j=-1; j<grid.extent(1); ++j ){
+    for( int i=-1; i<=grid.extent(0); ++i ){
       xminus.push_back( IntVec(i,j,-1) );
       xplus .push_back( IntVec(i,j,grid.extent(2)) );
     }
