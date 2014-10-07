@@ -63,14 +63,14 @@ initialize_mask_points( const Grid& grid,
   }
   for( int k=-1; k<grid.extent(2); ++k ){
     for( int i=-1; i<=grid.extent(0); ++i ){
-      xminus.push_back( IntVec(i,-1,k) );
-      xplus .push_back( IntVec(i,grid.extent(1), k) );
+      yminus.push_back( IntVec(i,-1,k) );
+      yplus .push_back( IntVec(i,grid.extent(1), k) );
     }
   }
   for( int j=-1; j<grid.extent(1); ++j ){
     for( int i=-1; i<=grid.extent(0); ++i ){
-      xminus.push_back( IntVec(i,j,-1) );
-      xplus .push_back( IntVec(i,j,grid.extent(2)) );
+      zminus.push_back( IntVec(i,j,-1) );
+      zplus .push_back( IntVec(i,j,grid.extent(2)) );
     }
   }
 }
