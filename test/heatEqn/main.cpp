@@ -5,6 +5,7 @@ using std::endl;
 
 //--- SpatialOps includes ---//
 #include <spatialops/structured/FVStaggered.h>
+#include <spatialops/structured/FVStaggeredBCTools.h>
 #include <spatialops/structured/Grid.h>
 #ifdef ENABLE_THREADS
 #include <spatialops/ThreadPool.h>
@@ -28,6 +29,10 @@ typedef SpatialOps::BasicOpTypes<CellField>::DivY       DivY;
 typedef SpatialOps::BasicOpTypes<CellField>::GradZ      GradZ;
 typedef SpatialOps::BasicOpTypes<CellField>::InterpC2FZ InterpZ;
 typedef SpatialOps::BasicOpTypes<CellField>::DivZ       DivZ;
+
+typedef SpatialOps::NeboBoundaryConditionBuilder<InterpX> DirichletXOpT;
+typedef SpatialOps::NeboBoundaryConditionBuilder<InterpY> DirichletYOpT;
+typedef SpatialOps::NeboBoundaryConditionBuilder<InterpZ> DirichletZOpT;
 
 // If we are compiling with GPU CUDA support, create fields on the device.
 // Otherwise, create them on the host.
@@ -55,24 +60,25 @@ initialize_mask_points( const Grid& grid,
                         std::vector<IntVec>& zminus,
                         std::vector<IntVec>& zplus )
 {
-  for( int k=-1; k<grid.extent(2); ++k ){
-    for( int  j=-1; j<=grid.extent(1); ++j ){
-      xminus.push_back( IntVec(-1, j, k) );
+  for( int k=0; k<grid.extent(2); ++k ){
+    for( int  j=0; j<grid.extent(1); ++j ){
+      xminus.push_back( IntVec(0, j, k) );
       xplus .push_back( IntVec(grid.extent(0), j, k) );
     }
   }
-  for( int k=-1; k<grid.extent(2); ++k ){
-    for( int i=-1; i<=grid.extent(0); ++i ){
-      yminus.push_back( IntVec(i,-1,k) );
+  for( int k=0; k<grid.extent(2); ++k ){
+    for( int i=0; i<grid.extent(0); ++i ){
+      yminus.push_back( IntVec(i,0,k) );
       yplus .push_back( IntVec(i,grid.extent(1), k) );
     }
   }
-  for( int j=-1; j<grid.extent(1); ++j ){
-    for( int i=-1; i<=grid.extent(0); ++i ){
-      zminus.push_back( IntVec(i,j,-1) );
+  for( int j=0; j<grid.extent(1); ++j ){
+    for( int i=0; i<grid.extent(0); ++i ){
+      zminus.push_back( IntVec(i,j,0) );
       zplus .push_back( IntVec(i,j,grid.extent(2)) );
     }
   }
+  std::cout << xminus.size() << std::endl;
 }
 
 //==============================================================================
@@ -132,6 +138,7 @@ int main( int iarg, char* carg[] )
   SpatialOps::OperatorDatabase sodb;
   SpatialOps::build_stencils( grid, sodb );
 
+
   const GradX& gradx = *sodb.retrieve_operator<GradX>();
   const GradY& grady = *sodb.retrieve_operator<GradY>();
   const GradZ& gradz = *sodb.retrieve_operator<GradZ>();
@@ -143,6 +150,14 @@ int main( int iarg, char* carg[] )
   const InterpX& interpx = *sodb.retrieve_operator<InterpX>();
   const InterpY& interpy = *sodb.retrieve_operator<InterpY>();
   const InterpZ& interpz = *sodb.retrieve_operator<InterpZ>();
+
+  sodb.register_new_operator( new DirichletXOpT(interpx) );
+  sodb.register_new_operator( new DirichletYOpT(interpy) );
+  sodb.register_new_operator( new DirichletZOpT(interpz) );
+
+  const DirichletXOpT& dirichletX = *sodb.retrieve_operator<DirichletXOpT>();
+  const DirichletYOpT& dirichletY = *sodb.retrieve_operator<DirichletYOpT>();
+  const DirichletZOpT& dirichletZ = *sodb.retrieve_operator<DirichletZOpT>();
 
   // build fields
   const GhostData ghost(1);
@@ -177,15 +192,14 @@ int main( int iarg, char* carg[] )
   //----------------------------------------------------------------------------
   // Build and initialize masks:
   std::vector<IntVec> xminusPts, xplusPts, yminusPts, yplusPts, zminusPts, zplusPts;
-
   initialize_mask_points( grid, xminusPts, xplusPts, yminusPts, yplusPts, zminusPts, zplusPts );
 
-  SpatialMask<CellField> xminus( temperature, xminusPts );
-  SpatialMask<CellField> xplus ( temperature, xplusPts  );
-  SpatialMask<CellField> yminus( temperature, yminusPts );
-  SpatialMask<CellField> yplus ( temperature, yplusPts  );
-  SpatialMask<CellField> zminus( temperature, zminusPts );
-  SpatialMask<CellField> zplus ( temperature, zplusPts  );
+  SpatialMask<XSideField> xminus( xflux, xminusPts );
+  SpatialMask<XSideField> xplus ( xflux, xplusPts  );
+  SpatialMask<YSideField> yminus( yflux, yminusPts );
+  SpatialMask<YSideField> yplus ( yflux, yplusPts  );
+  SpatialMask<ZSideField> zminus( zflux, zminusPts );
+  SpatialMask<ZSideField> zplus ( zflux, zplusPts  );
 
 # ifdef ENABLE_CUDA
   // Masks are created on CPU so we need to explicitly transfer them to GPU
@@ -202,10 +216,13 @@ int main( int iarg, char* carg[] )
   // initial conditions
   thermCond   <<= xcoord + ycoord + zcoord;
   rhoCp       <<= 1.0;
-  temperature <<= cond( xminus, 1.0 )( xplus, -1.0 )
-                      ( yminus, 1.0 )( yplus, -1.0 )
-                      ( zminus, 1.0 )( zplus, -1.0 )
-                      ( sin( xcoord ) + cos( ycoord ) + sin( zcoord ) );
+  temperature <<= sin( xcoord ) + cos( ycoord ) + sin( zcoord );
+  dirichletX( xminus, temperature,  1.0, true  );
+  dirichletX( xplus,  temperature, -1.0, false );
+  dirichletY( yminus, temperature,  1.0, true  );
+  dirichletY( yplus,  temperature, -1.0, false );
+  dirichletZ( zminus, temperature,  1.0, true  );
+  dirichletZ( zplus,  temperature, -1.0, false );
   //----------------------------------------------------------------------------
 
   try{
@@ -239,10 +256,12 @@ int main( int iarg, char* carg[] )
       logger.stop("update");
 
       logger.start("bc");
-      temperature <<= cond( xminus, 1.0 )( xplus, -1.0 )
-                          ( yminus, 1.0 )( yplus, -1.0 )
-                          ( zminus, 1.0 )( zplus, -1.0 )
-                          ( temperature );
+      dirichletX( xminus, temperature,  1.0, true  );
+      dirichletX( xplus,  temperature, -1.0, false );
+      dirichletY( yminus, temperature,  1.0, true  );
+      dirichletY( yplus,  temperature, -1.0, false );
+      dirichletZ( zminus, temperature,  1.0, true  );
+      dirichletZ( zplus,  temperature, -1.0, false );
       logger.stop("bc");
 
       t += dt;
