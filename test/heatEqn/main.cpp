@@ -78,7 +78,6 @@ initialize_mask_points( const Grid& grid,
       zplus .push_back( IntVec(i,j,grid.extent(2)) );
     }
   }
-  std::cout << xminus.size() << std::endl;
 }
 
 //==============================================================================
