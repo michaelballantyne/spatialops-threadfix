@@ -234,20 +234,26 @@ int main( int iarg, char* carg[] )
     while( t < tend ){
 
       logger.start("flux");
+      thermCond <<= 0.1;
       if( npts[0]>1 ) xflux <<= -interpx(thermCond) * gradx(temperature);
       if( npts[1]>1 ) yflux <<= -interpy(thermCond) * grady(temperature);
       if( npts[2]>1 ) zflux <<= -interpz(thermCond) * gradz(temperature);
       logger.stop("flux");
 
-      rhs <<= 0.0;
 
       logger.start("rhs");
+      if( npts[0] >1 && npts[1] > 1 && npts[2] > 1 ){
+        rhs <<= ( - divx(xflux) - divy(yflux) - divz(zflux) ) / rhoCp;
+      }
+      else{
+        rhs <<= 0.0;
 //      if( npts[0]>1 ) rhs <<= rhs + divx( interpx(thermCond) * gradx(temperature) ) / rhoCp;
 //      if( npts[1]>1 ) rhs <<= rhs + divy( interpy(thermCond) * grady(temperature) ) / rhoCp;
 //      if( npts[2]>1 ) rhs <<= rhs + divz( interpz(thermCond) * gradz(temperature) ) / rhoCp;
-      if( npts[0]>1 ) rhs <<= rhs - divx( xflux ) / rhoCp;
-      if( npts[1]>1 ) rhs <<= rhs - divy( yflux ) / rhoCp;
-      if( npts[2]>1 ) rhs <<= rhs - divz( zflux ) / rhoCp;
+        if( npts[0]>1 ) rhs <<= rhs - divx( xflux ) / rhoCp;
+        if( npts[1]>1 ) rhs <<= rhs - divy( yflux ) / rhoCp;
+        if( npts[2]>1 ) rhs <<= rhs - divz( zflux ) / rhoCp;
+      }
       logger.stop("rhs");
 
       logger.start("update");
