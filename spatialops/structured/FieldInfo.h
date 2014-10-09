@@ -435,7 +435,7 @@ namespace SpatialOps{
       activeDeviceIndex_( devIdx )
       //Determine raw byte count -- this is sometimes required for external device allocation.
 #     ifdef ENABLE_THREADS
-      , partitionCount_( NTHREADS )
+      , partitionCount_( get_soft_thread_count() )
 #     endif
 #     ifdef ENABLE_CUDA
       , cudaStream_( 0 )
