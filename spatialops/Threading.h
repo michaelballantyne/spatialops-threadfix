@@ -8,6 +8,7 @@
 #include <vector>
 #include <stdexcept>
 #include <string>
+#include <sched.h>
 
 namespace SpatialOps {
     class Threading {
@@ -51,6 +52,11 @@ namespace SpatialOps {
 
             // (Private) constructor taking thread count.
             Threading(int nthreadsArg) : nthreads(nthreadsArg), remaining(0) {
+                cpu_set_t cpuset;
+                CPU_ZERO(&cpuset);
+                CPU_SET(0, &cpuset);
+            //    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+
                 // Create atomics for communication with threads
                 tasksArray = new boost::atomic<boost::function0<void> *> *[nthreads];
                 for (int i = 0; i < nthreads; i++) {
@@ -87,7 +93,12 @@ namespace SpatialOps {
             }
 
             void threadBody(int threadId) {
-                pthread_setname_np(std::to_string(threadId).c_str());
+                cpu_set_t cpuset;
+                CPU_ZERO(&cpuset);
+                CPU_SET((threadId + 1) * 2, &cpuset);
+                //sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+
+//                pthread_setname_np(std::to_string(threadId).c_str());
                 while (true) {
                     boost::function0<void> *task = NULL;
                     while((task = tasksArray[threadId]->load(boost::memory_order_relaxed)) == NULL) {

@@ -58,16 +58,16 @@ namespace SpatialOps{
 
 #ifdef ENABLE_THREADS
 
-  /* used within nebo to determine if thread parallelism should be used */
-  inline bool is_thread_parallel(){
-    return true;
-  }
 
   /* used within nebo to get current soft (active) thread count */
   inline int get_soft_thread_count(){
     return Threading::getInstance().nthreads;
   }
 
+  /* used within nebo to determine if thread parallelism should be used */
+  inline bool is_thread_parallel(){
+    return get_soft_thread_count() > 1;
+  }
 
 #endif // ENABLE_THREADS
 
