@@ -25,6 +25,7 @@
 
 #include <spatialops/SpatialOpsConfigure.h>
 
+#include <spatialops/Threading.h>
 #include <spatialops/NeboBasic.h>
 #include <spatialops/NeboRhs.h>
 #include <spatialops/NeboMask.h>

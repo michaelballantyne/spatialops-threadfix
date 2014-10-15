@@ -83,7 +83,7 @@ namespace SpatialOps{
     const GhostData ghosts_;          ///< The total number of ghost cells on each face of this field.
     GhostData validGhosts_;           ///< The number of valid ghost cells on each face of this field.
 
-    std::vector<IntVec> points_;
+    boost::shared_ptr<std::vector<IntVec> > points_;
     BitField bitField_;
 
   public:
@@ -107,7 +107,7 @@ namespace SpatialOps{
         bcInfo_(bc),
         ghosts_(ghosts),
         validGhosts_(ghosts),
-        points_(points),
+        points_(new std::vector<IntVec>(points)),
         bitField_(points_,
                   interiorMaskWindow_,
                   validGhosts_)
@@ -125,8 +125,8 @@ namespace SpatialOps{
         bcInfo_(prototype.boundary_info()),
         ghosts_(prototype.get_ghost_data()),
         validGhosts_(prototype.get_valid_ghost_data()),
-        points_(points),
-        bitField_(points_,
+        points_(new std::vector<IntVec>(points)),
+        bitField_(*points_,
                   interiorMaskWindow_,
                   validGhosts_)
     {};
@@ -188,7 +188,7 @@ namespace SpatialOps{
      */
     inline const std::vector<IntVec> & points(void) const
     {
-      return points_;
+      return *points_;
     };
 
     /**

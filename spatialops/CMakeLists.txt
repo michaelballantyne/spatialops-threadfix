@@ -20,7 +20,6 @@ set( SO_HEADERS
   OperatorDatabase.h
   SpatialOpsDefs.h
   SpatialOpsTools.h
-  Semaphore.h
   )
 
 # create dummy/empty file to circumvent restriction on add_library
@@ -30,8 +29,8 @@ file( WRITE ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp "" )
 set( SO_Sources ${CMAKE_CURRENT_BINARY_DIR}/empty.cpp )
 
 if( ENABLE_THREADS )
-    set( SO_Sources ${SO_Sources} ThreadPool.cpp )
-    set( SO_HEADERS ${SO_HEADERS} ThreadPool.h )
+    set( SO_Sources ${SO_Sources} Threading.cpp )
+    set( SO_HEADERS ${SO_HEADERS} Threading.h )
     add_subdirectory( threadpool )
 endif( ENABLE_THREADS )
 

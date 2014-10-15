@@ -343,8 +343,6 @@
                  #endif
                  /* NEBO_REPORT_BACKEND */;
 
-                 Semaphore semaphore(0);
-
                  const int thread_count = field_.get_partition_count();
 
                  typename RhsType::ResizeType typedef RhsResizeType;
@@ -367,10 +365,12 @@
 
                  IntVec location = IntVec(0, 0, 0);
 
+                 std::vector<boost::function0<void> > tasks(max);
+
                  for(int count = 0; count < max; count++) {
                     nebo_set_up_extents(location, split, localLimits, limits);
 
-                    ThreadPoolFIFO::self().schedule(boost::bind(&ResizeType::
+                    tasks[count] = boost::bind(&ResizeType::
                                                                 template
                                                                 resize_assign<RhsResizeType>,
                                                                 new_lhs,
@@ -378,13 +378,13 @@
                                                                 extents,
                                                                 ghosts,
                                                                 hasBC,
-                                                                localLimits,
-                                                                &semaphore));
+                                                                localLimits
+                                                                );
 
                     location = nebo_next_partition(location, split);
                  };
 
-                 for(int ii = 0; ii < max; ii++) { semaphore.wait(); };
+                 Threading::getInstance().scheduleTasks(tasks);
 
                  #ifdef NEBO_REPORT_BACKEND
                     std::cout << "Finished Nebo thread parallel" << std::endl
@@ -574,12 +574,10 @@
                                            IntVec const & extents,
                                            GhostData const & ghosts,
                                            IntVec const & hasBC,
-                                           GhostData const limits,
-                                           Semaphore * semaphore) {
+                                           GhostData const limits
+                                          ) {
                     init().seqwalk_assign(rhs.init(extents, ghosts, hasBC),
                                           limits);
-
-                    semaphore->post();
                  }
              #endif
              /* ENABLE_THREADS */

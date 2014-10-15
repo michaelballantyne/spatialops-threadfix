@@ -193,6 +193,7 @@ namespace SpatialOps {
    ThreadPoolFIFO&
    ThreadPoolFIFO::self()
    {
+     std::cout << "thread pool constructed\n";
      static ThreadPoolFIFO tp( NTHREADS );
      ThreadPoolResourceManager& tprm = ThreadPoolResourceManager::self();
      if( tp.init_ == false ){

@@ -117,7 +117,7 @@ int main( int iarg, char* carg[] )
   }
 
 # ifdef ENABLE_THREADS
-  set_soft_thread_count( nthreads );
+  Threading::setup(nthreads);
 # endif
 
   cout << " [nx,ny,nz] = [" << npts[0] << "," << npts[1] << "," << npts[2] << "]" << endl
