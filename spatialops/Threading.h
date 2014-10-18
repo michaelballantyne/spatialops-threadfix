@@ -27,11 +27,11 @@ namespace SpatialOps {
                     //throw std::invalid_argument("ntasks must match nthreads");
                 //}
 
-                for (int i = 0; i < nthreads; i++) {
+                for (int i = 1; i < nthreads; i++) {
                     tasksArray[i]->store(&tasks[i], boost::memory_order_relaxed);
                 }
 
-                remaining.store(nthreads, boost::memory_order_release);
+                remaining.store(nthreads - 1, boost::memory_order_release);
 
                 while(remaining.load(boost::memory_order_acquire) > 0) {
                     // Spin until done
@@ -55,17 +55,17 @@ namespace SpatialOps {
                 cpu_set_t cpuset;
                 CPU_ZERO(&cpuset);
                 CPU_SET(0, &cpuset);
-            //    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+                sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
 
                 // Create atomics for communication with threads
                 tasksArray = new boost::atomic<boost::function0<void> *> *[nthreads];
-                for (int i = 0; i < nthreads; i++) {
+                for (int i = 1; i < nthreads; i++) {
                     tasksArray[i] = new boost::atomic<boost::function0<void> *>(NULL);
                 }
 
                 // Start threads
                 threadsArray = new boost::thread *[nthreads];
-                for (int i = 0; i < nthreads; i++) {
+                for (int i = 1; i < nthreads; i++) {
                     threadsArray[i] = new boost::thread(boost::bind(&Threading::threadBody, this, i));
                 }
             }
@@ -73,11 +73,11 @@ namespace SpatialOps {
             // I probably don't need this whole thing at all.
             ~Threading() {
                 // Interrupt and threads and wait for them to die.
-                for (int i = 0; i < nthreads; i++) {
+                for (int i = 1; i < nthreads; i++) {
                     threadsArray[i]->interrupt();
                 }
 
-                for (int i = 0; i < nthreads; i++) {
+                for (int i = 1; i < nthreads; i++) {
                     threadsArray[i]->join();
                     delete threadsArray[i];
                 }
@@ -85,7 +85,7 @@ namespace SpatialOps {
                 delete threadsArray;
 
                 // Then we delete the boost::atomics we allocated.
-                for (int i = 0; i < nthreads; i++) {
+                for (int i = 1; i < nthreads; i++) {
                     delete tasksArray[i];
                 }
 
@@ -95,8 +95,8 @@ namespace SpatialOps {
             void threadBody(int threadId) {
                 cpu_set_t cpuset;
                 CPU_ZERO(&cpuset);
-                CPU_SET((threadId + 1) * 2, &cpuset);
-                //sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
+                CPU_SET(threadId, &cpuset);
+                sched_setaffinity(0, sizeof(cpu_set_t), &cpuset);
 
 //                pthread_setname_np(std::to_string(threadId).c_str());
                 while (true) {
