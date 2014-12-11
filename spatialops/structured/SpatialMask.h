@@ -108,7 +108,7 @@ namespace SpatialOps{
         ghosts_(ghosts),
         validGhosts_(ghosts),
         points_(new std::vector<IntVec>(points)),
-        bitField_(points_,
+        bitField_(*points_,
                   interiorMaskWindow_,
                   validGhosts_)
     {};

@@ -26,10 +26,6 @@
 #include <spatialops/SpatialOpsConfigure.h>
 #include <spatialops/Threading.h>
 
-#ifdef ENABLE_THREADS
-# include <spatialops/ThreadPool.h>
-#endif
-
 /**
  *  \file SpatialOpsTools.h
  */

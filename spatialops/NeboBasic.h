@@ -43,9 +43,7 @@
 #     include <spatialops/SpatialOpsTools.h>
 #     include <vector>
 #     include <boost/bind.hpp>
-#     include <spatialops/ThreadPool.h>
 #     include <spatialops/structured/IntVec.h>
-#     include <spatialops/Semaphore.h>
 #  endif
    /* ENABLE_THREADS */
 

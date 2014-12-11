@@ -23,15 +23,13 @@ namespace SpatialOps {
             }
 
             void scheduleTasks(std::vector<boost::function0<void> > & tasks) {
-                //if (tasks.size() != nthreads) {
-                    //throw std::invalid_argument("ntasks must match nthreads");
-                //}
+                remaining.store(nthreads - 1, boost::memory_order_release);
 
                 for (int i = 1; i < nthreads; i++) {
-                    tasksArray[i]->store(&tasks[i], boost::memory_order_relaxed);
+                    tasksArray[i]->store(&tasks[i], boost::memory_order_release);
                 }
 
-                remaining.store(nthreads - 1, boost::memory_order_release);
+                tasks[0]();
 
                 while(remaining.load(boost::memory_order_acquire) > 0) {
                     // Spin until done
@@ -114,8 +112,6 @@ namespace SpatialOps {
                     tasksArray[threadId]->store(NULL, boost::memory_order_relaxed);
 
                     remaining.fetch_sub(1, boost::memory_order_release);
-
-                    //boost::this_thread::interruption_point();
                 }
             }
     };
